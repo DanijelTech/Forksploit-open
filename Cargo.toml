@@ -69,17 +69,17 @@ regex = "1"
 typetag = "0.2.13"
 lazy_static = "1.4.0"
 
-revm = { git = "https://github.com/forksploit/revm", rev = "1dead51", features = [
+revm = { path = "vendor/revm/crates/revm", features = [
     "no_gas_measuring",
     "serde",
     "memory_limit",
 ] }
-revm-primitives = { git = "https://github.com/forksploit/revm", rev = "1dead51", features = [
+revm-primitives = { path = "vendor/revm/crates/primitives", features = [
     "no_gas_measuring",
     "serde",
     "memory_limit",
 ] }
-revm-interpreter = { git = "https://github.com/forksploit/revm", rev = "1dead51", features = [
+revm-interpreter = { path = "vendor/revm/crates/interpreter", features = [
     "no_gas_measuring",
     "serde",
     "memory_limit",
