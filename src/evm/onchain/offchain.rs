@@ -56,7 +56,7 @@ impl OffChainConfig {
         fuzz_host.evmstate = setup_data.evmstate.clone();
         fuzz_host.env = setup_data.env.clone();
         for (addr, bytecode) in &setup_data.code {
-            // FAZA 6.1: setup code comes from an external artifact/config
+            // PHASE 6.1: setup code comes from an external artifact/config
             // file; a contract whose bytecode revm's analyser rejects must
             // surface as an error the caller can report, not a panic that
             // takes the whole off-chain run down.
@@ -249,7 +249,7 @@ impl OffChainConfig {
 
 impl ChainConfig for OffChainConfig {
     fn get_pair(&mut self, token: &str, _is_pegged: bool) -> Vec<PairData> {
-        // FAZA 6.1: `token` is an external string; an unparseable address
+        // PHASE 6.1: `token` is an external string; an unparseable address
         // yields no pairs instead of panicking.
         let Ok(token) = EVMAddress::from_str(token) else {
             debug!("get_pair: cannot parse token address '{}', returning no pairs", token);
@@ -259,7 +259,7 @@ impl ChainConfig for OffChainConfig {
     }
 
     fn fetch_reserve(&self, pair: &str) -> Option<(String, String)> {
-        // FAZA 6.1: `pair` is an external string; a malformed address yields
+        // PHASE 6.1: `pair` is an external string; a malformed address yields
         // `None` instead of panicking.
         let Ok(pair) = EVMAddress::from_str(pair) else {
             debug!("fetch_reserve: cannot parse pair address '{}'", pair);

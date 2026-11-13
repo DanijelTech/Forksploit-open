@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """test_network_profile.py -- offline proof tests for the runtime RPC
 identity check (chains.verify_rpc_identity / NetworkProfile).
 

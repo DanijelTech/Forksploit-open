@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """test_dashboard_ui.py -- proof (R1) that the dashboard's static GUI is the
 modern sidebar shell, projects EVERY /api/state key, and wires EVERY
 operation the server exposes.

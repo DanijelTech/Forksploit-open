@@ -1,3 +1,4 @@
+# Author: DanyTech
 import json, urllib.request
 import pyevmasm as e
 RPC="https://etc.etcdesktop.com"

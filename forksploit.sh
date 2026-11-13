@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
+# Author: DanyTech
 # forksploit.sh -- the one interactive entry point for running ForkSploit's
 # full register -> fund -> fuzz -> exploit -> recover pipeline.
 #
-# UPGRADED v2.0 - Matrix Theme (črna, zelena, temno siva)
-# - Logo "ForkSploit" je vedno prikazan na vrhu vsakega zaslona
-# - Glavni meni s svojimi podmeniji (nov tek / nastavitve / doctor / pomoč)
-# - Okvirčki za polja za vnos podatkov
-# - Navigacija: nazaj (en korak), glavni meni, izhod
+# UPGRADED v2.0 - Matrix Theme (black, green, dark gray)
+# - The "ForkSploit" logo is always shown at the top of every screen
+# - Main menu with its own submenus (new run / settings / doctor / help)
+# - Framed boxes for data-entry fields
+# - Navigation: back (one step), main menu, exit
 #
 # What this script does, in order, before it touches anything:
 #   1. PREFLIGHT ("doctor"): detect the OS, verify the build/runtime
@@ -14,9 +15,9 @@
 #      + the onchain_scripts requirements, the built binary), and -- only
 #      with your explicit confirmation -- install whatever is missing and
 #      build the release binary. Nothing is installed silently.
-#   2. MAIN MENU: a persistent menu with submenus -- Nov tek (the wizard),
-#      Nastavitve (default key / per-chain RPC), Preveri okolje (full
-#      doctor report), Pomoč (what the tool does), izhod (quit).
+#   2. MAIN MENU: a persistent menu with submenus -- New run (the wizard),
+#      Settings (default key / per-chain RPC), Check environment (full
+#      doctor report), Help (what the tool does), exit (quit).
 #   3. WIZARD: ask the three roles the whole run commits to -- WHO funds
 #      (private-key file), WHAT is audited (one or more contracts), WHERE
 #      recovered funds go (recovery wallet) -- plus the chain and RPC, with
@@ -24,8 +25,8 @@
 #   4. EXEC: hand off to auto_pipeline.py (one target) or batch_pipeline.py
 #      (many), exactly as the old script did.
 #
-# Navigation: every question accepts "nazaj" (redo the previous step),
-# "glavni meni" (return to main menu), and "izhod" (abort cleanly).
+# Navigation: every question accepts "back" (redo the previous step),
+# "main menu" (return to main menu), and "exit" (abort cleanly).
 # A plain invalid answer re-asks the SAME question or steps back --
 # it never kills the script. Only a genuine pipeline failure AFTER the
 # wizard (the final exec) still exits hard.
@@ -65,8 +66,8 @@ while [[ $# -gt 0 ]]; do
         --dry-run) DRY_RUN=1 ;;
         --doctor)  DOCTOR_ONLY=1 ;;
         --no-install) NO_INSTALL=1 ;;
-        -h|--help) sed -n '2,29p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
-        *) printf 'neznana zastavica: %s (poskusi --help)\n' "$1" >&2; exit 2 ;;
+        -h|--help) sed -n '3,30p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        *) printf 'unknown flag: %s (try --help)\n' "$1" >&2; exit 2 ;;
     esac
     shift
 done
@@ -371,7 +372,7 @@ if [[ -x "$REPO_ROOT/.venv/bin/python3" ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Persisted advanced settings (Nastavitve -> Napredne nastavitve)
+# Persisted advanced settings (Settings -> Advanced settings)
 # ---------------------------------------------------------------------------
 # A tiny JSON map of the advanced run settings, written/read with python3
 # (stdlib json; no jq dependency). All values are strings so the file is
@@ -442,7 +443,7 @@ advanced_summary() {
     [[ -n "$FUND_ETH" ]]     && s+="fund=${FUND_ETH}ETH "
     (( NO_PREFLIGHT ))       && s+="no-preflight "
     (( NO_GAS_ORACLE ))      && s+="no-gas-oracle "
-    [[ -z "$s" ]] && s="privzete (brez dodatnih zastavic)"
+    [[ -z "$s" ]] && s="defaults (no extra flags)"
     printf '%s' "$s"
 }
 
@@ -466,7 +467,7 @@ elif fn == "wallet_from_key":
     print(Account.from_key(open(args[0]).read().strip()).address)
 elif fn == "is_testnet":
     from chains import TESTNET_CHAINS
-    print("da" if args[0] in TESTNET_CHAINS else "ne")
+    print("yes" if args[0] in TESTNET_CHAINS else "no")
 elif fn == "list_chains":
     from chains import DEFAULT_RPC, TESTNET_CHAINS, chain_banner, chain_title
     tests = sorted(c for c in DEFAULT_RPC if c in TESTNET_CHAINS)
@@ -475,7 +476,7 @@ elif fn == "list_chains":
         tag = "testnet" if c in TESTNET_CHAINS else "mainnet"
         print(f"{c}|{chain_title(c)}|{chain_banner(c)}|{tag}")
 else:
-    sys.exit("neznana pomožna funkcija: " + fn)
+    sys.exit("unknown helper function: " + fn)
 PYEOF
 }
 
@@ -506,7 +507,7 @@ need_pkg() {
         record ok "$(ok_s "$(printf '%-22s %s' "$desc" "${C_DIM}ok${C_R}")")"
     else
         MISSING_PKGS+=("$logical")
-        record warn "$(warn_s "$(printf '%-22s %s' "$desc" "${C_YEL}manjka${C_R}")")"
+        record warn "$(warn_s "$(printf '%-22s %s' "$desc" "${C_YEL}missing${C_R}")")"
     fi
 }
 
@@ -515,13 +516,13 @@ check_env() {
     detect_os
 
     box_top
-    box_line "  ${C_B}PREDLETNO PREVERJANJE OKOLJA${C_R} ${C_DIM}(doctor)${C_R}"
+    box_line "  ${C_B}PREFLIGHT ENVIRONMENT CHECK${C_R} ${C_DIM}(doctor)${C_R}"
     box_mid
-    box_line "  Sistem : ${C_CYN}${OS_NAME}${C_R} ${C_DIM}($(uname -m))${C_R}"
+    box_line "  System : ${C_CYN}${OS_NAME}${C_R} ${C_DIM}($(uname -m))${C_R}"
     if [[ -n "$PKG_MGR" ]]; then
-        box_line "  Paketi : ${C_CYN}${PKG_MGR}${C_R}"
+        box_line "  Packages: ${C_CYN}${PKG_MGR}${C_R}"
     else
-        box_line "  Paketi : ${C_YEL}neznan upravljalnik -- namestitve ne bom izvajal sam${C_R}"
+        box_line "  Packages: ${C_YEL}unknown package manager -- I will not install anything myself${C_R}"
     fi
     box_line "  Python : ${C_CYN}${PYTHON}${C_R}"
     box_bot
@@ -542,43 +543,43 @@ check_env() {
         record ok "$(ok_s "$(printf '%-22s %s' "cargo (Rust)" "$(cargo --version 2>/dev/null)")")"
     else
         rust_ok=0
-        record warn "$(warn_s "$(printf '%-22s %s' "cargo (Rust)" "manjka -- namestitev prek rustup")")"
+        record warn "$(warn_s "$(printf '%-22s %s' "cargo (Rust)" "missing -- install via rustup")")"
     fi
     if command -v rustup >/dev/null 2>&1; then
         record ok "$(ok_s "$(printf '%-22s %s' "rustup" "ok")")"
     else
         rust_ok=0
-        record warn "$(warn_s "$(printf '%-22s %s' "rustup" "manjka")")"
+        record warn "$(warn_s "$(printf '%-22s %s' "rustup" "missing")")"
     fi
 
     # Python requirements (special: installed via pip).
     local deps_ok=1
     if have_python_deps; then
-        record ok "$(ok_s "$(printf '%-22s %s' "python odvisnosti" "web3, fastapi, uvicorn, ...")")"
+        record ok "$(ok_s "$(printf '%-22s %s' "python dependencies" "web3, fastapi, uvicorn, ...")")"
     else
         deps_ok=0
-        record warn "$(warn_s "$(printf '%-22s %s' "python odvisnosti" "manjkajo -- glej onchain_scripts/requirements.txt")")"
+        record warn "$(warn_s "$(printf '%-22s %s' "python dependencies" "missing -- see onchain_scripts/requirements.txt")")"
     fi
 
     # Optional (never blocks a run).
     if command -v anvil >/dev/null 2>&1; then
-        record ok "$(ok_s "$(printf '%-22s %s' "anvil (opcijsko)" "ok -- pre-flight fork simulacija bo na voljo")")"
+        record ok "$(ok_s "$(printf '%-22s %s' "anvil (optional)" "ok -- pre-flight fork simulation will be available")")"
     else
-        record info "$(info_s "$(printf '%-22s %s' "anvil (opcijsko)" "ni nameščen -- pre-flight fork simulacija bo preskočena")")"
+        record info "$(info_s "$(printf '%-22s %s' "anvil (optional)" "not installed -- pre-flight fork simulation will be skipped")")"
     fi
     if command -v solc >/dev/null 2>&1 || [[ -x "$HOME/.svm/0.8.24/solc-0.8.24" ]]; then
-        record ok "$(ok_s "$(printf '%-22s %s' "solc (opcijsko)" "ok")")"
+        record ok "$(ok_s "$(printf '%-22s %s' "solc (optional)" "ok")")"
     else
-        record info "$(info_s "$(printf '%-22s %s' "solc (opcijsko)" "ni nameščen -- potreben le za .sol cilje")")"
+        record info "$(info_s "$(printf '%-22s %s' "solc (optional)" "not installed -- needed only for .sol targets")")"
     fi
 
     # Built binary.
     local bin_ok=0
     if [[ -x "$BIN" ]]; then
         bin_ok=1
-        record ok "$(ok_s "$(printf '%-22s %s' "binarij" "$BIN")")"
+        record ok "$(ok_s "$(printf '%-22s %s' "binary" "$BIN")")"
     else
-        record warn "$(warn_s "$(printf '%-22s %s' "binarij" "$BIN ni zgrajen")")"
+        record warn "$(warn_s "$(printf '%-22s %s' "binary" "$BIN is not built")")"
     fi
 
     # Show the results. The full doctor report (--doctor) prints every line;
@@ -601,9 +602,9 @@ check_env() {
             fi
         done
         if (( n_warn == 0 )); then
-            ok "Okolje je pripravljeno (vse, kar je potrebno, je na mestu)."
+            ok "Environment is ready (everything required is in place)."
         else
-            info "$n_warn stvar(i) manjka -- glej zgoraj (opcijske vrstice '·' niso težava)."
+            info "$n_warn item(s) missing -- see above (optional '·' lines are not a problem)."
         fi
     fi
 
@@ -613,50 +614,50 @@ check_env() {
         if [[ -n "$PKG_MGR" ]]; then
             local cmdline; cmdline="$(pkg_install_cmdline "${MISSING_PKGS[@]}")" || cmdline=""
             if [[ -n "$cmdline" ]]; then
-                bold "Manjka ${#MISSING_PKGS[@]} sistemskih odvisnosti. Namestim jih z:"
+                bold "${#MISSING_PKGS[@]} system dependencies missing. I will install them with:"
                 echo "    $cmdline"
                 if (( NO_INSTALL )); then
-                    info "Preskočeno (--no-install). Namesti ročno: $cmdline"
+                    info "Skipped (--no-install). Install manually: $cmdline"
                 else
                     local ans
-                    read -rp "  ➜ Namestim zdaj? (da/ne) [Enter = ne]: " ans
-                    if [[ "$ans" == "da" ]]; then
+                    read -rp "  ➜ Install now? (yes/no) [Enter = no]: " ans
+                    if [[ "$ans" == "yes" ]]; then
                         if pkg_install_run "${MISSING_PKGS[@]}"; then
-                            ok "Sistemske odvisnosti nameščene."
+                            ok "System dependencies installed."
                             MISSING_PKGS=()
                         else
-                            err "Namestitev ni uspela -- namesti ročno: $cmdline"
+                            err "Installation failed -- install manually: $cmdline"
                         fi
                     else
-                        info "Preskočeno. Namesti ročno: $cmdline"
+                        info "Skipped. Install manually: $cmdline"
                     fi
                 fi
             fi
         else
-            warn "Ne poznam upravljalnika paketov za ta sistem. Namesti ročno (glej README.md, razdelek Namestitev)."
+            warn "I do not know the package manager for this system. Install manually (see README.md, Installation section)."
         fi
     fi
 
     # Rust toolchain install offer.
     if (( rust_ok == 0 )); then
         echo
-        bold "Rust orodja manjkajo. Uradni namestitveni ukaz:"
+        bold "Rust toolchain is missing. Official install command:"
         echo "    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
         if (( NO_INSTALL )); then
-            info "Preskočeno (--no-install). Namesti ročno z zgornjim ukazom."
+            info "Skipped (--no-install). Install manually with the command above."
         else
             local ans
-            read -rp "  ➜ Zaženem uradni rustup namestitveni program zdaj? (da/ne) [Enter = ne]: " ans
-            if [[ "$ans" == "da" ]]; then
+            read -rp "  ➜ Run the official rustup installer now? (yes/no) [Enter = no]: " ans
+            if [[ "$ans" == "yes" ]]; then
                 if curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; then
                     # shellcheck disable=SC1091
                     [[ -f "$HOME/.cargo/env" ]] && . "$HOME/.cargo/env"
-                    command -v cargo >/dev/null 2>&1 && ok "Rust nameščen." || warn "Rust nameščen, a 'cargo' še ni na PATH -- odpri novo lupino."
+                    command -v cargo >/dev/null 2>&1 && ok "Rust installed." || warn "Rust installed, but 'cargo' is not on PATH yet -- open a new shell."
                 else
-                    err "Namestitev Rust-a ni uspela."
+                    err "Rust installation failed."
                 fi
             else
-                info "Preskočeno. Namesti ročno z zgornjim ukazom."
+                info "Skipped. Install manually with the command above."
             fi
         fi
     fi
@@ -664,22 +665,22 @@ check_env() {
     # Python requirements install offer.
     if (( deps_ok == 0 )); then
         echo
-        bold "Python odvisnosti manjkajo. Predlagani ukaz:"
+        bold "Python dependencies are missing. Suggested command:"
         echo "    $PYTHON -m pip install -r $REQ_FILE"
         if (( NO_INSTALL )); then
-            info "Preskočeno (--no-install)."
+            info "Skipped (--no-install)."
         else
             local ans
-            read -rp "  ➜ Namestim jih zdaj? (da/ne) [Enter = ne]: " ans
-            if [[ "$ans" == "da" ]]; then
+            read -rp "  ➜ Install them now? (yes/no) [Enter = no]: " ans
+            if [[ "$ans" == "yes" ]]; then
                 if "$PYTHON" -m pip install -r "$REQ_FILE"; then
-                    ok "Python odvisnosti nameščene."
+                    ok "Python dependencies installed."
                 else
-                    err "pip namestitev ni uspela (morda 'externally-managed-environment')."
-                    info "Poskusi: python3 -m venv .venv && .venv/bin/pip install -r $REQ_FILE"
+                    err "pip install failed (possibly 'externally-managed-environment')."
+                    info "Try: python3 -m venv .venv && .venv/bin/pip install -r $REQ_FILE"
                 fi
             else
-                info "Preskočeno."
+                info "Skipped."
             fi
         fi
     fi
@@ -687,30 +688,30 @@ check_env() {
     # Build the release binary if it is missing and cargo is available.
     if (( bin_ok == 0 )) && command -v cargo >/dev/null 2>&1; then
         echo
-        bold "Binarij še ni zgrajen. Zgradim ga z:"
+        bold "The binary is not built yet. I will build it with:"
         echo "    cargo build --release"
         if (( NO_INSTALL )); then
-            info "Preskočeno (--no-install). Zgradi ročno: cargo build --release"
+            info "Skipped (--no-install). Build manually: cargo build --release"
         else
             local ans
-            read -rp "  ➜ Zgradim zdaj? (traja lahko več minut) (da/ne) [Enter = da]: " ans
-            if [[ -z "$ans" || "$ans" == "da" ]]; then
-                info "Gradim ... (to lahko traja dlje časa)"
+            read -rp "  ➜ Build now? (may take several minutes) (yes/no) [Enter = yes]: " ans
+            if [[ -z "$ans" || "$ans" == "yes" ]]; then
+                info "Building ... (this may take a while)"
                 if (cd "$REPO_ROOT" && cargo build --release); then
-                    ok "Zgrajeno: $BIN"
+                    ok "Built: $BIN"
                     bin_ok=1
                 else
-                    err "Gradnja ni uspela -- odpravi napake zgoraj in poskusi znova."
+                    err "Build failed -- fix the errors above and try again."
                 fi
             else
-                info "Preskočeno."
+                info "Skipped."
             fi
         fi
     fi
 
     echo
     if [[ ! -x "$BIN" ]]; then
-        err "Binarij '$BIN' še vedno manjka -- brez njega pipeline ne more teči."
+        err "The binary '$BIN' is still missing -- the pipeline cannot run without it."
         return 1
     fi
     return 0
@@ -726,7 +727,7 @@ MENU_IDX=1
 # prompt_nav <prompt> [default] -- with main menu navigation
 prompt_nav() {
     local __prompt="$1" __default="${2:-}" __input
-    local __hint=" ${C_DIM}(nazaj = prejšnji · glavni meni = MM · izhod = EXIT)${C_R}"
+    local __hint=" ${C_DIM}(back = previous · main menu = MM · exit = EXIT)${C_R}"
     if ! read -rp "${__prompt}${__hint}" __input; then
         NAV_ACTION="quit"; return 1
     fi
@@ -734,9 +735,9 @@ prompt_nav() {
         __input="$__default"
     fi
     case "$__input" in
-        nazaj) NAV_ACTION="back"; return 1 ;;
-        glavni\ meni|MM) NAV_ACTION="main_menu"; return 1 ;;
-        izhod|EXIT) NAV_ACTION="quit"; return 1 ;;
+        nazaj|back) NAV_ACTION="back"; return 1 ;;
+        glavni\ meni|main\ menu|MM) NAV_ACTION="main_menu"; return 1 ;;
+        izhod|exit|EXIT) NAV_ACTION="quit"; return 1 ;;
         *) NAV_ACTION=""; REPLY_VAL="$__input"; return 0 ;;
     esac
 }
@@ -747,8 +748,8 @@ prompt_nav() {
 # in a compact multi-column grid, so a long list never becomes a single-column
 # wall.
 #
-# Navigation is by WORD only -- 'nazaj'/'glavni meni'/'izhod' (aliases 0, MM,
-# q). Numbers belong to the entries alone: an earlier version also bound 1/2/3
+# Navigation is by WORD only -- 'back'/'main menu'/'exit' (aliases 0, MM, q).
+# Numbers belong to the entries alone: an earlier version also bound 1/2/3
 # to back/main/exit, which silently stole the first three entries of any short
 # menu (a 3-entry submenu could not be selected by number at all).
 # Sets REPLY_VAL=value (and MENU_IDX) on 0; NAV_ACTION=back|main_menu|quit on 1.
@@ -818,18 +819,18 @@ menu() {
     done
     _menu_flush
 
-    # Draw navigation bar with frame. The root menu has no 'glavni meni'
-    # (it *is* the main menu) and no 'nazaj' (nowhere to go back to).
+    # Draw navigation bar with frame. The root menu has no 'main menu'
+    # (it *is* the main menu) and no 'back' (nowhere to go back to).
     echo
-    input_field_top "NAVIGACIJA"
+    input_field_top "NAVIGATION"
     if (( __root )); then
-        input_field "Nazaj (korak)" "ni -- glavni meni"
-        input_field "Glavni meni" "že si tukaj"
-        input_field "Izhod" "izhod"
+        input_field "Back (step)" "none -- main menu"
+        input_field "Main menu" "you are already here"
+        input_field "Exit" "exit"
     else
-        input_field "Nazaj (korak)" "nazaj"
-        input_field "Glavni meni" "glavni meni"
-        input_field "Izhod" "izhod"
+        input_field "Back (step)" "back"
+        input_field "Main menu" "main menu"
+        input_field "Exit" "exit"
     fi
     input_field_bottom
 
@@ -842,24 +843,24 @@ menu() {
         done
     fi
     while true; do
-        if ! read -rp "  ➜ Izberi [1-$n] (Enter = $__def): " __in; then
+        if ! read -rp "  ➜ Choose [1-$n] (Enter = $__def): " __in; then
             NAV_ACTION="quit"; return 1
         fi
         [[ -z "$__in" ]] && __in=$__def
         case "$__in" in
-            0|nazaj)
+            0|nazaj|back)
                 if (( __root )); then
-                    err "  V glavnem meniju ni 'nazaj' -- izberi vrstico ali 'izhod'."
+                    err "  There is no 'back' in the main menu -- pick a row or 'exit'."
                     continue
                 fi
                 NAV_ACTION="back"; return 1 ;;
-            glavni\ meni|MM)
+            glavni\ meni|main\ menu|MM)
                 if (( __root )); then
-                    err "  Že si v glavnem meniju -- izberi vrstico ali 'izhod'."
+                    err "  You are already in the main menu -- pick a row or 'exit'."
                     continue
                 fi
                 NAV_ACTION="main_menu"; return 1 ;;
-            izhod|EXIT|q|Q) NAV_ACTION="quit"; return 1 ;;
+            izhod|exit|EXIT|q|Q) NAV_ACTION="quit"; return 1 ;;
         esac
         if [[ "$__in" =~ ^[0-9]+$ ]] && (( __in >= 1 && __in <= n )); then
             MENU_IDX="$__in"; REPLY_VAL="${__vals[$((__in - 1))]}"; NAV_ACTION=""; return 0
@@ -870,13 +871,13 @@ menu() {
                 MENU_IDX=$((__k + 1)); REPLY_VAL="${__vals[$__k]}"; NAV_ACTION=""; return 0
             fi
         done
-        err "  Neveljavna izbira -- vnesi številko 1-$n, ime, 'nazaj', 'glavni meni' ali 'izhod'."
+        err "  Invalid choice -- enter a number 1-$n, a name, 'back', 'main menu' or 'exit'."
     done
 }
 
 quit_wizard() {
     echo
-    bold "Prekinjeno na zahtevo uporabnika."
+    bold "Aborted at the user's request."
     exit 0
 }
 
@@ -900,26 +901,26 @@ reset_run_state() {
 main_menu() {
     # Sets MAIN_CHOICE to one of: wizard, settings, doctor, help, quit.
     local -a opts=(
-        "#|${C_DIM}Pregled in izvedba${C_R}"
-        "wizard|Nov tek -- čarovnik (veriga → RPC → ključ → cilji → recovery → potrditev)"
-        "#|${C_DIM}Nastavitve in pomoč${C_R}"
-        "settings|Nastavitve (privzeti ključ, RPC po verigi)"
-        "doctor|Preveri okolje (doctor) -- kaj je na voljo, kaj manjka"
-        "help|Pomoč -- kaj ForkSploit počne in kaj pomenijo koraki"
-        "#|${C_DIM}Napredno in orodja${C_R}"
-        "advanced|Napredne nastavitve teka (fuzzing, financiranje, pre-flight)"
-        "tools|Orodja -- monitor, triage, materialize, dashboard, DEX, fixture"
+        "#|${C_DIM}Overview and execution${C_R}"
+        "wizard|New run -- wizard (chain → RPC → key → targets → recovery → confirm)"
+        "#|${C_DIM}Settings and help${C_R}"
+        "settings|Settings (default key, per-chain RPC)"
+        "doctor|Check environment (doctor) -- what is available, what is missing"
+        "help|Help -- what ForkSploit does and what the steps mean"
+        "#|${C_DIM}Advanced and tools${C_R}"
+        "advanced|Advanced run settings (fuzzing, funding, pre-flight)"
+        "tools|Tools -- monitor, triage, materialize, dashboard, DEX, fixture"
     )
     MENU_DEFAULT_VAL="wizard"
     while true; do
         new_page
         matrix_logo
         echo
-        if menu --root "GLAVNI MENI" "${opts[@]}"; then
+        if menu --root "MAIN MENU" "${opts[@]}"; then
             MAIN_CHOICE="$REPLY_VAL"; return 0
         fi
         [[ "$NAV_ACTION" == "quit" ]] && { MAIN_CHOICE="quit"; return 0; }
-        # --root rejects 'nazaj'/'glavni meni', so nothing else can land here.
+        # --root rejects 'back'/'main menu', so nothing else can land here.
     done
 }
 
@@ -931,51 +932,51 @@ settings_menu() {
         new_page
         matrix_logo
         echo
-        gutb "NASTAVITVE"
-        gutc "Trajne privzete vrednosti, shranjene med teki."
+        gutb "SETTINGS"
+        gutc "Persistent defaults, saved between runs."
         echo
         box_top
-        box_line "  ${C_GREEN}◆ NASTAVITVE ◆${C_R}"
+        box_line "  ${C_GREEN}◆ SETTINGS ◆${C_R}"
         box_mid
-        input_field "Privzeti ključ" "$DEFAULT_KEY"
-        input_field "RPC (veriga)" "${CHAIN:-ni izbrana}"
+        input_field "Default key" "$DEFAULT_KEY"
+        input_field "RPC (chain)" "${CHAIN:-none selected}"
         box_bot
         echo
 
         local -a opts=(
-            "key|Nastavi privzeti ključ (pot do datoteke)"
-            "rpc|Nastavi RPC za verigo"
-            "back|Nazaj v glavni meni"
+            "key|Set the default key (file path)"
+            "rpc|Set the RPC for a chain"
+            "back|Back to main menu"
         )
         MENU_DEFAULT_VAL="back"
-        if ! menu "Izberi nastavitev:" "${opts[@]}"; then
+        if ! menu "Choose a setting:" "${opts[@]}"; then
             [[ "$NAV_ACTION" == "quit" ]] && { quit_wizard; }
-            return 0                     # 'nazaj'/'glavni meni' -> main menu
+            return 0                     # 'back'/'main menu' -> main menu
         fi
         case "$REPLY_VAL" in
             key)
                 local kf
-                if ! prompt_nav "  ➜ Pot do datoteke s ključem [$DEFAULT_KEY]: " "$DEFAULT_KEY"; then
+                if ! prompt_nav "  ➜ Path to the key file [$DEFAULT_KEY]: " "$DEFAULT_KEY"; then
                     [[ "$NAV_ACTION" == "quit" ]] && quit_wizard
                     [[ "$NAV_ACTION" == "main_menu" ]] && return 0
                     continue
                 fi
                 kf="$REPLY_VAL"
                 if [[ ! -f "$kf" ]]; then
-                    err "  Datoteka '$kf' ne obstaja."
+                    err "  File '$kf' does not exist."
                     continue
                 fi
                 local wallet
                 if ! wallet="$(py_help wallet_from_key "$kf" 2>&1)"; then
-                    err "  '$kf' ne vsebuje veljavnega privatnega ključa."
+                    err "  '$kf' does not contain a valid private key."
                     continue
                 fi
                 DEFAULT_KEY="$kf"
-                ok "Privzeti ključ nastavljen: ${C_CYN}${wallet}${C_R}  (${kf})"
+                ok "Default key set: ${C_CYN}${wallet}${C_R}  (${kf})"
                 ;;
             rpc)
                 local ch
-                if ! prompt_nav "  ➜ Veriga (npr. sepolia, eth, etc) [${CHAIN:-sepolia}]: " "${CHAIN:-sepolia}"; then
+                if ! prompt_nav "  ➜ Chain (e.g. sepolia, eth, etc) [${CHAIN:-sepolia}]: " "${CHAIN:-sepolia}"; then
                     [[ "$NAV_ACTION" == "quit" ]] && quit_wizard
                     [[ "$NAV_ACTION" == "main_menu" ]] && return 0
                     continue
@@ -983,34 +984,34 @@ settings_menu() {
                 ch="$REPLY_VAL"
                 local cur
                 if ! cur="$(py_help rpc "$ch" 2>&1)"; then
-                    err "  Veriga '$ch' ni znana ForkSploit-u."
+                    err "  Chain '$ch' is not known to ForkSploit."
                     continue
                 fi
-                gut "  Trenutni RPC za '$ch': ${C_CYN}${cur}${C_R}"
+                gut "  Current RPC for '$ch': ${C_CYN}${cur}${C_R}"
                 local url
-                if ! prompt_nav "  ➜ Nov RPC URL (Enter = obdrži): " ""; then
+                if ! prompt_nav "  ➜ New RPC URL (Enter = keep): " ""; then
                     [[ "$NAV_ACTION" == "quit" ]] && quit_wizard
                     [[ "$NAV_ACTION" == "main_menu" ]] && return 0
                     continue
                 fi
                 url="$REPLY_VAL"
                 if [[ -z "$url" ]]; then
-                    info "  Obdržan: $cur"
+                    info "  Kept: $cur"
                 elif py_help set_rpc "$ch" "$url"; then
-                    ok "  Shranjen RPC za '$ch': $url"
+                    ok "  RPC saved for '$ch': $url"
                 else
-                    err "  Shranjevanje RPC-ja ni uspelo."
+                    err "  Saving the RPC failed."
                 fi
                 ;;
             back) return 0 ;;
         esac
         echo
-        read -rp "  ➜ Enter za nadaljevanje ..." _ || true
+        read -rp "  ➜ Enter to continue ..." _ || true
     done
 }
 
 # ---------------------------------------------------------------------------
-# Advanced run settings (Nastavitve -> Napredne nastavitve)
+# Advanced run settings (Settings -> Advanced settings)
 # ---------------------------------------------------------------------------
 # Exposes only REAL auto_pipeline.py / batch_pipeline.py flags. Values are
 # persisted in $SETTINGS_FILE; an empty value means "unset". Each editor
@@ -1020,38 +1021,38 @@ advanced_menu() {
         new_page
         matrix_logo
         echo
-        gutb "NAPREDNE NASTAVITVE TEKA"
-        gutc "Veljajo za vsak zagon iz čarovnika. Prazno = privzeto (zastavica se izpusti)."
+        gutb "ADVANCED RUN SETTINGS"
+        gutc "Apply to every run started from the wizard. Empty = default (the flag is omitted)."
         echo
         box_top
-        box_line "  ${C_GREEN}◆ NAPREDNE NASTAVITVE ◆${C_R}"
+        box_line "  ${C_GREEN}◆ ADVANCED SETTINGS ◆${C_R}"
         box_mid
-        input_field "Fuzz trajanje" "${FUZZ_SECONDS:+${FUZZ_SECONDS}s}"
-        input_field "Detektorji" "${DETECTORS:-privzeto (all)}"
-        input_field "Financiranje" "${FUND_ETH:+${FUND_ETH} ETH}"
-        input_field "Pre-flight vrata" "$( (( NO_PREFLIGHT )) && echo 'IZKLOPLJENA' || echo 'vklopljena (privzeto)' )"
-        input_field "Gas oracle" "$( (( NO_GAS_ORACLE )) && echo 'IZKLOPLJEN' || echo 'vklopljen (privzeto)' )"
+        input_field "Fuzz duration" "${FUZZ_SECONDS:+${FUZZ_SECONDS}s}"
+        input_field "Detectors" "${DETECTORS:-default (all)}"
+        input_field "Funding" "${FUND_ETH:+${FUND_ETH} ETH}"
+        input_field "Pre-flight gate" "$( (( NO_PREFLIGHT )) && echo 'DISABLED' || echo 'enabled (default)' )"
+        input_field "Gas oracle" "$( (( NO_GAS_ORACLE )) && echo 'DISABLED' || echo 'enabled (default)' )"
         box_bot
         echo
 
         local -a opts=(
-            "fuzz|Nastavi trajanje fuzzinga (sekunde, npr. 300)"
-            "det|Nastavi detektorje (all / high_confidence / seznam)"
-            "fund|Nastavi začetno financiranje cilja (ETH, npr. 0.01)"
-            "preflight|Preklopi pre-flight vrata izplativosti (vklop/izklop)"
-            "gasoracle|Preklopi gas-fee oracle (vklop/izklop)"
-            "reset|Ponastavi vse napredne nastavitve na privzete"
-            "back|Nazaj v glavni meni"
+            "fuzz|Set the fuzzing duration (seconds, e.g. 300)"
+            "det|Set the detectors (all / high_confidence / list)"
+            "fund|Set the initial funding of the target (ETH, e.g. 0.01)"
+            "preflight|Toggle the pre-flight profitability gate (on/off)"
+            "gasoracle|Toggle the gas-fee oracle (on/off)"
+            "reset|Reset all advanced settings to their defaults"
+            "back|Back to main menu"
         )
         MENU_DEFAULT_VAL="back"
-        if ! menu "Izberi nastavitev:" "${opts[@]}"; then
+        if ! menu "Choose a setting:" "${opts[@]}"; then
             [[ "$NAV_ACTION" == "quit" ]] && { quit_wizard; }
             return 0
         fi
         case "$REPLY_VAL" in
             fuzz)
                 local v
-                if ! prompt_nav "  ➜ Fuzz trajanje v sekundah (Enter = privzeto/počisti): " "$FUZZ_SECONDS"; then
+                if ! prompt_nav "  ➜ Fuzz duration in seconds (Enter = default/clear): " "$FUZZ_SECONDS"; then
                     [[ "$NAV_ACTION" == "quit" ]] && quit_wizard
                     [[ "$NAV_ACTION" == "main_menu" ]] && return 0
                     continue
@@ -1059,12 +1060,12 @@ advanced_menu() {
                 v="$REPLY_VAL"
                 if [[ -z "$v" ]]; then FUZZ_SECONDS=""
                 elif [[ "$v" =~ ^[0-9]+$ ]] && (( v > 0 )); then FUZZ_SECONDS="$v"
-                else err "  '$v' ni pozitivno celo število sekund -- poskusi znova."; continue; fi
-                save_settings; ok "Shranjeno."
+                else err "  '$v' is not a positive whole number of seconds -- try again."; continue; fi
+                save_settings; ok "Saved."
                 ;;
             det)
                 local v
-                if ! prompt_nav "  ➜ Detektorji (all / high_confidence / npr. reentrancy,erc20): " "$DETECTORS"; then
+                if ! prompt_nav "  ➜ Detectors (all / high_confidence / e.g. reentrancy,erc20): " "$DETECTORS"; then
                     [[ "$NAV_ACTION" == "quit" ]] && quit_wizard
                     [[ "$NAV_ACTION" == "main_menu" ]] && return 0
                     continue
@@ -1077,12 +1078,12 @@ advanced_menu() {
                 # rejects an unknown one loudly, and we surface that at run).
                 if [[ -z "$v" ]]; then DETECTORS=""
                 elif [[ "$v" =~ ^[a-z_,-]+$ ]]; then DETECTORS="$v"
-                else err "  Neveljaven vnos -- uporabi 'all', 'high_confidence' ali imena, ločena z vejico."; continue; fi
-                save_settings; ok "Shranjeno."
+                else err "  Invalid input -- use 'all', 'high_confidence' or comma-separated names."; continue; fi
+                save_settings; ok "Saved."
                 ;;
             fund)
                 local v
-                if ! prompt_nav "  ➜ Začetno financiranje cilja v ETH (Enter = brez): " "$FUND_ETH"; then
+                if ! prompt_nav "  ➜ Initial funding of the target in ETH (Enter = none): " "$FUND_ETH"; then
                     [[ "$NAV_ACTION" == "quit" ]] && quit_wizard
                     [[ "$NAV_ACTION" == "main_menu" ]] && return 0
                     continue
@@ -1090,32 +1091,32 @@ advanced_menu() {
                 v="$REPLY_VAL"
                 if [[ -z "$v" ]]; then FUND_ETH=""
                 elif [[ "$v" =~ ^[0-9]+([.][0-9]+)?$ ]]; then FUND_ETH="$v"
-                else err "  '$v' ni veljavno število (npr. 0.01) -- poskusi znova."; continue; fi
-                save_settings; ok "Shranjeno."
+                else err "  '$v' is not a valid number (e.g. 0.01) -- try again."; continue; fi
+                save_settings; ok "Saved."
                 ;;
             preflight)
                 (( NO_PREFLIGHT )) && NO_PREFLIGHT=0 || NO_PREFLIGHT=1
                 save_settings
-                (( NO_PREFLIGHT )) && warn "Pre-flight vrata: IZKLOPLJENA (teče vsak plan za res)." || ok "Pre-flight vrata: vklopljena."
+                (( NO_PREFLIGHT )) && warn "Pre-flight gate: DISABLED (runs every plan for real)." || ok "Pre-flight gate: enabled."
                 ;;
             gasoracle)
                 (( NO_GAS_ORACLE )) && NO_GAS_ORACLE=0 || NO_GAS_ORACLE=1
                 save_settings
-                (( NO_GAS_ORACLE )) && warn "Gas oracle: IZKLOPLJEN (cena iz vozlišča)." || ok "Gas oracle: vklopljen."
+                (( NO_GAS_ORACLE )) && warn "Gas oracle: DISABLED (price from the node)." || ok "Gas oracle: enabled."
                 ;;
             reset)
                 FUZZ_SECONDS=""; DETECTORS=""; FUND_ETH=""; NO_PREFLIGHT=0; NO_GAS_ORACLE=0
-                save_settings; ok "Napredne nastavitve ponastavljene na privzete."
+                save_settings; ok "Advanced settings reset to defaults."
                 ;;
             back) return 0 ;;
         esac
         echo
-        read -rp "  ➜ Nadaljevanje ..." _ || true
+        read -rp "  ➜ Continue ..." _ || true
     done
 }
 
 # ---------------------------------------------------------------------------
-# Tools menu (Pomožna orodja) -- launches the OTHER onchain_scripts/ tools
+# Tools menu (Helper tools) -- launches the OTHER onchain_scripts/ tools
 # that the wizard does not run: monitor, triage, materialize, dashboard,
 # DEX scanner, chain-fixture generator. Every entry prints the exact command
 # and, unless it is a long-running server/monitor, runs it after a confirm.
@@ -1123,14 +1124,14 @@ advanced_menu() {
 run_tool() { # run_tool <label> <cmd...>
     local label="$1"; shift
     echo
-    gutb "Ukaz:"
+    gutb "Command:"
     printf '   %s\n' "$*"
     local ans
-    read -rp "  ➜ Zaženi ta ukaz? (da/ne) [Enter = ne]: " ans || true
-    if [[ "$ans" == "da" ]]; then
+    read -rp "  ➜ Run this command? (yes/no) [Enter = no]: " ans || true
+    if [[ "$ans" == "yes" ]]; then
         ( cd "$SCRIPTS_DIR" && "$@" )
     else
-        info "Preskočeno (ukaz je izpisan zgoraj)."
+        info "Skipped (the command is printed above)."
     fi
 }
 
@@ -1139,69 +1140,69 @@ tools_menu() {
         new_page
         matrix_logo
         echo
-        gutb "ORODJA"
-        gutc "Pomožna orodja onchain_scripts/. Nekatera so dolgotrajna (monitor, dashboard)."
+        gutb "TOOLS"
+        gutc "Helper tools in onchain_scripts/. Some are long-running (monitor, dashboard)."
         echo
         box_top
-        box_line "  ${C_GREEN}◆ ORODJA ◆${C_R}"
+        box_line "  ${C_GREEN}◆ TOOLS ◆${C_R}"
         box_mid
-        box_line "  ${C_DIM}Vsa orodja tečejo iz onchain_scripts/, z izbranimi privzetki.${C_R}"
+        box_line "  ${C_DIM}All tools run from onchain_scripts/, with the chosen defaults.${C_R}"
         box_bot
         echo
 
         local -a opts=(
-            "monitor|Monitor -- nadzor žive pogodbe po deployu (odliv/nova tx)"
-            "triage|Triage -- razčleni plane v work_dir na resnične površine"
-            "materialize|Materialize -- control-leak površine, nato odpri dashboard"
-            "dashboard|Dashboard -- lokalni web nadzor (privzeto port 4114)"
-            "dex|DEX arbitraža -- skener cross-DEX priložnosti"
-            "fixture|Generiraj 'chain' fixture za merjenje globine"
-            "back|Nazaj v glavni meni"
+            "monitor|Monitor -- watch a live contract after deploy (outflow/new tx)"
+            "triage|Triage -- break down the plans in work_dir into real surfaces"
+            "materialize|Materialize -- control-leak surfaces, then open the dashboard"
+            "dashboard|Dashboard -- local web control (default port 4114)"
+            "dex|DEX arbitrage -- cross-DEX opportunity scanner"
+            "fixture|Generate a 'chain' fixture for depth measurement"
+            "back|Back to main menu"
         )
         MENU_DEFAULT_VAL="back"
-        if ! menu "Izberi orodje:" "${opts[@]}"; then
+        if ! menu "Choose a tool:" "${opts[@]}"; then
             [[ "$NAV_ACTION" == "quit" ]] && { quit_wizard; }
             return 0
         fi
         case "$REPLY_VAL" in
             monitor)
                 local ch addr
-                if ! prompt_nav "  ➜ Veriga za monitor [${CHAIN:-sepolia}]: " "${CHAIN:-sepolia}"; then
+                if ! prompt_nav "  ➜ Chain for monitor [${CHAIN:-sepolia}]: " "${CHAIN:-sepolia}"; then
                     [[ "$NAV_ACTION" == "quit" ]] && quit_wizard
                     [[ "$NAV_ACTION" == "main_menu" ]] && return 0
                     continue
                 fi
                 ch="$REPLY_VAL"
-                if ! prompt_nav "  ➜ Naslov pogodbe (0x...): " ""; then
+                if ! prompt_nav "  ➜ Contract address (0x...): " ""; then
                     [[ "$NAV_ACTION" == "quit" ]] && quit_wizard
                     continue
                 fi
                 addr="$REPLY_VAL"
-                if [[ ! "$addr" =~ ^0x[0-9a-fA-F]{40}$ ]]; then err "  Neveljaven naslov."; continue; fi
+                if [[ ! "$addr" =~ ^0x[0-9a-fA-F]{40}$ ]]; then err "  Invalid address."; continue; fi
                 run_tool "monitor" "$PYTHON" monitor.py --chain "$ch" --address "$addr"
                 ;;
             triage)
                 local wd
-                if ! prompt_nav "  ➜ Work dir (ali vzorec, npr. auto_work/*): " "auto_work/*"; then
+                if ! prompt_nav "  ➜ Work dir (or a pattern, e.g. auto_work/*): " "auto_work/*"; then
                     [[ "$NAV_ACTION" == "quit" ]] && quit_wizard
                     continue
                 fi
                 wd="$REPLY_VAL"
                 # shellcheck disable=SC2086
                 # (intentional glob expansion)
-                ( cd "$SCRIPTS_DIR" && "$PYTHON" triage_findings.py $wd ) || err "  Triage ni uspel (ali ni najdb v $wd)."
-                read -rp "  ➜ Nadaljevanje ..." _ || true
+                ( cd "$SCRIPTS_DIR" && "$PYTHON" triage_findings.py $wd ) || err "  Triage failed (or there are no findings in $wd)."
+                read -rp "  ➜ Continue ..." _ || true
                 ;;
             materialize)
                 local wd
-                if ! prompt_nav "  ➜ Work dir (ali vzorec, npr. auto_work/*): " "auto_work/*"; then
+                if ! prompt_nav "  ➜ Work dir (or a pattern, e.g. auto_work/*): " "auto_work/*"; then
                     [[ "$NAV_ACTION" == "quit" ]] && quit_wizard
                     continue
                 fi
                 wd="$REPLY_VAL"
                 # shellcheck disable=SC2086
                 # (intentional glob expansion)
-                ( cd "$SCRIPTS_DIR" && "$PYTHON" materialize_plan.py $wd ) || err "  Materialize ni uspel (ali ni površin v $wd)."
+                ( cd "$SCRIPTS_DIR" && "$PYTHON" materialize_plan.py $wd ) || err "  Materialize failed (or there are no surfaces in $wd)."
                 echo
                 # Per the request, Materialize also opens the dashboard GUI so
                 # the worklist can be inspected visually. NOTE (R3): the
@@ -1210,35 +1211,35 @@ tools_menu() {
                 # (dashboard_server.py has no materialize view); the worklist
                 # is the terminal output printed just above.
                 local ans
-                read -rp "  ➜ Odprem dashboard GUI v brskalniku? (da/ne) [Enter = ne]: " ans || true
-                if [[ "$ans" == "da" ]]; then
-                    info "Dashboard teče, dokler ga ne prekineš s Ctrl-C."
+                read -rp "  ➜ Open the dashboard GUI in the browser? (yes/no) [Enter = no]: " ans || true
+                if [[ "$ans" == "yes" ]]; then
+                    info "The dashboard runs until you stop it with Ctrl-C."
                     ( cd "$SCRIPTS_DIR" && bash server_run.sh 4114 )
-                    read -rp "  ➜ Nadaljevanje ..." _ || true
+                    read -rp "  ➜ Continue ..." _ || true
                 fi
                 ;;
             dashboard)
                 local port
-                if ! prompt_nav "  ➜ Port za dashboard [4114]: " "4114"; then
+                if ! prompt_nav "  ➜ Port for the dashboard [4114]: " "4114"; then
                     [[ "$NAV_ACTION" == "quit" ]] && quit_wizard
                     continue
                 fi
                 port="$REPLY_VAL"
-                info "Dashboard teče, dokler ga ne prekineš s Ctrl-C. Brskalnik se odpre sam."
+                info "The dashboard runs until you stop it with Ctrl-C. The browser opens by itself."
                 ( cd "$SCRIPTS_DIR" && bash server_run.sh "$port" )
-                read -rp "  ➜ Nadaljevanje ..." _ || true
+                read -rp "  ➜ Continue ..." _ || true
                 ;;
             dex)
                 run_tool "dex" "$PYTHON" dex_arbitrage_scanner.py --chain "${CHAIN:-eth}"
                 ;;
             fixture)
                 local depth dir
-                if ! prompt_nav "  ➜ Globina (št. korakov, npr. 4): " "4"; then
+                if ! prompt_nav "  ➜ Depth (number of steps, e.g. 4): " "4"; then
                     [[ "$NAV_ACTION" == "quit" ]] && quit_wizard
                     continue
                 fi
                 depth="$REPLY_VAL"
-                if ! prompt_nav "  ➜ Izhodna mapa [work_dir/chain_fixture]: " "work_dir/chain_fixture"; then
+                if ! prompt_nav "  ➜ Output directory [work_dir/chain_fixture]: " "work_dir/chain_fixture"; then
                     [[ "$NAV_ACTION" == "quit" ]] && quit_wizard
                     continue
                 fi
@@ -1261,7 +1262,7 @@ show_doctor_page() {
     check_env
     CHECK_FULL=0
     echo
-    read -rp "  ➜ Enter za vrnitev v glavni meni ..." _ || true
+    read -rp "  ➜ Enter to return to the main menu ..." _ || true
 }
 
 # ---------------------------------------------------------------------------
@@ -1272,36 +1273,36 @@ show_help_page() {
     matrix_logo
     echo
     box_top
-    box_line "  ${C_GREEN}${C_B}◆ POMOČ ◆${C_R}"
+    box_line "  ${C_GREEN}${C_B}◆ HELP ◆${C_R}"
     box_mid
-    gutb "Kaj ForkSploit počne"
-    gut "Poišče resničen, izvedljiv exploit na pametni pogodbi in ga -- z jasnim"
-    gut "dokazom -- izvede, nato pobrana sredstva pobere na recovery denarnico."
+    gutb "What ForkSploit does"
+    gut "It finds a real, runnable exploit in a smart contract and -- with clear"
+    gut "proof -- executes it, then sweeps the recovered funds to the recovery wallet."
     gut ""
-    gutb "Čarovnik vpraša natanko tri vloge, preden karkoli podpiše:"
-    gut "  · KDO financira  -- datoteka s privatnim ključem (plača ves gas),"
-    gut "  · KAJ se pregleduje -- naslov 0x… ali pot do .sol/.bin (več z vejico),"
-    gut "  · KAM gredo sredstva -- recovery denarnica (0x…, 40 hex znakov)."
-    gut "Poleg tega izbereš verigo (testnet/mainnet) in RPC."
+    gutb "The wizard asks exactly three roles before anything signs:"
+    gut "  · WHO funds it    -- private-key file (pays all the gas),"
+    gut "  · WHAT is audited -- a 0x… address or a path to .sol/.bin (comma-separated for many),"
+    gut "  · WHERE funds go  -- recovery wallet (0x…, 40 hex chars)."
+    gut "You also pick the chain (testnet/mainnet) and the RPC."
     gut ""
-    gutb "Koraki (1/7 … 7/7)"
-    gut "  1/7 VERIGA     -- izberi omrežje (dvonivojski podmeni)."
-    gut "  2/7 RPC        -- privzeti ali svoj RPC endpoint."
-    gut "  3/7 KDO FINANCIRA -- pot do datoteke s privatnim ključem."
-    gut "  4/7 CILJI      -- en ali več naslovov/poti."
-    gut "  5/7 RECOVERY   -- kam se poberejo sredstva."
-    gut "  6/7 WALLET POLICY -- zakleni funding + recovery za to verigo."
-    gut "  7/7 MAINNET    -- izrecna potrditev, če veriga ni testnet."
+    gutb "Steps (1/7 … 7/7)"
+    gut "  1/7 CHAIN      -- pick the network (two-level submenu)."
+    gut "  2/7 RPC        -- the default or your own RPC endpoint."
+    gut "  3/7 WHO FUNDS  -- path to the private-key file."
+    gut "  4/7 TARGETS    -- one or more addresses/paths."
+    gut "  5/7 RECOVERY   -- where the funds are swept to."
+    gut "  6/7 WALLET POLICY -- lock funding + recovery for this chain."
+    gut "  7/7 MAINNET    -- explicit confirmation if the chain is not a testnet."
     gut ""
-    gutb "Pomikanje"
-    gut "  V čarovniku: 'nazaj' (prejšnji korak), 'glavni meni' (nazaj v meni),"
-    gut "  'izhod' (prekini). V menijih izbereš vrstico s številko ali imenom;"
-    gut "  'q' prekine, 'nazaj'/'glavni meni' se vrneta."
+    gutb "Navigation"
+    gut "  In the wizard: 'back' (previous step), 'main menu' (back to the menu),"
+    gut "  'exit' (abort). In the menus you pick a row by number or by name;"
+    gut "  'q' aborts, 'back'/'main menu' return."
     gut ""
-    gutc "Napačen vnos nikoli ne vrže izhoda -- skript znova vpraša ali vrne korak."
+    gutc "A wrong answer never causes an exit -- the script re-asks or steps back."
     box_bot
     echo
-    read -rp "  ➜ Enter za vrnitev v glavni meni ..." _ || true
+    read -rp "  ➜ Enter to return to the main menu ..." _ || true
 }
 
 # ---------------------------------------------------------------------------
@@ -1315,10 +1316,10 @@ choose_pipeline() {
     fi
     if [[ ${#TARGET_PARTS[@]} -gt 1 || $IS_LIST_FILE -eq 1 ]]; then
         PIPELINE_LABEL="batch_pipeline.py"
-        PIPELINE_MODE="batch_pipeline.py  (več ciljev)"
+        PIPELINE_MODE="batch_pipeline.py  (multiple targets)"
     else
         PIPELINE_LABEL="auto_pipeline.py"
-        PIPELINE_MODE="auto_pipeline.py  (en cilj)"
+        PIPELINE_MODE="auto_pipeline.py  (single target)"
     fi
 }
 
@@ -1347,20 +1348,20 @@ step_chain() {
     local line c title kind kindname candidate shown
     while true; do
         # Page 1 -- pick the kind of network (a submenu opens on page 2).
-        gutb "1/7 · VERIGA"
-        gutc "Omrežje, na katerem teče celoten tek."
+        gutb "1/7 · CHAIN"
+        gutc "The network the whole run takes place on."
         local -a gopts=(
-            "testnet|Testna omrežja   ${C_DIM}(varna za preizkus)${C_R}"
-            "mainnet|Glavna omrežja   ${C_DIM}(resnična vrednost)${C_R}"
+            "testnet|Test networks   ${C_DIM}(safe to try)${C_R}"
+            "mainnet|Main networks   ${C_DIM}(real value)${C_R}"
         )
         MENU_DEFAULT_VAL="testnet"
-        if ! menu "Izberi vrsto omrežja:" "${gopts[@]}"; then
+        if ! menu "Choose the network kind:" "${gopts[@]}"; then
             [[ "$NAV_ACTION" == "quit" ]] && return 2
             [[ "$NAV_ACTION" == "main_menu" ]] && return 3
             NEXT_STEP=1; return 1
         fi
         kind="$REPLY_VAL"
-        if [[ "$kind" == "testnet" ]]; then kindname="Testna omrežja"; else kindname="Glavna omrežja"; fi
+        if [[ "$kind" == "testnet" ]]; then kindname="Test networks"; else kindname="Main networks"; fi
 
         # Page 2 -- the chains of that kind, on a fresh page.
         while true; do
@@ -1371,27 +1372,27 @@ step_chain() {
                 c="${line%%|*}"; title="${line#*|}"
                 copts+=("$c|$title")
             done < <(chains_of_kind "$kind")
-            gutb "1/7 · VERIGA › $kindname"
+            gutb "1/7 · CHAIN › $kindname"
             MENU_DEFAULT_VAL="sepolia"
-            if ! menu "Izberi verigo:" "${copts[@]}"; then
+            if ! menu "Choose the chain:" "${copts[@]}"; then
                 [[ "$NAV_ACTION" == "quit" ]] && return 2
                 [[ "$NAV_ACTION" == "main_menu" ]] && return 3
-                break                     # 'nazaj' -> back to page 1 (kind)
+                break                     # 'back' -> back to page 1 (kind)
             fi
             candidate="$REPLY_VAL"
             shown="$(py_help banner "$candidate")"
             echo
-            bold "  Izbrana veriga: $shown"
+            bold "  Selected chain: $shown"
             while true; do                # confirm by re-typing the chain name
-                if ! prompt_nav "  ➜ Ponovi ime verige, da potrdiš ('$candidate'): " ""; then
+                if ! prompt_nav "  ➜ Retype the chain name to confirm ('$candidate'): " ""; then
                     [[ "$NAV_ACTION" == "quit" ]] && return 2
                     [[ "$NAV_ACTION" == "main_menu" ]] && return 3
-                    continue 2            # 'nazaj' -> back to page 2 (chain list)
+                    continue 2            # 'back' -> back to page 2 (chain list)
                 fi
                 if [[ "$REPLY_VAL" == "$candidate" ]]; then
                     CHAIN="$candidate"; return 0
                 fi
-                err "  '$candidate' in '$REPLY_VAL' se ne ujemata -- poskusi znova (ali 'nazaj'/'glavni meni')."
+                err "  '$candidate' and '$REPLY_VAL' do not match -- try again (or 'back'/'main menu')."
             done
         done
     done
@@ -1402,103 +1403,103 @@ step_rpc() {
     gutb "2/7 · RPC"
     local current
     if ! current="$(py_help rpc "$CHAIN" 2>&1)"; then
-        err "NAPAKA: veriga '$CHAIN' ni znana ForkSploit-u."
+        err "ERROR: the chain '$CHAIN' is not known to ForkSploit."
         NEXT_STEP=1; return 1
     fi
-    gut "Trenutni RPC za '$CHAIN': ${C_CYN}${current}${C_R}"
-    gutc "Pusti privzetega ali vnesi svoj. Svoj RPC se SHRANI za vse prihodnje teke na tej verigi."
+    gut "Current RPC for '$CHAIN': ${C_CYN}${current}${C_R}"
+    gutc "Leave the default or enter your own. Your own RPC is SAVED for all future runs on this chain."
 
     # Draw input frame
     echo
     box_top
     box_line ""
-    box_line "  ${C_GREEN}◆ VNESI RPC URL ◆${C_R}"
+    box_line "  ${C_GREEN}◆ ENTER THE RPC URL ◆${C_R}"
     box_mid
-    input_field "Trenutni RPC" "$current"
+    input_field "Current RPC" "$current"
     box_line ""
     box_bot
 
-    if ! prompt_nav "  ➜ RPC URL (Enter = obdrži zgornjega): " ""; then
+    if ! prompt_nav "  ➜ RPC URL (Enter = keep the one above): " ""; then
         [[ "$NAV_ACTION" == "quit" ]] && return 2
         [[ "$NAV_ACTION" == "main_menu" ]] && return 3
         NEXT_STEP=1; return 1
     fi
     if [[ -n "$REPLY_VAL" ]]; then
         py_help set_rpc "$CHAIN" "$REPLY_VAL"
-        ok "Shranjen kot privzeti RPC za '$CHAIN': $REPLY_VAL"
+        ok "Saved as the default RPC for '$CHAIN': $REPLY_VAL"
     else
-        info "Obdržan: $current"
+        info "Kept: $current"
     fi
     return 0
 }
 
 step_key() {
     NEXT_STEP=4
-    gutb "3/7 · KDO FINANCIRA"
-    gutc "Datoteka s privatnim ključem denarnice, ki PLAČA ves gas (deploy, financiranje, izvedbo exploitov)."
+    gutb "3/7 · WHO FUNDS IT"
+    gutc "Private-key file of the wallet that PAYS all the gas (deploy, funding, exploit execution)."
 
     echo
     box_top
     box_line ""
-    box_line "  ${C_GREEN}◆ VNESI POT DO KLJUČA ◆${C_R}"
+    box_line "  ${C_GREEN}◆ ENTER THE KEY PATH ◆${C_R}"
     box_mid
-    input_field "Privzeta pot" "$DEFAULT_KEY"
+    input_field "Default path" "$DEFAULT_KEY"
     box_line ""
     box_bot
 
     local kf
-    if ! prompt_nav "  ➜ Pot do datoteke s ključem [$DEFAULT_KEY]: " "$DEFAULT_KEY"; then
+    if ! prompt_nav "  ➜ Path to the key file [$DEFAULT_KEY]: " "$DEFAULT_KEY"; then
         [[ "$NAV_ACTION" == "quit" ]] && return 2
         [[ "$NAV_ACTION" == "main_menu" ]] && return 3
         NEXT_STEP=2; return 1
     fi
     kf="$REPLY_VAL"
     if [[ ! -f "$kf" ]]; then
-        err "  Datoteka '$kf' ne obstaja -- poskusi znova (ali 'nazaj'/'glavni meni')."
+        err "  File '$kf' does not exist -- try again (or 'back'/'main menu')."
         return 1
     fi
     local wallet
     if ! wallet="$(py_help wallet_from_key "$kf" 2>&1)"; then
-        err "  '$kf' ne vsebuje veljavnega privatnega ključa."
+        err "  '$kf' does not contain a valid private key."
         err "  $(printf '%s' "$wallet" | tail -1)"
         return 1
     fi
     KEY_FILE="$kf"
     FUNDING_WALLET="$wallet"
-    ok "Financirajoča denarnica: ${C_CYN}${FUNDING_WALLET}${C_R}"
+    ok "Funding wallet: ${C_CYN}${FUNDING_WALLET}${C_R}"
     return 0
 }
 
 step_targets() {
     NEXT_STEP=5
-    gutb "4/7 · KAJ SE PREGLEDUJE"
-    gut "Vnesi ENO od:"
-    gut "  · en naslov 0x... ali pot do .sol/.bin (za deploy),"
-    gut "  · več ciljev, ločenih z vejico (0xAAA...,0xBBB...,path/To.sol),"
-    gut "  · pot do datoteke s seznamom (ena pogodba na vrstico)."
+    gutb "4/7 · WHAT IS AUDITED"
+    gut "Enter ONE of:"
+    gut "  · a single 0x... address or a path to .sol/.bin (to deploy),"
+    gut "  · several targets, comma-separated (0xAAA...,0xBBB...,path/To.sol),"
+    gut "  · a path to a list file (one contract per line)."
 
     echo
     box_top
     box_line ""
-    box_line "  ${C_GREEN}◆ VNESI CILJ(I) ◆${C_R}"
+    box_line "  ${C_GREEN}◆ ENTER THE TARGET(S) ◆${C_R}"
     box_mid
     box_line ""
-    box_line "  ${C_DIM}0x... ali pot do .sol/.bin datoteke${C_R}"
-    box_line "  ${C_DIM}Več ciljev: ločenih z vejico${C_R}"
-    box_line "  ${C_DIM}Datoteka s seznamom${C_R}"
+    box_line "  ${C_DIM}0x... or a path to a .sol/.bin file${C_R}"
+    box_line "  ${C_DIM}Several targets: comma-separated${C_R}"
+    box_line "  ${C_DIM}A list file${C_R}"
     box_line ""
     box_bot
 
     local ans
     while true; do
-        if ! prompt_nav "  ➜ Cilj(i): " ""; then
+        if ! prompt_nav "  ➜ Target(s): " ""; then
             [[ "$NAV_ACTION" == "quit" ]] && return 2
             [[ "$NAV_ACTION" == "main_menu" ]] && return 3
             NEXT_STEP=3; return 1
         fi
         ans="$REPLY_VAL"
         [[ -n "$ans" ]] && break
-        err "  Brez cilja ni kaj pregledovati -- poskusi znova."
+        err "  Without a target there is nothing to audit -- try again."
     done
     TARGETS_INPUT="$ans"
     return 0
@@ -1506,17 +1507,17 @@ step_targets() {
 
 step_recovery() {
     NEXT_STEP=6
-    gutb "5/7 · KAM GREDO SREDSTVA"
-    gutc "Recovery denarnica: kam se poberejo VSA najdena sredstva (ETH in ERC20), ko se koraki končajo."
+    gutb "5/7 · WHERE THE FUNDS GO"
+    gutc "Recovery wallet: where ALL recovered funds (ETH and ERC20) are swept when the steps finish."
 
     echo
     box_top
     box_line ""
-    box_line "  ${C_GREEN}◆ VNESI RECOVERY DENARNICO ◆${C_R}"
+    box_line "  ${C_GREEN}◆ ENTER THE RECOVERY WALLET ◆${C_R}"
     box_mid
     box_line ""
-    box_line "  ${C_DIM}Format: 0x + 40 hex znakov${C_R}"
-    box_line "  ${C_DIM}Primer: 0x1234567890abcdef1234567890abcdef12345678${C_R}"
+    box_line "  ${C_DIM}Format: 0x + 40 hex chars${C_R}"
+    box_line "  ${C_DIM}Example: 0x1234567890abcdef1234567890abcdef12345678${C_R}"
     box_line ""
     box_bot
 
@@ -1529,7 +1530,7 @@ step_recovery() {
         fi
         ans="$REPLY_VAL"
         if [[ "$ans" =~ ^0x[0-9a-fA-F]{40}$ ]]; then break; fi
-        err "  '$ans' ni veljaven naslov (pričakovano 0x + 40 hex znakov) -- poskusi znova."
+        err "  '$ans' is not a valid address (expected 0x + 40 hex chars) -- try again."
     done
     RECOVERY_WALLET="$ans"
     return 0
@@ -1541,35 +1542,35 @@ step_policy() {
     local out
     out="$("$PYTHON" "$SCRIPTS_DIR/wallet_policy.py" show --chain "$CHAIN" 2>&1)"
     if echo "$out" | grep -q "no policy registered"; then
-        gutc "Za verigo '$CHAIN' še ni registriranega wallet policy-ja."
-        gut "Zaklenil bom natanko ti dve denarnici za VSE prihodnje teke na '$CHAIN':"
+        gutc "No wallet policy is registered yet for chain '$CHAIN'."
+        gut "I will lock exactly these two wallets for ALL future runs on '$CHAIN':"
         gut "  funding_wallet  = ${C_CYN}${FUNDING_WALLET}${C_R}"
         gut "  recovery_wallet = ${C_CYN}${RECOVERY_WALLET}${C_R}"
         local ans
-        if ! prompt_nav "  ➜ Potrdi registracijo (da/ne): " ""; then
+        if ! prompt_nav "  ➜ Confirm registration (yes/no): " ""; then
             [[ "$NAV_ACTION" == "quit" ]] && return 2
             [[ "$NAV_ACTION" == "main_menu" ]] && return 3
             NEXT_STEP=5; return 1
         fi
         ans="$REPLY_VAL"
-        if [[ "$ans" != "da" ]]; then
-            err "  Brez registriranega policy-ja se ne nadaljuje -- popravi denarnici."
+        if [[ "$ans" != "yes" ]]; then
+            err "  Cannot continue without a registered policy -- fix the wallets."
             NEXT_STEP=5; return 1
         fi
         local reg
         if ! reg="$("$PYTHON" "$SCRIPTS_DIR/wallet_policy.py" register \
             --chain "$CHAIN" --confirm-chain "$CHAIN" \
             --funding-wallet "$FUNDING_WALLET" --recovery-wallet "$RECOVERY_WALLET" --confirm 2>&1)"; then
-            err "NAPAKA pri registraciji wallet policy-ja:"
+            err "ERROR registering the wallet policy:"
             echo "$reg" >&2
             NEXT_STEP=5; return 1
         fi
         printf '%s\n' "$reg" | gut_block "    "
-        ok "Wallet policy registriran."
+        ok "Wallet policy registered."
     else
-        info "Wallet policy za '$CHAIN' je že registriran:"
+        info "Wallet policy for '$CHAIN' is already registered:"
         printf '%s\n' "$out" | gut_block "    "
-        gutc "Če se denarnici ne ujemata z registriranima, bo pipeline to zavrnil, preden karkoli podpiše."
+        gutc "If the wallets do not match the registered ones, the pipeline will refuse before signing anything."
     fi
     return 0
 }
@@ -1579,36 +1580,36 @@ step_mainnet() {
     CONFIRM_MAINNET_FLAG=()
     local is_testnet
     is_testnet="$(py_help is_testnet "$CHAIN")"
-    if [[ "$is_testnet" == "ne" ]]; then
-        gutb "7/7 · MAINNET POTRDITEV"
-        gut "  ${C_RED}${C_B}'$CHAIN' NI testnet -- to je resnična veriga z resnično vrednostjo.${C_R}"
+    if [[ "$is_testnet" == "no" ]]; then
+        gutb "7/7 · MAINNET CONFIRMATION"
+        gut "  ${C_RED}${C_B}'$CHAIN' is NOT a testnet -- this is a real chain with real value.${C_R}"
 
         echo
         box_top
         box_line ""
-        box_line "  ${C_RED}${C_B}◆ POTRDITEV MAINNET ◆${C_R}"
+        box_line "  ${C_RED}${C_B}◆ MAINNET CONFIRMATION ◆${C_R}"
         box_mid
-        box_line "  ${C_RED}⚠ $CHAIN - Resnična vrednost! ⚠${C_R}"
+        box_line "  ${C_RED}⚠ $CHAIN - Real value! ⚠${C_R}"
         box_line ""
         box_bot
 
         local ans
         while true; do
-            if ! prompt_nav "  ➜ Potrdi nadaljevanje na '$CHAIN' (da/ne): " ""; then
+            if ! prompt_nav "  ➜ Confirm continuing on '$CHAIN' (yes/no): " ""; then
                 [[ "$NAV_ACTION" == "quit" ]] && return 2
                 [[ "$NAV_ACTION" == "main_menu" ]] && return 3
                 NEXT_STEP=6; return 1
             fi
             case "$REPLY_VAL" in
-                da) break ;;
-                ne) err "  Prekinjeno na '$CHAIN' -- izberi drugo verigo."; NEXT_STEP=1; return 1 ;;
-                *) err "  Vnesi 'da' ali 'ne'." ;;
+                da|yes) break ;;
+                ne|no) err "  Aborted on '$CHAIN' -- choose another chain."; NEXT_STEP=1; return 1 ;;
+                *) err "  Enter 'yes' or 'no'." ;;
             esac
         done
         CONFIRM_MAINNET_FLAG=("--confirm-mainnet")
     else
-        gutb "7/7 · MAINNET POTRDITEV"
-        info "  '$CHAIN' je testnet -- dodatna potrditev ni potrebna."
+        gutb "7/7 · MAINNET CONFIRMATION"
+        info "  '$CHAIN' is a testnet -- no extra confirmation needed."
     fi
     return 0
 }
@@ -1622,21 +1623,21 @@ summary() {
 
     echo
     box_top
-    box_line "  ${C_B}POVZETEK TEKA -- preveri, preden karkoli podpiše${C_R}"
+    box_line "  ${C_B}RUN SUMMARY -- review before anything signs${C_R}"
     box_mid
-    box_line "  Veriga      : ${C_CYN}${shown}${C_R}"
+    box_line "  Chain       : ${C_CYN}${shown}${C_R}"
     box_line "  RPC         : $(py_help rpc "$CHAIN")"
-    box_line "  Financira   : ${C_CYN}${FUNDING_WALLET}${C_R}"
-    box_line "  Ključ       : ${KEY_FILE}"
-    box_line "  Cilj(i)     : ${TARGETS_INPUT}"
+    box_line "  Funds from  : ${C_CYN}${FUNDING_WALLET}${C_R}"
+    box_line "  Key         : ${KEY_FILE}"
+    box_line "  Target(s)   : ${TARGETS_INPUT}"
     box_line "  Recovery    : ${C_CYN}${RECOVERY_WALLET}${C_R}"
     if (( ${#CONFIRM_MAINNET_FLAG[@]} > 0 )); then
-        box_line "  Mainnet     : ${C_RED}DA -- resnična vrednost${C_R}"
+        box_line "  Mainnet     : ${C_RED}YES -- real value${C_R}"
     else
-        box_line "  Mainnet     : ne (testnet)"
+        box_line "  Mainnet     : no (testnet)"
     fi
-    box_line "  Poganjam    : ${PIPELINE_MODE}"
-    box_line "  Napredno    : $(advanced_summary)"
+    box_line "  Running     : ${PIPELINE_MODE}"
+    box_line "  Advanced    : $(advanced_summary)"
     box_bot
     echo
 }
@@ -1674,13 +1675,13 @@ run_wizard() {
     done
 
     summary
-    if ! prompt_nav "  ➜ Zaženi pipeline z zgornjimi nastavitvami? (da/ne) [Enter = da]: " "da"; then
+    if ! prompt_nav "  ➜ Start the pipeline with the settings above? (yes/no) [Enter = yes]: " "yes"; then
         [[ "$NAV_ACTION" == "quit" ]] && quit_wizard
-        warn "Prekinjeno pred zagonom."
+        warn "Aborted before starting."
         return 1
     fi
-    if [[ "$REPLY_VAL" != "da" ]]; then
-        warn "Prekinjeno pred zagonom."
+    if [[ "$REPLY_VAL" != "yes" && "$REPLY_VAL" != "da" ]]; then
+        warn "Aborted before starting."
         return 1
     fi
 
@@ -1712,15 +1713,15 @@ run_wizard() {
             "${ADVANCED_FLAGS[@]}")
     fi
 
-    bold "-> Poganjam $PIPELINE_LABEL"
+    bold "-> Running $PIPELINE_LABEL"
     printf '   %s\n' "${RUN_CMD[*]}"
     if (( DRY_RUN )); then
         echo
-        info "--dry-run: ukaz je pripravljen, a ga NISEM zagnal."
+        info "--dry-run: the command is ready, but I did NOT run it."
         return 0
     fi
     echo
-    cd "$SCRIPTS_DIR" || { err "NAPAKA: ne morem priti v $SCRIPTS_DIR."; exit 1; }
+    cd "$SCRIPTS_DIR" || { err "ERROR: cannot enter $SCRIPTS_DIR."; exit 1; }
     exec "${RUN_CMD[@]}"
 }
 
@@ -1730,7 +1731,7 @@ echo
 check_env || exit 1
 if (( DOCTOR_ONLY )); then
     echo
-    bold "Doctor: okolje je pripravljeno."
+    bold "Doctor: the environment is ready."
     exit 0
 fi
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """dashboard_server.py -- lightweight local web dashboard that PROJECTS
 ForkSploit's real state (wallet policy, RPC overrides, deployed
 AttackWallets + live balances, tested contracts, recent run outcomes,
@@ -7,7 +8,7 @@ their confirmation prompts from the browser instead of the terminal.
 
 This is an orchestration/projection layer ONLY -- it never re-implements
 any safety check. Every real action (wallet_policy, --confirm-mainnet,
-the exact "DA" confirmation in dex_arbitrage_scanner.py's
+the exact "YES" confirmation in dex_arbitrage_scanner.py's
 ask_human_confirmation()) still runs inside the SAME script the CLI
 already runs, as a real subprocess; this server only starts it, streams
 its real stdout, and relays a typed answer back into its real stdin.
@@ -65,9 +66,9 @@ FORKSPLOIT_BIN = REPO_ROOT / "target" / "release" / "forksploit"
 SCRIPTS = {
     "auto_pipeline": {"module": auto_pipeline, "file": HERE / "auto_pipeline.py", "label": "auto_pipeline.py -- register→fund→fuzz→exploit→recover"},
     "dex_arbitrage_scanner": {"module": dex_arbitrage_scanner, "file": HERE / "dex_arbitrage_scanner.py", "label": "dex_arbitrage_scanner.py -- cross-DEX arbitrage scanner"},
-    "batch_pipeline": {"module": batch_pipeline, "file": HERE / "batch_pipeline.py", "label": "batch_pipeline.py -- register→fund→fuzz→exploit→recover, več tarč hkrati"},
-    "monitor": {"module": monitor, "file": HERE / "monitor.py", "label": "monitor.py -- stalen nadzor že deployane pogodbe, samodejno reševanje sredstev"},
-    "aave_flashloan_runner": {"module": aave_flashloan_runner, "file": HERE / "aave_flashloan_runner.py", "label": "aave_flashloan_runner.py -- resnična Aave V3 flashloan validacija"},
+    "batch_pipeline": {"module": batch_pipeline, "file": HERE / "batch_pipeline.py", "label": "batch_pipeline.py -- register→fund→fuzz→exploit→recover, multiple targets at once"},
+    "monitor": {"module": monitor, "file": HERE / "monitor.py", "label": "monitor.py -- continuous monitoring of an already-deployed contract, automatic fund rescue"},
+    "aave_flashloan_runner": {"module": aave_flashloan_runner, "file": HERE / "aave_flashloan_runner.py", "label": "aave_flashloan_runner.py -- real Aave V3 flashloan validation"},
 }
 
 # Direct Rust fuzzer launch (./target/release/forksploit evm ...) -- not a
@@ -77,19 +78,19 @@ SCRIPTS = {
 # as a special case in api_run() below rather than going through SCRIPTS,
 # since it launches a different binary entirely, not `sys.executable`.
 RUST_FUZZER_FIELDS = [
-    {"dest": "target", "flag": "-t", "type": "str", "default": None, "required": True, "help": "Glob do lokalne .bin/.abi, ALI 0x naslov že deployane pogodbe", "choices": None},
-    {"dest": "chain_type", "flag": "-c", "type": "str", "default": None, "required": False, "help": "Veriga za onchain cilj (eth, etc, sepolia, mordor, bsc, polygon, ...)", "choices": None},
-    {"dest": "onchain_url", "flag": "-u", "type": "str", "default": None, "required": False, "help": "RPC URL -- VEDNO podaj eksplicitno pri lokalnih/forkanih vozliščih", "choices": None},
-    {"dest": "onchain_block_number", "flag": "-b", "type": "str", "default": None, "required": False, "help": "Blok, na katerem se fork/branje stanja zgodi (privzeto najnovejši)", "choices": None},
-    {"dest": "onchain_etherscan_api_key", "flag": "-k", "type": "str", "default": None, "required": False, "help": "API ključ za verificiran ABI (brez njega EVMole dekompilacija)", "choices": None},
-    {"dest": "flashloan", "flag": "-f", "type": "flag", "default": False, "required": False, "help": "Omogoči flashloan simulacijo (Aave V3/Balancer V2)", "choices": None},
-    {"dest": "run_forever", "flag": "--run-forever", "type": "flag", "default": False, "required": False, "help": "Ne ustavi se ob prvi najdbi -- nadaljuj do izteka časa", "choices": None},
-    {"dest": "detectors", "flag": "-d", "type": "str", "default": "all", "required": False, "help": "'all' (privzeto) ali 'high_confidence'", "choices": None},
-    {"dest": "spec_id", "flag": "--spec-id", "type": "str", "default": None, "required": False, "help": "EVM hardfork (za ETC/Mordor VEDNO 'Shanghai')", "choices": None},
-    {"dest": "concolic", "flag": "--concolic", "type": "flag", "default": False, "required": False, "help": "Omogoči Z3-podprto simbolično reševanje", "choices": None},
-    {"dest": "concolic_caller", "flag": "--concolic-caller", "type": "flag", "default": False, "required": False, "help": "Obravnava klicatelja kot simboličnega (z --concolic)", "choices": None},
-    {"dest": "max_call_depth", "flag": "--max-call-depth", "type": "int", "default": None, "required": False, "help": "Globina analize klicne verige (privzeto 15)", "choices": None},
-    {"dest": "work_dir", "flag": "-w", "type": "str", "default": None, "required": False, "help": "Kam se zapišejo corpus/dnevniki/najdbe (privzeto work_dir)", "choices": None},
+    {"dest": "target", "flag": "-t", "type": "str", "default": None, "required": True, "help": "Glob for a local .bin/.abi, OR the 0x address of an already-deployed contract", "choices": None},
+    {"dest": "chain_type", "flag": "-c", "type": "str", "default": None, "required": False, "help": "Chain for an onchain target (eth, etc, sepolia, mordor, bsc, polygon, ...)", "choices": None},
+    {"dest": "onchain_url", "flag": "-u", "type": "str", "default": None, "required": False, "help": "RPC URL -- ALWAYS pass it explicitly for local/forked nodes", "choices": None},
+    {"dest": "onchain_block_number", "flag": "-b", "type": "str", "default": None, "required": False, "help": "Block at which the fork/state read happens (default: latest)", "choices": None},
+    {"dest": "onchain_etherscan_api_key", "flag": "-k", "type": "str", "default": None, "required": False, "help": "API key for a verified ABI (without it, EVMole decompilation)", "choices": None},
+    {"dest": "flashloan", "flag": "-f", "type": "flag", "default": False, "required": False, "help": "Enable flashloan simulation (Aave V3/Balancer V2)", "choices": None},
+    {"dest": "run_forever", "flag": "--run-forever", "type": "flag", "default": False, "required": False, "help": "Do not stop at the first finding -- continue until time runs out", "choices": None},
+    {"dest": "detectors", "flag": "-d", "type": "str", "default": "all", "required": False, "help": "'all' (default) or 'high_confidence'", "choices": None},
+    {"dest": "spec_id", "flag": "--spec-id", "type": "str", "default": None, "required": False, "help": "EVM hardfork (for ETC/Mordor ALWAYS 'Shanghai')", "choices": None},
+    {"dest": "concolic", "flag": "--concolic", "type": "flag", "default": False, "required": False, "help": "Enable Z3-backed symbolic solving", "choices": None},
+    {"dest": "concolic_caller", "flag": "--concolic-caller", "type": "flag", "default": False, "required": False, "help": "Treat the caller as symbolic (with --concolic)", "choices": None},
+    {"dest": "max_call_depth", "flag": "--max-call-depth", "type": "int", "default": None, "required": False, "help": "Depth of the call-chain analysis (default 15)", "choices": None},
+    {"dest": "work_dir", "flag": "-w", "type": "str", "default": None, "required": False, "help": "Where the corpus/logs/findings are written (default: work_dir)", "choices": None},
 ]
 
 # Substrings this dashboard recognizes as "this subprocess is now blocked
@@ -254,7 +255,7 @@ def api_actions():
 def api_verify_chain(chain: str):
     """Live network-identity check for the dashboard's own watermark/
     warning display -- NEVER trust the selected --chain NAME alone, the
-    same discipline SKILL.md's own FAZA 1 and chains.py's
+    same discipline SKILL.md's own PHASE 1 and chains.py's
     require_mainnet_confirmation() already apply, because 'eth' and 'etc'
     are one letter apart and both real mainnets. Calls the REAL
     configured RPC's eth_chainId (chains.make_w3 already respects any
@@ -490,7 +491,7 @@ class RpcOverrideRequest(BaseModel):
 @app.post("/api/rpc-override")
 def api_set_rpc_override(req: RpcOverrideRequest):
     """Thin wrapper around chains.set_rpc_override -- the exact same
-    function SKILL.md's FAZA 3 has a human run via `python3 -c ...`
+    function SKILL.md's PHASE 3 has a human run via `python3 -c ...`
     today. No extra validation added here beyond what that function
     already does -- this is a convenience for a step that already
     existed, not a new safety surface."""
@@ -502,7 +503,7 @@ def api_set_rpc_override(req: RpcOverrideRequest):
 
 @app.delete("/api/rpc-override/{chain}")
 def api_clear_rpc_override(chain: str):
-    """See FAZA 9's own warning: clearing a stale override (e.g. still
+    """See PHASE 9's own warning: clearing a stale override (e.g. still
     pointed at a long-gone Anvil fork) matters before the NEXT real run
     on that chain accidentally signs against it."""
     cleared = chains.clear_rpc_override(chain)

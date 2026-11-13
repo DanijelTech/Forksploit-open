@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """LLM hypothesis-generation layer.
 
 This component ONLY proposes a hypothesis -- a strict-JSON sequence of

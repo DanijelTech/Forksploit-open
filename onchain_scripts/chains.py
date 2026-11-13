@@ -1,3 +1,4 @@
+# Author: DanyTech
 """chains.py -- shared chain/RPC configuration for every onchain_scripts/
 tool (auto_pipeline.py, monitor.py).
 

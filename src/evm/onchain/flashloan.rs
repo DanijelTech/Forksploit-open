@@ -144,7 +144,7 @@ impl Flashloan {
         self.chain_cfg.as_mut().map(|config| {
             let mut ctx = fetch_uniswap_path(config, addr);
             // fetch_uniswap_path resolves entirely on-chain now (no
-            // forksploit dependency anywhere -- see onchain_pair_discovery.rs's
+            // DanyTech dependency anywhere -- see onchain_pair_discovery.rs's
             // module doc), via OnChainConfig::get_pair's own
             // fetch_pegged_pair_data_onchain. That path additionally needs
             // real decimals() on both tokens to succeed; this direct retry

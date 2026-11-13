@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """test_auto_setup.py -- end-to-end proof for `--auto-setup`
 (src/evm/auto_setup.rs).
 

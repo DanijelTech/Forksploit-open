@@ -1,3 +1,4 @@
+// Author: DanyTech
 module.exports = async ({ github, context }) => {
   console.log("Pruning old prereleases");
 

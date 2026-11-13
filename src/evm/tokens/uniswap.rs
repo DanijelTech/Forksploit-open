@@ -49,7 +49,7 @@ pub fn fetch_uniswap_path(chain: &mut Box<dyn ChainConfig>, token_address: EVMAd
         warn!("failed to find weth address");
         return TokenContext::default();
     }
-    // FAZA 6.1: the weth address comes from the onchain path API; an
+    // PHASE 6.1: the weth address comes from the onchain path API; an
     // unparseable value yields an empty token context instead of panicking.
     let weth = match EVMAddress::from_str(&basic_info.weth) {
         Ok(w) => w,
@@ -78,7 +78,7 @@ pub fn fetch_uniswap_path(chain: &mut Box<dyn ChainConfig>, token_address: EVMAd
 
             macro_rules! _gen_v2_pair_context {
                 ($pair: expr) => {{
-                    // FAZA 6.1: addresses come from the onchain path API; a
+                    // PHASE 6.1: addresses come from the onchain path API; a
                     // pair with any unparseable address is skipped instead of
                     // panicking.
                     match (
@@ -146,7 +146,7 @@ pub fn fetch_uniswap_path(chain: &mut Box<dyn ChainConfig>, token_address: EVMAd
                     } else {
                         warn!("skipping unknown interface '{}'", pair.interface);
                     }
-                    // FAZA 6.1: `pair.next` is external; skip the Weth hop if
+                    // PHASE 6.1: `pair.next` is external; skip the Weth hop if
                     // it is not a parseable address.
                     match EVMAddress::from_str(pair.next.as_str()) {
                         Ok(weth_address) => {
@@ -158,7 +158,7 @@ pub fn fetch_uniswap_path(chain: &mut Box<dyn ChainConfig>, token_address: EVMAd
                     }
                 }
                 "pegged_weth" => {
-                    // FAZA 6.1: `pair.in_token` is external; skip on a bad address.
+                    // PHASE 6.1: `pair.in_token` is external; skip on a bad address.
                     match EVMAddress::from_str(pair.in_token.as_str()) {
                         Ok(weth_address) => {
                             register_code!(weth_address);
@@ -172,7 +172,7 @@ pub fn fetch_uniswap_path(chain: &mut Box<dyn ChainConfig>, token_address: EVMAd
             });
             for pair in &path_parsed.route {
                 if let super::PairContextTy::UniswapV3(inner) = pair {
-                    // FAZA 6.1: a v3 pair without a router simply registers no
+                    // PHASE 6.1: a v3 pair without a router simply registers no
                     // code instead of panicking.
                     if let Some(router) = inner.borrow().inner.uniswap_info.router {
                         register_code!(router);

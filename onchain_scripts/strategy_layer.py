@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """strategy_layer.py -- orders findings sensibly, and composes ONE coherent,
 fully-executable plan out of the many independent plans the Rust layer emits
 for a target.
@@ -580,7 +581,7 @@ def run_chain_attempts(
             "gas_spent_wei": gas_spent_wei,
             "gas_units": gas_units,
             "net_profit_wei": net_profit_wei,
-            # FAZA 1.2: the gate stamps these onto the composed plan when it
+            # PHASE 1.2: the gate stamps these onto the composed plan when it
             # measures the gas footprint (a composition carries no fuzzer
             # metadata), so the report can show the composed plan's own gas
             # reality exactly like a standalone one.

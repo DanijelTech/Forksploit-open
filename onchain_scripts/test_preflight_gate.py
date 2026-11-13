@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """test_preflight_gate.py -- a plan that provably reverts, or that moves
 value but costs more gas than it recovers, must be skipped BEFORE any real
 transaction is signed.
@@ -229,7 +230,7 @@ class MetadataSkipReasonTest(unittest.TestCase):
         }))
 
     def test_owner_gated_is_skipped_with_the_semantic_reason(self):
-        # FAZA 3.2: the semantic shape -- the trace calls the target AS an
+        # PHASE 3.2: the semantic shape -- the trace calls the target AS an
         # identity harvested from THAT contract's own storage
         # (require(msg.sender == owner) satisfied by impersonation).
         reason = metadata_skip_reason({

@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""test_gas_oversized_gate.py -- FAZA 1.3/1.4 of TASK_SPEC.md: a plan
+# Author: DanyTech
+"""test_gas_oversized_gate.py -- PHASE 1.3/1.4 of TASK_SPEC.md: a plan
 whose OWN measured gas footprint exceeds the block gas limit must be FLAGGED
 (`oversized_gas`) and never executed -- not reported as "confirmed".
 
 Regression test for the real ETC mainnet incident (plan `C9f53_2`): the
 un-metered revm model reported the trace as "Confirmed", and the real send
 then failed with "exceeds block gas limit" -- eth_estimateGas said ~49,610,942
-gas against a real block.gasLimit of exactly 8,000,000. FAZA 1.3 requires that
+gas against a real block.gasLimit of exactly 8,000,000. PHASE 1.3 requires that
 such a plan be flagged before it is ever signed.
 
 No network: a fake fork stands in for Anvil, so the REAL functions
@@ -129,7 +130,7 @@ class SkipStatusForTest(unittest.TestCase):
 
 
 class C9f53_2EndToEndTest(unittest.TestCase):
-    """The whole FAZA 1 path for the real incident, driving the REAL
+    """The whole PHASE 1 path for the real incident, driving the REAL
     functions: measure on the fork -> stamp the plan -> gate flags it."""
 
     def test_measured_oversized_plan_is_flagged_and_never_confirmed(self):
@@ -170,7 +171,7 @@ class C9f53_2EndToEndTest(unittest.TestCase):
         # A COMPOSED plan (strategy_layer.compose_plan) carries no fuzzer gas
         # metadata, so it has no `fits_block_gas_limit`. The gate must MEASURE
         # it on the fork and still flag it, otherwise a composition would
-        # silently bypass the FAZA 1 guard and an oversized plan could be
+        # silently bypass the PHASE 1 guard and an oversized plan could be
         # shown as executable.
         plan = _plan()  # no fits_block_gas_limit / gas_estimate
         self.assertIsNone(plan.get("fits_block_gas_limit"))
@@ -183,7 +184,7 @@ class C9f53_2EndToEndTest(unittest.TestCase):
         self.assertTrue(reason.startswith("gas:"))
         self.assertEqual(skip_status_for(reason), PLAN_OVERSIZED_GAS)
         # The gate stamped the measurement back onto the plan, so the report
-        # carries the composed plan's own gas reality too (FAZA 1.2).
+        # carries the composed plan's own gas reality too (PHASE 1.2).
         self.assertEqual(plan["gas_estimate"], C9F53_2_ESTIMATE)
         self.assertFalse(plan["fits_block_gas_limit"])
 

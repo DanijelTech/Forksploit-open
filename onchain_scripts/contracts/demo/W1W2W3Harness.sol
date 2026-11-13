@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
+// Author: DanyTech
 pragma solidity ^0.8.19;
 
 // Minimal, dependency-free harness contracts for proving AttackWallet's

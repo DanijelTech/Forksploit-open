@@ -85,7 +85,7 @@ fn set_size(bytes: *mut u8, len: usize) {
 }
 
 fn get_size(bytes: &[u8]) -> usize {
-    // FAZA 6.1: `bytes` is ABI-encoded external data; a slice shorter than a
+    // PHASE 6.1: `bytes` is ABI-encoded external data; a slice shorter than a
     // 32-byte word has no readable size, so report 0 instead of panicking.
     if bytes.len() < 32 {
         return 0;
@@ -304,7 +304,7 @@ impl BoxedABI {
 
     /// Set the bytes to args, used for decoding
     pub fn set_bytes(&mut self, bytes: Vec<u8>) -> bool {
-        // FAZA 6.1: `bytes` can be arbitrary solver/concolic output. A value
+        // PHASE 6.1: `bytes` can be arbitrary solver/concolic output. A value
         // shorter than the 4-byte selector is rejected instead of panicking.
         if bytes.len() < 4 {
             return false;
@@ -1224,7 +1224,7 @@ pub fn get_abi_type(abi_name: &str, with_address: &Option<Vec<u8>>) -> Box<dyn A
             dynamic_size: true,
         });
     } else if abi_name_str.ends_with(']') && abi_name_str.contains('[') {
-        // FAZA 6.1: this runs on external ABI strings (on-chain artifacts).
+        // PHASE 6.1: this runs on external ABI strings (on-chain artifacts).
         // A malformed fixed-array type must not panic; fall back to a
         // 1-element array and log instead.
         let split = abi_name_str.rsplit_once('[');
@@ -1291,7 +1291,7 @@ fn get_abi_type_basic(abi_name: &str, abi_bs: usize, with_address: &Option<Vec<u
         }),
         _ => {
             if let Some(stripped) = abi_name.strip_prefix("uint") {
-                // FAZA 6.1: width comes from an external ABI string; a
+                // PHASE 6.1: width comes from an external ABI string; a
                 // malformed value must not panic. Fall back to 256 bits.
                 let len = parse_abi_width(stripped, abi_name);
                 get_abi_type_basic("uint", len / 8, with_address)
@@ -1362,7 +1362,7 @@ mod tests {
         debug!("result: {:?} abi: {:?}", mutation_result, hex::encode(abi.get_bytes()));
     }
 
-    /// FAZA 6.1: malformed ABI type strings (from an external artifact) must
+    /// PHASE 6.1: malformed ABI type strings (from an external artifact) must
     /// not panic -- they must produce a usable default type instead.
     #[test]
     fn test_malformed_abi_type_does_not_panic() {
@@ -1376,7 +1376,7 @@ mod tests {
         assert_eq!(get_abi_type("uint256", &None).get_size(), 32);
     }
 
-    /// FAZA 6.1: `get_size` reads a 32-byte ABI word; a shorter slice (from
+    /// PHASE 6.1: `get_size` reads a 32-byte ABI word; a shorter slice (from
     /// truncated external calldata) must report 0 rather than panic.
     #[test]
     fn test_get_size_short_input_does_not_panic() {
@@ -1389,7 +1389,7 @@ mod tests {
         assert_eq!(get_size(&word), 1);
     }
 
-    /// FAZA 6.1: `EVMInput::set_bytes` strips a 4-byte selector; a shorter
+    /// PHASE 6.1: `EVMInput::set_bytes` strips a 4-byte selector; a shorter
     /// buffer (arbitrary solver output) must be rejected, not panic.
     #[test]
     fn test_set_bytes_short_input_does_not_panic() {

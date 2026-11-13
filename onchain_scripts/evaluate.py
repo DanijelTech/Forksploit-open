@@ -1,3 +1,4 @@
+# Author: DanyTech
 import os
 import sys
 from multiprocessing import Pool

@@ -19,7 +19,7 @@ from the code; every item cites the code.
 ## 1. Execution model
 
 ### 1.1 The `revm` fork does not measure gas
-`Cargo.toml` uses `revm` from `forksploit/revm` rev `1dead51` with the feature
+`Cargo.toml` uses a pinned custom `revm` fork at rev `1dead51` with the feature
 `no_gas_measuring`. The model therefore does not measure gas. Consequence: a
 plan that succeeds in simulation can exceed `block.gasLimit` on-chain.
 

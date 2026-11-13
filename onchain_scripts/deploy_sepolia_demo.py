@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """Deploy a set of intentionally-vulnerable demo contracts to Sepolia and
 save their addresses to deployed.json -- used to validate forksploit's
 detectors/exploit-generators end to end against a real chain (Foundry

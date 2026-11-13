@@ -37,7 +37,7 @@ use crate::{
 // executable. Mirrors gas_utils.MAX_GAS_LIMIT on the Python side.
 pub const MAX_BLOCK_GAS_LIMIT: u64 = 8_000_000;
 
-/// FAZA 6.1: why a JSON-RPC response could not be turned into a `result`.
+/// PHASE 6.1: why a JSON-RPC response could not be turned into a `result`.
 /// Every variant is a recoverable error, never a panic -- a malformed,
 /// empty, `null`, or error-carrying response from an external node must
 /// surface as a typed error the caller can log/retry, not take the fuzzer
@@ -603,7 +603,7 @@ impl ChainConfig for OnChainConfig {
     fn get_weth(&self) -> String {
         let pegged_token = self.get_pegged_token();
 
-        // FAZA 6.1: never `.unwrap()` a lookup into an external, possibly
+        // PHASE 6.1: never `.unwrap()` a lookup into an external, possibly
         // empty map. The chain-name arm and the map contents are both
         // external data; a mismatch used to panic the fuzzer.
         let key = match self.chain_name.as_str() {
@@ -761,7 +761,7 @@ impl OnChainConfig {
     ) -> Self {
         let mut s = Self {
             endpoint_url,
-            // FAZA 6.1: prefer a timeout-configured client; if building it
+            // PHASE 6.1: prefer a timeout-configured client; if building it
             // fails (an environment/TLS problem, not external data), log and
             // fall back rather than `.expect()`-panicking during construction.
             client: match build_http_client(20) {
@@ -1463,7 +1463,7 @@ impl OnChainConfig {
                 }
             }
         }
-        // FAZA 6.1: the field is always set just above, but never unwrap an
+        // PHASE 6.1: the field is always set just above, but never unwrap an
         // Option that mirrors external RPC state.
         match self.timestamp.as_deref() {
             Some(ts) => EVMU256::from_str(ts).unwrap_or_else(|e| {
@@ -1637,7 +1637,7 @@ impl OnChainConfig {
     /// known-pegged token on this chain (`onchain_pair_discovery.rs`'s
     /// KNOWN_V2_FACTORIES base token plus `get_pegged_token()`'s own
     /// list) -- direct `eth_call`s only, no third-party service of any
-    /// kind. This used to call forksploit's own
+    /// kind. This used to call DanyTech's own
     /// `pairs-all.infra.danytech` subgraph first and only fall back to
     /// on-chain lookup if that failed; it no longer calls it at all,
     /// anywhere, under any condition. A chain not yet in
@@ -1737,7 +1737,7 @@ mod tests {
         types::EVMAddress,
     };
 
-    /// FAZA 6.1 / FAZA 6.3: a deliberately broken RPC response must never
+    /// PHASE 6.1 / PHASE 6.3: a deliberately broken RPC response must never
     /// panic -- it must return a typed error. These are the exact shapes a
     /// real node can emit under load: an empty body, a literal `null`, a
     /// JSON-RPC error object, truncated JSON, and a body with neither
@@ -1775,7 +1775,7 @@ mod tests {
         assert!(v.is_null());
     }
 
-    /// FAZA 6.3 end-to-end proof: point a real `OnChainConfig` at a local
+    /// PHASE 6.3 end-to-end proof: point a real `OnChainConfig` at a local
     /// socket that answers every request with a corrupted body (empty,
     /// truncated, and a JSON-RPC error in turn) and drive `_request` -- the
     /// same method every on-chain code path uses. It must return `None`

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """triage_findings.py -- collapse thousands of fuzzer plans into the handful
 of REAL vulnerable surfaces behind them, and say, per surface, exactly what
 stands between it and a runnable exploit.

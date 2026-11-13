@@ -1,3 +1,4 @@
+// Author: DanyTech
 // ForkSploit dashboard -- frontend.
 //
 // This file is a PROJECTION + control surface ONLY. It renders what the
@@ -16,16 +17,16 @@ let latestState = {};
 const WATERMARKS = { eth: "eth_watermark.png", etc: "etc_watermark.png" };
 
 const VIEW_TITLES = {
-  overview: "Pregled",
-  run: "Zaženi operacijo",
-  runs: "Aktivni teki",
-  console: "Konzola",
+  overview: "Overview",
+  run: "Run an operation",
+  runs: "Active runs",
+  console: "Console",
   wallet: "Wallet policy",
-  rpc: "RPC override-i",
-  contracts: "Pogodbe",
-  findings: "Najdbe",
-  logs: "Dnevniki tekov",
-  processes: "Procesi in AttackWallet-i",
+  rpc: "RPC overrides",
+  contracts: "Contracts",
+  findings: "Findings",
+  logs: "Run logs",
+  processes: "Processes and AttackWallets",
 };
 
 // --------------------------------------------------------------------------
@@ -73,9 +74,9 @@ async function applyNetworkCheck(chain) {
 
   if (result.error) {
     root.setProperty("--network-color", "var(--bad)");
-    badge.textContent = `${chain}: RPC nedosegljiv (${result.error})`;
+    badge.textContent = `${chain}: RPC unreachable (${result.error})`;
     banner.style.display = "block";
-    banner.textContent = `OPOZORILO: ni bilo mogoče preveriti dejanskega chain ID za '${chain}' -- RPC ni odgovoril. NE zaupaj izbiri verige, dokler se to ne popravi.`;
+    banner.textContent = `WARNING: could not verify the actual chain ID for '${chain}' -- the RPC did not respond. Do NOT trust the chain selection until this is fixed.`;
     watermark.style.backgroundImage = "";
     return;
   }
@@ -92,12 +93,12 @@ async function applyNetworkCheck(chain) {
   }
 
   if (result.match) {
-    badge.textContent = `${chain} -- živo preverjeno (chain ID ${result.actual_chain_id})`;
+    badge.textContent = `${chain} -- live verified (chain ID ${result.actual_chain_id})`;
     banner.style.display = "none";
   } else {
-    badge.textContent = `${chain} -- NEUJEMANJE chain ID!`;
+    badge.textContent = `${chain} -- chain ID MISMATCH!`;
     banner.style.display = "block";
-    banner.textContent = `OPOZORILO: izbrana veriga '${chain}' pričakuje chain ID ${result.expected_chain_id}, a RPC dejansko vrača ${result.actual_chain_id} (${result.family.toUpperCase()}). Preveri RPC override/nastavitev PREDEN karkoli poženeš -- napačna izbira med ETH in ETC pomeni resno tveganje.`;
+    banner.textContent = `WARNING: the selected chain '${chain}' expects chain ID ${result.expected_chain_id}, but the RPC actually returns ${result.actual_chain_id} (${result.family.toUpperCase()}). Check the RPC override/setting BEFORE you run anything -- a wrong choice between ETH and ETC is a serious risk.`;
   }
 }
 
@@ -105,7 +106,7 @@ function watchChainField() {
   const el = document.getElementById("field-chain");
   const badge = document.getElementById("network-badge-text");
   if (!el) {
-    badge.textContent = "ta skript nima --chain izbire";
+    badge.textContent = "this script has no --chain option";
     document.getElementById("watermark").style.backgroundImage = "";
     document.documentElement.style.setProperty("--network-color", "var(--muted)");
     currentWatchedChain = null;
@@ -153,7 +154,7 @@ async function refreshState() {
   if (state.rpc_override_warning) {
     const chains = Object.keys(state.rpc_overrides).join(", ");
     banner.style.display = "block";
-    banner.textContent = `OPOZORILO: aktiven RPC override za: ${chains} -- preveri, da to ni ostanek od prejšnje fork-testne seje.`;
+    banner.textContent = `WARNING: an active RPC override for: ${chains} -- check that this is not left over from a previous fork-test session.`;
   } else {
     banner.style.display = "none";
   }
@@ -185,35 +186,35 @@ function renderOverview(state) {
   const procs = (state.external_processes || []).length;
   cards.innerHTML = `
     <div class="card"><div class="k">Wallet policy</div><div class="v">${wallets}</div></div>
-    <div class="card"><div class="k">RPC override-i</div><div class="v ${overrides ? "warn" : ""}">${overrides}</div></div>
-    <div class="card"><div class="k">Najdbe (plan.json)</div><div class="v">${findings}</div></div>
-    <div class="card"><div class="k">Aktivni teki</div><div class="v ${running ? "ok" : ""}">${running}</div></div>
-    <div class="card"><div class="k">Zunanji procesi</div><div class="v">${procs}</div></div>`;
+    <div class="card"><div class="k">RPC overrides</div><div class="v ${overrides ? "warn" : ""}">${overrides}</div></div>
+    <div class="card"><div class="k">Findings (plan.json)</div><div class="v">${findings}</div></div>
+    <div class="card"><div class="k">Active runs</div><div class="v ${running ? "ok" : ""}">${running}</div></div>
+    <div class="card"><div class="k">External processes</div><div class="v">${procs}</div></div>`;
 
   const rows = (state.recent_logs || []).slice(0, 6).map((entry) =>
     `<tr><td>${esc(entry.file)}</td><td class="muted">${esc(entry.modified)}</td><td>${(entry.outcome_lines || []).map(esc).join("<br/>")}</td></tr>`
   ).join("");
-  setTbody("overview-recent", rows || `<tr><td colspan="3" class="muted">Ni dnevnikov.</td></tr>`);
+  setTbody("overview-recent", rows || `<tr><td colspan="3" class="muted">No logs.</td></tr>`);
 }
 
 function renderRuns(state) {
   const runs = Object.entries(state.dashboard_runs || {});
   const rows = runs.map(([id, r]) => {
     const status = r.finished
-      ? `<span class="ok">končan (exit ${esc(r.exit_code)})</span>`
-      : (r.awaiting_input ? `<span class="warn">čaka na potrditev</span>` : `<span class="ok">teče</span>`);
-    const stop = r.finished ? "" : `<button class="danger" onclick="stopRunById('${esc(id)}')">Prekini</button>`;
+      ? `<span class="ok">finished (exit ${esc(r.exit_code)})</span>`
+      : (r.awaiting_input ? `<span class="warn">awaiting confirmation</span>` : `<span class="ok">running</span>`);
+    const stop = r.finished ? "" : `<button class="danger" onclick="stopRunById('${esc(id)}')">Stop</button>`;
     return `<tr><td class="mono">${esc(id)}</td><td>${esc(r.script)}</td><td class="muted">${esc(r.started_at)}</td><td>${status}</td><td>${stop}</td></tr>`;
   }).join("");
-  setTbody("runs-table", rows || `<tr><td colspan="5" class="muted">Noben tek ni bil zagnan iz dashboard-a.</td></tr>`);
+  setTbody("runs-table", rows || `<tr><td colspan="5" class="muted">No run has been started from the dashboard.</td></tr>`);
 }
 
 function renderWallets(state) {
   const rows = Object.entries(state.wallets || {}).map(([chain, w]) => {
-    const note = w.client_note ? esc(w.client_note) : `<span class="muted">(ni opombe)</span>`;
+    const note = w.client_note ? esc(w.client_note) : `<span class="muted">(no note)</span>`;
     return `<tr><td>${esc(chain)}</td><td class="mono">${esc(w.funding_wallet || "")}</td><td class="mono">${esc(w.recovery_wallet || "")}</td><td>${note}</td></tr>`;
   }).join("");
-  setTbody("wallets-table", rows || `<tr><td colspan="4" class="muted">Ni registriranih wallet policy-jev.</td></tr>`);
+  setTbody("wallets-table", rows || `<tr><td colspan="4" class="muted">No wallet policies registered.</td></tr>`);
 }
 
 function renderAttackWallets(state) {
@@ -221,7 +222,7 @@ function renderAttackWallets(state) {
     const bal = info.error ? `<span class="bad">${esc(info.error)}</span>` : esc(info.balance_eth);
     return `<tr><td>${esc(chain)}</td><td class="mono">${esc(info.address)}</td><td>${bal}</td></tr>`;
   }).join("");
-  setTbody("attack-wallets-table", rows || `<tr><td colspan="3" class="muted">Ni registriranih AttackWallet-ov.</td></tr>`);
+  setTbody("attack-wallets-table", rows || `<tr><td colspan="3" class="muted">No AttackWallets registered.</td></tr>`);
 }
 
 function renderContracts(state) {
@@ -236,36 +237,36 @@ function renderContracts(state) {
     const addr = info.address || (key.includes(":") ? key.split(":")[1] : key);
     const runs = Array.isArray(info.runs) ? info.runs.length : 0;
     const src = info.source || "";
-    return `<tr><td>${esc(chain)}</td><td class="mono">${esc(addr)}</td><td>${esc(src)}</td><td class="muted">${runs} tek(ov)</td></tr>`;
+    return `<tr><td>${esc(chain)}</td><td class="mono">${esc(addr)}</td><td>${esc(src)}</td><td class="muted">${runs} run(s)</td></tr>`;
   }).join("");
-  setTbody("contracts-table", rows || `<tr><td colspan="4" class="muted">Ni zabeleženih pogodb.</td></tr>`);
+  setTbody("contracts-table", rows || `<tr><td colspan="4" class="muted">No contracts recorded.</td></tr>`);
 }
 
 function renderOverrides(state) {
   const entries = Object.entries(state.rpc_overrides || {});
   const rows = entries.map(([chain, url]) =>
-    `<tr><td>${esc(chain)}</td><td class="mono">${esc(url)}</td><td><button class="danger" onclick="clearOverride('${esc(chain)}')">Počisti</button></td></tr>`
+    `<tr><td>${esc(chain)}</td><td class="mono">${esc(url)}</td><td><button class="danger" onclick="clearOverride('${esc(chain)}')">Clear</button></td></tr>`
   ).join("");
-  setTbody("overrides-table", rows || `<tr><td colspan="3" class="muted">Noben override ni aktiven -- vsaka veriga uporablja privzet RPC.</td></tr>`);
+  setTbody("overrides-table", rows || `<tr><td colspan="3" class="muted">No override is active -- every chain uses its default RPC.</td></tr>`);
 }
 
 function renderFindings(state) {
   const rows = (state.vulnerabilities_found || []).map((p) =>
     `<tr><td class="mono">${esc(p)}</td></tr>`).join("");
-  setTbody("findings-table", rows || `<tr><td class="muted">Ni najdb (plan.json) v work_dir/vulnerabilities ali auto_work/*/vulnerabilities.</td></tr>`);
+  setTbody("findings-table", rows || `<tr><td class="muted">No findings (plan.json) in work_dir/vulnerabilities or auto_work/*/vulnerabilities.</td></tr>`);
 }
 
 function renderLogs(state) {
   const rows = (state.recent_logs || []).map((entry) =>
     `<tr><td>${esc(entry.file)}</td><td class="muted">${esc(entry.modified)}</td><td>${(entry.outcome_lines || []).map(esc).join("<br/>")}</td></tr>`
   ).join("");
-  setTbody("logs-table", rows || `<tr><td colspan="3" class="muted">Ni dnevnikov.</td></tr>`);
+  setTbody("logs-table", rows || `<tr><td colspan="3" class="muted">No logs.</td></tr>`);
 }
 
 function renderProcesses(state) {
   const rows = (state.external_processes || []).map((line) =>
     `<tr><td class="muted mono">${esc(line)}</td></tr>`).join("");
-  setTbody("processes-table", rows || `<tr><td class="muted">Ni zunanjih procesov.</td></tr>`);
+  setTbody("processes-table", rows || `<tr><td class="muted">No external processes.</td></tr>`);
 }
 
 // --------------------------------------------------------------------------
@@ -280,12 +281,12 @@ async function setOverride() {
   const chain = document.getElementById("ov-chain").value;
   const url = document.getElementById("ov-url").value;
   const result = document.getElementById("ov-result");
-  if (!url) { result.textContent = "RPC URL je obvezen."; return; }
+  if (!url) { result.textContent = "RPC URL is required."; return; }
   const res = await fetchJSON("/api/rpc-override", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ chain, url }),
   });
-  result.textContent = res.ok ? `Nastavljeno: ${chain} -> ${url}` : (res.error || "napaka");
+  result.textContent = res.ok ? `Set: ${chain} -> ${url}` : (res.error || "error");
   await refreshState();
 }
 
@@ -298,7 +299,7 @@ async function registerWalletPolicy() {
   const force = document.getElementById("wp-force").checked;
   const result = document.getElementById("wp-result");
   if (confirm_chain !== chain) {
-    result.innerHTML = `<span class="bad">Veriga '${esc(chain)}' in potrditev '${esc(confirm_chain)}' se NE ujemata -- vtipkaj enako, brez kopiranja.</span>`;
+    result.innerHTML = `<span class="bad">Chain '${esc(chain)}' and confirmation '${esc(confirm_chain)}' do NOT match -- retype it exactly, without copying.</span>`;
     return;
   }
   const res = await fetchJSON("/api/wallet-policy", {
@@ -308,7 +309,7 @@ async function registerWalletPolicy() {
   if (res.error) {
     result.innerHTML = `<span class="bad">${esc(res.error)}</span>`;
   } else {
-    result.innerHTML = `<span class="ok">Registrirano: ${esc(chain)}</span>`;
+    result.innerHTML = `<span class="ok">Registered: ${esc(chain)}</span>`;
     await refreshState();
   }
 }
@@ -406,14 +407,14 @@ function connectStream(runId) {
       appendConsole(msg.text);
     } else if (msg.type === "awaiting_input") {
       document.getElementById("confirm-box").style.display = "block";
-      document.getElementById("confirm-text").textContent = "Skript čaka na človeško potrditev (glej konzolo za natančen poziv).";
+      document.getElementById("confirm-text").textContent = "The script is awaiting human confirmation (see the console for the exact prompt).";
     } else if (msg.type === "exit") {
-      appendConsole(`--- proces končan (exit code ${msg.code}) ---`);
+      appendConsole(`--- process finished (exit code ${msg.code}) ---`);
       document.getElementById("stop-button").style.display = "none";
       document.getElementById("confirm-box").style.display = "none";
       refreshState();
     } else if (msg.type === "error") {
-      appendConsole(`--- napaka: ${msg.text} ---`);
+      appendConsole(`--- error: ${msg.text} ---`);
     }
   };
 }
@@ -427,11 +428,11 @@ async function startRun() {
     body: JSON.stringify({ script: scriptName, args }),
   });
   if (result.error) {
-    appendConsole(`--- napaka ob zagonu: ${result.error} ---`);
+    appendConsole(`--- error while starting: ${result.error} ---`);
     return;
   }
   currentRunId = result.run_id;
-  document.getElementById("current-run-info").textContent = `Tek ${currentRunId} (${scriptName}), argv: ${result.argv.join(" ")}`;
+  document.getElementById("current-run-info").textContent = `Run ${currentRunId} (${scriptName}), argv: ${result.argv.join(" ")}`;
   document.getElementById("stop-button").style.display = "inline-block";
   document.getElementById("confirm-box").style.display = "none";
   connectStream(currentRunId);
@@ -450,10 +451,10 @@ async function sendConfirmation() {
 
 async function stopRun() {
   await fetchJSON(`/api/run/${currentRunId}/stop`, { method: "POST" });
-  appendConsole("--- SIGINT poslan, čakam na čisto zaustavitev ---");
+  appendConsole("--- SIGINT sent, waiting for a clean shutdown ---");
 }
 
-// Stop a run chosen from the "Aktivni teki" table (not necessarily the
+// Stop a run chosen from the "Active runs" table (not necessarily the
 // one currently streamed into the console).
 async function stopRunById(runId) {
   await fetchJSON(`/api/run/${runId}/stop`, { method: "POST" });

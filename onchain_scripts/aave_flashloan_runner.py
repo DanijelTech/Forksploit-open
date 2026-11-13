@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """aave_flashloan_runner.py -- validates a flashloan-fundable bug for real,
 using Aave V3's actual deployment on the given --chain (defaults to the
 Sepolia testnet deployment).
@@ -26,8 +27,8 @@ during its own in-memory simulation (see src/evm/onchain/flashloan.rs's
 only pays off at large scale is still a bug worth knowing about, even
 though no attacker's own wallet happens to hold millions of some token.
 Rather than teach the Rust side a whole new Aave-specific simulation path
-(a much bigger, separate undertaking -- see NASLEDNJI_KORAKI.md section
-27.7 for why multi-protocol flashloan *discovery* was deferred), this
+(a much bigger, separate undertaking -- see the limitations notes for why
+multi-protocol flashloan *discovery* was deferred), this
 script instead validates REPRODUCTION: does a bug the fuzzer already
 proved via simulation actually hold up when the capital for it comes from
 a real Aave V3 flashloan instead of the fuzzer's own pretend balance?

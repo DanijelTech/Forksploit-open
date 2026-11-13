@@ -127,7 +127,7 @@ struct PlanMeta<'a> {
     /// which made the report unactionable. Empty exactly when
     /// `owner_impersonation` is false.
     owner_impersonation_detail: Vec<ImpersonatedCaller>,
-    /// FAZA 3.2: the SEMANTIC owner-gated test, stricter than
+    /// PHASE 3.2: the SEMANTIC owner-gated test, stricter than
     /// `owner_impersonation`. True only when some step calls a contract AS
     /// an identity harvested from THAT SAME contract's own storage --
     /// exactly the `require(msg.sender == owner)` shape satisfied by
@@ -194,7 +194,7 @@ fn write_plan(output_dir: &str, contract_name: &str, plan: &ExploitPlan) {
 fn build_plan_meta<'a>(args: &'a TemplateArgs, trace: &[Tx]) -> PlanMeta<'a> {
     let bug_types = super::parse_bug_report(&args.solution);
     let requires_control_leak = super::trace_depends_on_control_leak(trace);
-    // FAZA 2.3 (TASK_SPEC.md): the acceptance criterion is that a
+    // PHASE 2.3 (TASK_SPEC.md): the acceptance criterion is that a
     // `sim-confirmed` plan NEVER rests on control leak. Injecting a faked
     // return value is only ever allowed as `sim-review` research -- so a
     // trace whose discovery needed one is downgraded here, regardless of
@@ -238,7 +238,7 @@ fn build_plan_meta<'a>(args: &'a TemplateArgs, trace: &[Tx]) -> PlanMeta<'a> {
             }
         })
         .collect();
-    // FAZA 3.2: the semantic owner-gated test. Per STEP (caller, contract),
+    // PHASE 3.2: the semantic owner-gated test. Per STEP (caller, contract),
     // ask whether the caller is an identity THAT contract harvested from its
     // OWN storage -- i.e. the trace calls the contract as its stored owner.
     // This is strictly narrower than `owner_impersonation` (which only needs
@@ -516,7 +516,7 @@ mod plan_meta_confidence_tests {
         }
     }
 
-    /// FAZA 2.3 acceptance criterion (TASK_SPEC.md): a
+    /// PHASE 2.3 acceptance criterion (TASK_SPEC.md): a
     /// `sim-confirmed` plan must NEVER rest on control leak. A trace whose
     /// discovery used an intercepted, fuzzer-injected fake return value has
     /// to be downgraded to `sim-review`, even when its bug_type is
@@ -558,7 +558,7 @@ mod plan_meta_confidence_tests {
         );
         assert_ne!(
             leaked_meta.confidence, "sim-confirmed",
-            "a control-leak-dependent trace must never be sim-confirmed (FAZA 2.3)"
+            "a control-leak-dependent trace must never be sim-confirmed (PHASE 2.3)"
         );
         assert_eq!(leaked_meta.confidence, "sim-review");
         assert!(

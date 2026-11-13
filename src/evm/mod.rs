@@ -870,7 +870,7 @@ fn validate_spec_id(spec_id: &str) {
 }
 
 pub fn evm_main(mut args: EvmArgs) {
-    // FAZA 6.2: multi-core dispatch. When more than one job is requested,
+    // PHASE 6.2: multi-core dispatch. When more than one job is requested,
     // this process becomes a supervisor that launches isolated worker
     // processes and never touches the fuzzing state itself (see
     // `evm::multicore` for why threads are unsound here).

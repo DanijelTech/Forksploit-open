@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """The full LLM-hypothesis / simulation-confirmation loop.
 
 "LLM proposes, ForkSploit's simulation engine confirms or refutes -- never

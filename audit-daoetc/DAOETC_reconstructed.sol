@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
-// REKONSTRUIRANO iz runtime bytecode (ETC mainnet 0x9f53...5ce3) z pyevmasm.
-// Ni uradna izvorna koda; logika prebrana iz disassemblyja in potrjena s forkom.
+// RECONSTRUCTED from runtime bytecode (ETC mainnet 0x9f53...5ce3) with pyevmasm.
+// Not official source code; the logic was read from the disassembly and confirmed with a fork.
 pragma solidity ^0.4.24;
 
 interface ILedger {
@@ -17,14 +17,14 @@ contract DAOETC {
     address public owner;                     // slot 0
     ILedger public ledger;                    // slot 1 = 0x180826b0...
     mapping(address => uint256) public balances; // slot 2 (getter: getPaidOut)
-    mapping(bytes32 => bool) public used;     // slot 3  (porabljene signature)
+    mapping(bytes32 => bool) public used;     // slot 3  (spent signatures)
     uint256 public totalDeposits;             // slot 4
-    uint256 public closingTime;               // slot 5  (= block.timestamp ob deployu)
-    uint256 public extension;                 // slot 6  (privzeto 0xdd7c00 = 14515200 s)
+    uint256 public closingTime;               // slot 5  (= block.timestamp at deploy)
+    uint256 public extension;                 // slot 6  (default 0xdd7c00 = 14515200 s)
     address public whgDonationAddress;        // slot 7  (getter: getWHGDonationAddress)
-    address public escapeAddress;             // slot 8  (escapeHatch cilj)
-    address public claimAddress;              // slot 9  (claimRemaining cilj)
-    // bit 0xa0 v slot 9 = "sealed" zastavica
+    address public escapeAddress;             // slot 8  (escapeHatch target)
+    address public claimAddress;              // slot 9  (claimRemaining target)
+    // bit 0xa0 in slot 9 = the "sealed" flag
 
     // ---- VIEW ----
     function getPaidOut(address a) public view returns (uint256) { return balances[a]; }        // 0x57211ac0
@@ -33,18 +33,18 @@ contract DAOETC {
     function getTotalFunds() public view returns (uint256) { return ledger.totalSupply(); }     // 0xeb8bbd28
     function getOwner() public view returns (address) { return owner; }                         // 0x893d20e8
 
-    // KONCNO IZPLACILO: tvoj deleZ v ledgerju, omejen z dejansko bilanco v ledgerju
+    // FINAL PAYOUT: your share in the ledger, capped by the actual balance in the ledger
     function calculateWithdraw(address a) public view returns (uint256) {                        // 0x02ef6c86
         uint256 B = ledger.balanceOf(a);
         uint256 T = ledger.totalSupply();
         uint256 S = balances[a];
-        uint256 amount = S * T / totalDeposits;   // tvoj deleZ supply-a
-        if (B < amount) amount = 0;               // kapica: potrebujes ledger.balanceOf >= amount
+        uint256 amount = S * T / totalDeposits;   // your share of the supply
+        if (B < amount) amount = 0;               // cap: you need ledger.balanceOf >= amount
         return amount;
     }
 
     // ---- MUTATIVE ----
-    // POZOR: NE pripise balances[msg.sender]! Samo totalDeposits += msg.value.
+    // WARNING: does NOT credit balances[msg.sender]! Only totalDeposits += msg.value.
     function deposit() public payable returns (bool) {                                           // 0xd0e30db0
         totalDeposits += msg.value;
         emit Deposit(msg.value);
@@ -60,7 +60,7 @@ contract DAOETC {
         require(msg.value == 0);
         bytes32 h = keccak256(abi.encodePacked("Withdraw DAOETC to ", to, amount));
         require(!used[h]);
-        address signer = ecrecover(h, v, r, s);   // <-- NE OVREDNOTENO: ni preverbe signer != 0
+        address signer = ecrecover(h, v, r, s);   // <-- NOT VALUED: no check of signer != 0
         used[h] = true;
         _withdraw(signer, to, amount, 1);
     }
@@ -86,7 +86,7 @@ contract DAOETC {
         uint256 amt = calculateWithdraw(user);
         if (amt > address(this).balance) amt = address(this).balance;
         balances[user] += amt;
-        uint256 fee = amt * 100 / FEE_DENOM;    // provizija
+        uint256 fee = amt * 100 / FEE_DENOM;    // fee
         require(address(this).balance - amt <= address(this).balance);
         whgDonationAddress.call.value(fee)("");
         if (amt - fee > 0) to.call.value(amt - fee)("");

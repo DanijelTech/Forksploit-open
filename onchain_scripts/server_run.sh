@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Author: DanyTech
 # server_run.sh -- start the ForkSploit dashboard (the static GUI served by
 # dashboard_server.py) and open it in a browser.
 #
@@ -35,13 +36,13 @@ PYTHON="python3"
 [[ -x "$REPO_ROOT/.venv/bin/python3" ]] && PYTHON="$REPO_ROOT/.venv/bin/python3"
 
 if ! "$PYTHON" -c "import fastapi, uvicorn" >/dev/null 2>&1; then
-    echo "NAPAKA: dashboard_server.py potrebuje 'fastapi' in 'uvicorn'." >&2
-    echo "Namesti:  $PYTHON -m pip install -r $HERE/requirements.txt" >&2
+    echo "ERROR: dashboard_server.py needs 'fastapi' and 'uvicorn'." >&2
+    echo "Install:  $PYTHON -m pip install -r $HERE/requirements.txt" >&2
     exit 2
 fi
 
 if [[ ! -f "$HERE/dashboard_server.py" ]]; then
-    echo "NAPAKA: $HERE/dashboard_server.py ne obstaja." >&2
+    echo "ERROR: $HERE/dashboard_server.py does not exist." >&2
     exit 2
 fi
 
@@ -105,17 +106,17 @@ case "$DECISION" in
     reuse\ *)
         PORT="${DECISION#reuse }"
         URL="http://$HOST:$PORT"
-        echo "Dashboard že teče na $URL -- odpiram brskalnik."
+        echo "Dashboard already running at $URL -- opening the browser."
         ;;
     use\ *)
         PORT="${DECISION#use }"
         URL="http://$HOST:$PORT"
         if [[ "$PORT" != "$PREFERRED" ]]; then
-            echo "Port $PREFERRED je zaseden -- uporabljam prosti port $PORT."
+            echo "Port $PREFERRED is taken -- using the free port $PORT."
         fi
         ;;
     *)
-        echo "NAPAKA: ni proste pristaniške številke okoli $PREFERRED (poskusil sem 50 zaporednih)." >&2
+        echo "ERROR: no free port number around $PREFERRED (I tried 50 consecutive ones)." >&2
         exit 3
         ;;
 esac
@@ -135,7 +136,7 @@ open_browser() {
 }
 
 if [[ "$DECISION" == reuse\ * ]]; then
-    open_browser "$URL" || echo "Odpri ročno: $URL"
+    open_browser "$URL" || echo "Open manually: $URL"
     exit 0
 fi
 
@@ -144,7 +145,7 @@ LOG_DIR="$HERE/logs"
 mkdir -p "$LOG_DIR" 2>/dev/null || LOG_DIR="${TMPDIR:-/tmp}"
 LOG="$LOG_DIR/dashboard_${PORT}.log"
 
-echo "Zaganjam ForkSploit dashboard na $URL ..."
+echo "Starting the ForkSploit dashboard at $URL ..."
 # Run the script directly (no subshell): dashboard_server.py inserts its own
 # directory into sys.path, so it works from any cwd, and the PID we keep is
 # the real server process (so the trap can stop it).
@@ -172,15 +173,15 @@ PY
 done
 
 if (( ! ready )); then
-    echo "NAPAKA: dashboard se ni zagnal v 15 s. Zadnje vrstice dnevnika ($LOG):" >&2
+    echo "ERROR: the dashboard did not start within 15 s. Last log lines ($LOG):" >&2
     tail -n 20 "$LOG" >&2 2>/dev/null || true
     cleanup
     exit 4
 fi
 
-echo "Dashboard pripravljen: $URL   (samo lokalno -- nikoli ne izpostavljaj tega porta navzven)"
-open_browser "$URL" || echo "(brskalnika ni bilo mogoče odpreti samodejno -- odpri ročno: $URL)"
-echo "Pritisni Ctrl-C za ustavitev."
+echo "Dashboard ready: $URL   (local only -- never expose this port externally)"
+open_browser "$URL" || echo "(could not open the browser automatically -- open manually: $URL)"
+echo "Press Ctrl-C to stop."
 
 # Foreground: block until the server exits or the user presses Ctrl-C.
 wait "$SRV_PID"

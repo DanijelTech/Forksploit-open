@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """test_invariant_oracle.py -- end-to-end proof for the declarative invariant
 oracle (src/evm/oracles/invariant.rs).
 
@@ -218,8 +219,8 @@ def _run_concolic(fixture_dir, timeout=90):
         return (e.stdout or b"").decode("utf-8", errors="replace")
 
 
-# FAZA 2.5: the gate depends on the RETURN VALUE of an external self-call
-# (`this.helper(y)` returns `y * 2`). Before FAZA 2.5 the concolic result of
+# PHASE 2.5: the gate depends on the RETURN VALUE of an external self-call
+# (`this.helper(y)` returns `y * 2`). Before PHASE 2.5 the concolic result of
 # a CALL was always concrete, so these gates were unreachable.
 CONCOLIC_RETVAL_DIR = "tests/evm/concolic_retval"
 CONCOLIC_RETVAL_UNSAT_DIR = "tests/evm_never_pass/concolic_retval_unsat"

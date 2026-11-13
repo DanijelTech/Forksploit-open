@@ -405,7 +405,7 @@ impl<'a> Solving<'a> {
         let result = solver.check();
         match result {
             z3::SatResult::Sat => {
-                // FAZA 6.1: model extraction is solver output and must never
+                // PHASE 6.1: model extraction is solver output and must never
                 // panic. Any element the model cannot evaluate aborts this
                 // candidate instead of taking the fuzzer down.
                 let Some(model) = solver.get_model() else {
@@ -702,7 +702,7 @@ impl SymbolicMemory {
         result
     }
 
-    /// FAZA 2.5: like `get_slice`, but returns `None` if ANY byte in the
+    /// PHASE 2.5: like `get_slice`, but returns `None` if ANY byte in the
     /// range was never written (`None`), instead of substituting a concrete
     /// `0`. Callers that turn the result into a symbolic RETURN value need
     /// this stricter view: a genuine `0` and an untracked byte are
@@ -724,7 +724,7 @@ impl SymbolicMemory {
         Some(result)
     }
 
-    /// FAZA 2.5: write a run of already-symbolic bytes starting at `idx`,
+    /// PHASE 2.5: write a run of already-symbolic bytes starting at `idx`,
     /// used to place a callee's symbolic return value into the caller's
     /// memory at the CALL's return offset. Untracked (`None`) entries are
     /// left untouched so a partial symbolic return degrades to the concrete
@@ -743,11 +743,11 @@ impl SymbolicMemory {
     }
 }
 
-/// FAZA 2.1 (TASK_SPEC.md): storage that can be keyed by a
+/// PHASE 2.1 (TASK_SPEC.md): storage that can be keyed by a
 /// SYMBOLIC expression, not only by the concrete value the seed input
 /// happens to evaluate to.
 ///
-/// The pre-FAZA-2 model was a bare `HashMap<EVMU256, _>` keyed on
+/// The pre-PHASE-2 model was a bare `HashMap<EVMU256, _>` keyed on
 /// `fast_peek!` -- the concrete value of the key slot on the CURRENT
 /// (seed) input. That is enough when the contract writes and reads the
 /// SAME slot in one frame (the concrete interpreter resolves both to the
@@ -775,7 +775,7 @@ pub struct SymbolicStorage {
     /// scan is fine -- a single transaction performs only a handful of such
     /// writes, and only the symbolic ones land here.
     symbolic: Vec<(Box<Expr>, Box<Expr>)>,
-    /// The pre-FAZA-2 concrete-keyed map, unchanged.
+    /// The pre-PHASE-2 concrete-keyed map, unchanged.
     concrete: HashMap<EVMU256, Option<Box<Expr>>>,
 }
 
@@ -835,14 +835,14 @@ pub struct ConcolicCallCtx {
     // seperated by 32 bytes
     pub input_bytes: Vec<Box<Expr>>,
 
-    /// FAZA 2.5: the frame's return value as a run of symbolic BYTES, filled
+    /// PHASE 2.5: the frame's return value as a run of symbolic BYTES, filled
     /// in by the callee's `RETURN` handler (0xf3) from its own symbolic
     /// memory. `None` means "not a symbolically tracked return" -- the
     /// caller then falls back to the concrete return bytes. Only present
     /// for frames pushed by push_ctx (real CALLs), never the root frame.
     #[serde(default)]
     pub return_bytes: Option<Vec<Box<Expr>>>,
-    /// FAZA 2.5: the CALL's return-data offset and length on the CALLER's
+    /// PHASE 2.5: the CALL's return-data offset and length on the CALLER's
     /// stack/memory, captured in push_ctx so on_return can write the
     /// symbolic return bytes back into the caller's memory. Meaningless
     /// when `return_bytes` is None.
@@ -856,7 +856,7 @@ pub struct ConcolicCallCtx {
 pub struct ConcolicHost {
     pub symbolic_stack: Vec<Option<Box<Expr>>>,
     pub symbolic_memory: SymbolicMemory,
-    /// FAZA 2.1: symbolic storage is keyed by the STORAGE-CONTEXT ADDRESS
+    /// PHASE 2.1: symbolic storage is keyed by the STORAGE-CONTEXT ADDRESS
     /// and lives on the host, not per call frame. EVM storage is addressed
     /// by contract, not by frame, so a slot written in one call must be
     /// readable (symbolically) from a later call in the same transaction --
@@ -877,7 +877,7 @@ pub struct ConcolicHost {
     pub num_threads: usize,
     pub call_depth: usize,
 
-    /// FAZA 2.5: return bytes of the most recently completed call, pushed
+    /// PHASE 2.5: return bytes of the most recently completed call, pushed
     /// here by `on_return` and consumed by `RETURNDATASIZE` (0x3d) /
     /// `RETURNDATACOPY` (0x3e). Mirrors the EVM's "last call's return data"
     /// buffer. Empty when the last call's return was not symbolically
@@ -911,7 +911,7 @@ impl ConcolicHost {
     }
 
     /// Pops the current call frame and restores the caller's symbolic
-    /// stack/memory. Returns the popped frame so `on_return` (FAZA 2.5) can
+    /// stack/memory. Returns the popped frame so `on_return` (PHASE 2.5) can
     /// read its symbolic return bytes and splice them into the caller.
     pub fn pop_ctx(&mut self) -> Option<ConcolicCallCtx> {
         let ctx = self.ctxs.pop();
@@ -956,7 +956,7 @@ impl ConcolicHost {
             }
         };
 
-        // FAZA 2.5: the return-data window on the CALLER's stack, so
+        // PHASE 2.5: the return-data window on the CALLER's stack, so
         // on_return can splice the callee's symbolic return bytes into the
         // caller's symbolic memory at exactly the offset the CALL wrote its
         // concrete return to. Yellow Paper stack order (peek(0) = top):
@@ -1527,7 +1527,7 @@ where
             }
             // RETURNDATASIZE
             0x3d => {
-                // FAZA 2.5: size of the last call's return data. We only
+                // PHASE 2.5: size of the last call's return data. We only
                 // know it symbolically when the last return was tracked;
                 // otherwise fall back to the concrete size.
                 if self.last_return_bytes.is_empty() {
@@ -1542,7 +1542,7 @@ where
             }
             // RETURNDATACOPY
             0x3e => {
-                // FAZA 2.5: copy the last call's return data into memory.
+                // PHASE 2.5: copy the last call's return data into memory.
                 // dest is concrete (a compiler constant); mem_offset and
                 // len index the return buffer. When the last return was
                 // tracked symbolically, splice those symbolic bytes into
@@ -1841,7 +1841,7 @@ where
             }
             // RETURN
             0xf3 => {
-                // FAZA 2.5: capture the returned bytes symbolically so the
+                // PHASE 2.5: capture the returned bytes symbolically so the
                 // CALLER (in on_return) can gate on `callee(...)`'s result.
                 // Offset/len are concrete (they sit on the real stack as
                 // PUSH/MSTORE constants on virtually all compiler output);
@@ -1922,7 +1922,7 @@ where
         _state: &mut EVMFuzzState,
         _by: &Bytes,
     ) {
-        // FAZA 2.5: pop_ctx restores the CALLER's symbolic stack/memory.
+        // PHASE 2.5: pop_ctx restores the CALLER's symbolic stack/memory.
         // If the callee's RETURN was symbolically tracked, splice those
         // bytes into the caller's memory at the CALL's return offset, so a
         // later MLOAD of the return region reads the callee's expression
@@ -1981,7 +1981,7 @@ mod symbolic_storage_tests {
         Expr::new_sliced_input(EVMU256::from(id))
     }
 
-    /// The pre-FAZA-2 behaviour, preserved (R5): a concrete-keyed store is
+    /// The pre-PHASE-2 behaviour, preserved (R5): a concrete-keyed store is
     /// found again by the same concrete key.
     #[test]
     fn concrete_roundtrip_is_unchanged() {
@@ -1993,7 +1993,7 @@ mod symbolic_storage_tests {
         assert_eq!(s.symbolic_len(), 0);
     }
 
-    /// FAZA 2.1 core: a store under a SYMBOLIC key is found by a later load
+    /// PHASE 2.1 core: a store under a SYMBOLIC key is found by a later load
     /// with the same symbolic key, even when the concrete key differs -- the
     /// exact case the old concrete-only map could not represent.
     #[test]
@@ -2032,7 +2032,7 @@ mod symbolic_storage_tests {
 
 #[cfg(test)]
 mod return_data_tests {
-    //! FAZA 2.5: the symbolic return-value flow (`callee(...)`'s result
+    //! PHASE 2.5: the symbolic return-value flow (`callee(...)`'s result
     //! gating the caller). These pin the two primitives the flow rests on:
     //! `SymbolicMemory::get_slice_tracked` (only a fully-written window
     //! counts as a trackable return) and `insert_bytes` (splicing it back

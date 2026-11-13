@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""test_proof.py -- the structured proof object (FAZA 5.2 of
+# Author: DanyTech
+"""test_proof.py -- the structured proof object (PHASE 5.2 of
 TASK_SPEC.md) must collapse the three gates (state replay, gas
 reality, independence from lies) into one record with an explicit,
 non-empty `blockers` list whenever a gate fails, so a rejection is
-explained rather than silently dropped (nalog §6.8).
+explained rather than silently dropped (task spec §6.8).
 
 No network: build_proof is a pure function over signals the pipeline
 already has.

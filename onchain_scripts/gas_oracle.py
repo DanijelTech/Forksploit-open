@@ -1,3 +1,4 @@
+# Author: DanyTech
 """
 gas_oracle.py -- gas-FEE PRICE oracle for the chains ForkSploit actually
 attacks onchain. Complements gas_utils.py: gas_utils answers "how much gas

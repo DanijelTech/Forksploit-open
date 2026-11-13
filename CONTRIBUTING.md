@@ -39,7 +39,7 @@ measurement, or a command output. Anything not measured must be labelled as
 
 ## Getting set up
 
-See the README's *Namestitev* (Installation) section. In short:
+See the README's *Installation* section. In short:
 
 ```bash
 # System prerequisites (Debian/Ubuntu)

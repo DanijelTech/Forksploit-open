@@ -1,3 +1,4 @@
+# Author: DanyTech
 """flashbots_bundle.py -- real Flashbots bundle submission (eth_sendBundle
 / eth_callBundle against the official relay), not privacy-preserving RPC
 redirection. A bundle is a set of pre-signed transactions submitted

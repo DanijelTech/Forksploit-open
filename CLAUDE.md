@@ -179,7 +179,7 @@ Key CLI flags (always compiled in):
 ---
 
 ## External dependencies (pinned)
-- `revm` — fork `forksploit/revm` @ `1dead51`, `no_gas_measuring` (the model
+- `revm` — a pinned custom fork @ `1dead51` (see `Cargo.toml`), `no_gas_measuring` (the model
   does **not** meter gas; the authoritative gas number is the node's
   `eth_estimateGas`).
 - `libafl` / `libafl_bolts` — exactly `0.11.2`.
@@ -204,7 +204,7 @@ Key CLI flags (always compiled in):
   --version` prints the commit it was built from, so a stale binary is
   detectable.
 - **`/cache` is populated from GitHub releases** for integration tests.
-- External-data hardening (FAZA 6.1): panic-prone `.unwrap()`/`.expect()` on
+- External-data hardening (PHASE 6.1): panic-prone `.unwrap()`/`.expect()` on
   external input (RPC, solc/forge artifacts, ABIs, storage, presets) is
   converted to typed `Result`s / safe defaults across
   `onchain/endpoints.rs`, `blaz/offchain_artifacts.rs`, `blaz/linking.rs`,

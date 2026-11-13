@@ -416,7 +416,7 @@ impl OnChain {
                 Some(ref abi_ins) => match ContractLoader::parse_abi_str(abi_ins) {
                     Ok(parsed) => parsed_abi = parsed,
                     Err(e) => {
-                        // FAZA 6.1: a malformed explorer ABI must not panic;
+                        // PHASE 6.1: a malformed explorer ABI must not panic;
                         // fall back to decompilation from bytecode.
                         tracing::warn!("cannot parse fetched ABI for {:?}: {e}, decompiling instead", address_h160);
                         parsed_abi = fetch_abi_evmole(contract_code.bytes());
@@ -452,7 +452,7 @@ impl OnChain {
                         let abis = fetch_abi_evmole(contract_code)
                             .iter()
                             .map(|abi| {
-                                // FAZA 6.1: the ABIMap metadata is optional;
+                                // PHASE 6.1: the ABIMap metadata is optional;
                                 // fall back to the decompiled ABI if absent.
                                 state
                                     .metadata_map()

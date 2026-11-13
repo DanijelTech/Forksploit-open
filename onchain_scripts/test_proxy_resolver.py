@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """test_proxy_resolver.py -- offline proof tests for the Python-side proxy
 discovery (proxy_resolver.py).
 

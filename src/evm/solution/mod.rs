@@ -1107,7 +1107,7 @@ mod tests {
         );
     }
 
-    // FAZA 2.3 regression: the plan's own `confidence`/`confirmed_exploitable`
+    // PHASE 2.3 regression: the plan's own `confidence`/`confirmed_exploitable`
     // flags must agree with the oracle JSON for the SAME finding, or the
     // Python layer (auto_pipeline.py's metadata_skip_reason) will skip a
     // finding the Rust side just stamped `sim-confirmed`. Two separate bugs

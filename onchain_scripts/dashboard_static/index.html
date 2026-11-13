@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="sl">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -10,7 +10,7 @@
   <div id="watermark"></div>
 
   <!-- ------------------------------------------------------------------ -->
-  <!-- Sidebar: the whole system, grouped into submenus (podmeniji).       -->
+  <!-- Sidebar: the whole system, grouped into submenus.                 -->
   <!-- This is a PROJECTION + control surface only -- it holds no logic;   -->
   <!-- every action calls the server, which calls the real CLI script.     -->
   <!-- ------------------------------------------------------------------ -->
@@ -26,41 +26,41 @@
     <nav id="nav">
       <div class="nav-group" data-group="operate">
         <button class="nav-head" data-toggle="operate">
-          <span class="chev">▾</span> Upravljanje
+          <span class="chev">▾</span> Management
         </button>
         <div class="nav-items">
-          <a class="nav-item" data-view="overview">Pregled</a>
-          <a class="nav-item" data-view="run">Zaženi operacijo</a>
-          <a class="nav-item" data-view="runs">Aktivni teki <span class="pill" id="pill-runs">0</span></a>
-          <a class="nav-item" data-view="console">Konzola</a>
+          <a class="nav-item" data-view="overview">Overview</a>
+          <a class="nav-item" data-view="run">Run an operation</a>
+          <a class="nav-item" data-view="runs">Active runs <span class="pill" id="pill-runs">0</span></a>
+          <a class="nav-item" data-view="console">Console</a>
         </div>
       </div>
 
       <div class="nav-group" data-group="config">
         <button class="nav-head" data-toggle="config">
-          <span class="chev">▾</span> Nastavitve in konfiguracija
+          <span class="chev">▾</span> Settings and configuration
         </button>
         <div class="nav-items">
           <a class="nav-item" data-view="wallet">Wallet policy</a>
-          <a class="nav-item" data-view="rpc">RPC override-i</a>
-          <a class="nav-item" data-view="contracts">Pogodbe</a>
+          <a class="nav-item" data-view="rpc">RPC overrides</a>
+          <a class="nav-item" data-view="contracts">Contracts</a>
         </div>
       </div>
 
       <div class="nav-group" data-group="results">
         <button class="nav-head" data-toggle="results">
-          <span class="chev">▾</span> Rezultati
+          <span class="chev">▾</span> Results
         </button>
         <div class="nav-items">
-          <a class="nav-item" data-view="findings">Najdbe (plan.json) <span class="pill" id="pill-findings">0</span></a>
-          <a class="nav-item" data-view="logs">Dnevniki tekov</a>
-          <a class="nav-item" data-view="processes">Procesi</a>
+          <a class="nav-item" data-view="findings">Findings (plan.json) <span class="pill" id="pill-findings">0</span></a>
+          <a class="nav-item" data-view="logs">Run logs</a>
+          <a class="nav-item" data-view="processes">Processes</a>
         </div>
       </div>
     </nav>
 
     <div class="side-foot">
-      <span class="localhost-note">127.0.0.1 samo — nikoli ne izpostavljaj navzven</span>
+      <span class="localhost-note">127.0.0.1 only — never expose it externally</span>
     </div>
   </aside>
 
@@ -69,9 +69,9 @@
   <!-- ------------------------------------------------------------------ -->
   <div id="content">
     <header>
-      <div class="crumb" id="crumb">Pregled</div>
+      <div class="crumb" id="crumb">Overview</div>
       <div class="head-right">
-        <span id="network-badge"><span class="dot"></span><span id="network-badge-text">omrežje ni preverjeno</span></span>
+        <span id="network-badge"><span class="dot"></span><span id="network-badge-text">network not verified</span></span>
       </div>
     </header>
 
@@ -84,29 +84,29 @@
       <section class="view" data-view="overview">
         <div class="cards" id="overview-cards"></div>
         <div class="panel">
-          <h2>Hitri pregled</h2>
-          <table id="overview-recent"><thead><tr><th>Dnevnik</th><th>Spremenjeno</th><th>Izid</th></tr></thead><tbody></tbody></table>
+          <h2>Quick overview</h2>
+          <table id="overview-recent"><thead><tr><th>Log</th><th>Modified</th><th>Outcome</th></tr></thead><tbody></tbody></table>
         </div>
       </section>
 
       <!-- RUN -->
       <section class="view" data-view="run">
         <div class="panel" id="action-panel">
-          <h2>Zaženi operacijo</h2>
+          <h2>Run an operation</h2>
           <div class="field">
-            <label>Skript</label>
+            <label>Script</label>
             <select id="script-select"></select>
           </div>
           <div id="action-form"></div>
           <div class="row">
-            <button id="run-button">Zaženi</button>
-            <button id="stop-button" class="danger" style="display:none;">Prekini (SIGINT)</button>
+            <button id="run-button">Run</button>
+            <button id="stop-button" class="danger" style="display:none;">Stop (SIGINT)</button>
           </div>
-          <div id="current-run-info" class="muted" style="margin-top:8px;">Noben tek ni aktiven.</div>
+          <div id="current-run-info" class="muted" style="margin-top:8px;">No run is active.</div>
           <div id="confirm-box" class="confirm-box" style="display:none;">
             <div id="confirm-text"></div>
-            <input type="text" id="confirm-input" placeholder="Vtipkaj natanko 'DA' za potrditev, karkoli drugega zavrne" />
-            <button id="confirm-send">Pošlji</button>
+            <input type="text" id="confirm-input" placeholder="Type exactly 'YES' to confirm, anything else rejects" />
+            <button id="confirm-send">Send</button>
           </div>
         </div>
       </section>
@@ -114,15 +114,15 @@
       <!-- RUNS -->
       <section class="view" data-view="runs">
         <div class="panel">
-          <h2>Aktivni teki (ta dashboard)</h2>
-          <table id="runs-table"><thead><tr><th>Run ID</th><th>Skript</th><th>Začetek</th><th>Stanje</th><th></th></tr></thead><tbody></tbody></table>
+          <h2>Active runs (this dashboard)</h2>
+          <table id="runs-table"><thead><tr><th>Run ID</th><th>Script</th><th>Started</th><th>State</th><th></th></tr></thead><tbody></tbody></table>
         </div>
       </section>
 
       <!-- CONSOLE -->
       <section class="view" data-view="console">
         <div class="panel">
-          <h2>Konzola</h2>
+          <h2>Console</h2>
           <div id="console"></div>
         </div>
       </section>
@@ -131,17 +131,17 @@
       <section class="view" data-view="wallet">
         <div class="panel">
           <h2>Wallet policy</h2>
-          <table id="wallets-table"><thead><tr><th>Veriga</th><th>Funding</th><th>Recovery</th><th>Stranka / opomba</th></tr></thead><tbody></tbody></table>
+          <table id="wallets-table"><thead><tr><th>Chain</th><th>Funding</th><th>Recovery</th><th>Client / note</th></tr></thead><tbody></tbody></table>
         </div>
         <div class="panel">
-          <h2>Registriraj novo wallet policy</h2>
-          <div class="field"><label>Veriga</label><select id="wp-chain"></select></div>
-          <div class="field"><label>Potrdi verigo (vtipkaj ROČNO še enkrat — anti-tipkarska zaščita)</label><input type="text" id="wp-confirm-chain" placeholder="npr. etc" /></div>
+          <h2>Register a new wallet policy</h2>
+          <div class="field"><label>Chain</label><select id="wp-chain"></select></div>
+          <div class="field"><label>Confirm chain (type it MANUALLY once more — anti-typo guard)</label><input type="text" id="wp-confirm-chain" placeholder="e.g. etc" /></div>
           <div class="field"><label>Funding wallet</label><input type="text" id="wp-funding" placeholder="0x..." /></div>
           <div class="field"><label>Recovery wallet</label><input type="text" id="wp-recovery" placeholder="0x..." /></div>
-          <div class="field"><label>Stranka / opomba</label><input type="text" id="wp-client-note" placeholder="npr. ime stranke ali projekta" /></div>
-          <div class="field"><label><input type="checkbox" id="wp-force" style="width:auto;" /> force (prepiši obstoječo registracijo)</label></div>
-          <button id="wp-register-button">Registriraj</button>
+          <div class="field"><label>Client / note</label><input type="text" id="wp-client-note" placeholder="e.g. client or project name" /></div>
+          <div class="field"><label><input type="checkbox" id="wp-force" style="width:auto;" /> force (overwrite an existing registration)</label></div>
+          <button id="wp-register-button">Register</button>
           <div id="wp-result" class="muted" style="margin-top:6px;"></div>
         </div>
       </section>
@@ -149,14 +149,14 @@
       <!-- RPC -->
       <section class="view" data-view="rpc">
         <div class="panel">
-          <h2>RPC override-i</h2>
-          <table id="overrides-table"><thead><tr><th>Veriga</th><th>URL</th><th></th></tr></thead><tbody></tbody></table>
+          <h2>RPC overrides</h2>
+          <table id="overrides-table"><thead><tr><th>Chain</th><th>URL</th><th></th></tr></thead><tbody></tbody></table>
         </div>
         <div class="panel">
-          <h2>Nastavi override</h2>
-          <div class="field"><label>Veriga</label><select id="ov-chain"></select></div>
+          <h2>Set an override</h2>
+          <div class="field"><label>Chain</label><select id="ov-chain"></select></div>
           <div class="field"><label>RPC URL</label><input type="text" id="ov-url" placeholder="http://127.0.0.1:8555" /></div>
-          <button id="ov-set-button">Nastavi</button>
+          <button id="ov-set-button">Set</button>
           <div id="ov-result" class="muted" style="margin-top:6px;"></div>
         </div>
       </section>
@@ -164,35 +164,35 @@
       <!-- CONTRACTS -->
       <section class="view" data-view="contracts">
         <div class="panel">
-          <h2>Testirane / deployane pogodbe</h2>
-          <table id="contracts-table"><thead><tr><th>Veriga</th><th>Naslov</th><th>Vir</th><th>Tekovi</th></tr></thead><tbody></tbody></table>
+          <h2>Tested / deployed contracts</h2>
+          <table id="contracts-table"><thead><tr><th>Chain</th><th>Address</th><th>Source</th><th>Runs</th></tr></thead><tbody></tbody></table>
         </div>
       </section>
 
       <!-- FINDINGS -->
       <section class="view" data-view="findings">
         <div class="panel">
-          <h2>Najdbe (work_dir/vulnerabilities + auto_work/*/vulnerabilities)</h2>
-          <table id="findings-table"><thead><tr><th>Datoteka plan.json</th></tr></thead><tbody></tbody></table>
+          <h2>Findings (work_dir/vulnerabilities + auto_work/*/vulnerabilities)</h2>
+          <table id="findings-table"><thead><tr><th>plan.json file</th></tr></thead><tbody></tbody></table>
         </div>
       </section>
 
       <!-- LOGS -->
       <section class="view" data-view="logs">
         <div class="panel">
-          <h2>Zadnji teki</h2>
-          <table id="logs-table"><thead><tr><th>Datoteka</th><th>Spremenjeno</th><th>Izid</th></tr></thead><tbody></tbody></table>
+          <h2>Recent runs</h2>
+          <table id="logs-table"><thead><tr><th>File</th><th>Modified</th><th>Outcome</th></tr></thead><tbody></tbody></table>
         </div>
       </section>
 
       <!-- PROCESSES -->
       <section class="view" data-view="processes">
         <div class="panel">
-          <h2>AttackWallet-i (živ saldo)</h2>
-          <table id="attack-wallets-table"><thead><tr><th>Veriga</th><th>Naslov</th><th>Saldo (ETH)</th></tr></thead><tbody></tbody></table>
+          <h2>AttackWallets (live balance)</h2>
+          <table id="attack-wallets-table"><thead><tr><th>Chain</th><th>Address</th><th>Balance (ETH)</th></tr></thead><tbody></tbody></table>
         </div>
         <div class="panel">
-          <h2>Aktivni procesi (zunaj dashboard-a)</h2>
+          <h2>Active processes (outside the dashboard)</h2>
           <table id="processes-table"><tbody></tbody></table>
         </div>
       </section>

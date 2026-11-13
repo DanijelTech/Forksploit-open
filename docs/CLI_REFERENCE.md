@@ -123,7 +123,7 @@ Main menu (`main_menu`, the number = a constant in the test):
 exit / q            -> exit
 ```
 
-Navigation: `nazaj`/`0` (previous), `glavni meni`/`MM`, `izhod`/`q`. Numbers
+Navigation: `back`/`0` (previous), `main menu`/`MM`, `exit`/`q`. Numbers
 select entries **only**.
 
 Wizard (7 steps): chain → RPC → key → targets → recovery → policy → mainnet

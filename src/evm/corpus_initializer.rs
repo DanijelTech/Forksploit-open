@@ -132,7 +132,7 @@ macro_rules! handle_contract_insertion {
             register_borrow_txn(scheduler, $state, $deployed_address);
         }
         if is_pair {
-            // FAZA 6.1: `is_pair` is only true when a middleware was present,
+            // PHASE 6.1: `is_pair` is only true when a middleware was present,
             // but guard defensively rather than unwrapping.
             if let Some(ref middleware) = $host.flashloan_middleware {
                 let mut mid = middleware.deref().borrow_mut();
@@ -300,7 +300,7 @@ where
             }
 
             if let Some(srcmap) = &contract.raw_source_map {
-                // FAZA 6.1: the runtime bytecode may be absent if the deploy
+                // PHASE 6.1: the runtime bytecode may be absent if the deploy
                 // failed; skip the source map instead of panicking.
                 let Some(code) = self.executor.host.code.get(&contract.deployed_address) else {
                     warn!("no runtime bytecode for {:?}, skipping source map", contract.deployed_address);
@@ -383,7 +383,7 @@ where
                 let sigs = extract_sig_from_contract(&contract_code);
                 let mut unknown_sigs: usize = 0;
                 for sig in &sigs {
-                    // FAZA 6.1: the ABIMap metadata is optional; without it
+                    // PHASE 6.1: the ABIMap metadata is optional; without it
                     // every extracted sig counts as unknown.
                     if let Some(abi) = self
                         .state
@@ -402,7 +402,7 @@ where
                     let abis = fetch_abi_evmole(&contract.code)
                         .iter()
                         .map(|abi| {
-                            // FAZA 6.1: fall back to the decompiled ABI when
+                            // PHASE 6.1: fall back to the decompiled ABI when
                             // the ABIMap metadata is absent.
                             self.state
                                 .metadata_map()

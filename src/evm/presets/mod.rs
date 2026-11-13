@@ -43,7 +43,7 @@ pub struct ExploitTemplate {
 }
 
 impl ExploitTemplate {
-    /// FAZA 6.1: the preset file is user-supplied external data. A missing
+    /// PHASE 6.1: the preset file is user-supplied external data. A missing
     /// file or malformed JSON returns a typed error instead of panicking.
     pub fn from_filename(filename: String) -> Result<Vec<Self>, anyhow::Error> {
         let file = File::open(&filename)
@@ -60,7 +60,7 @@ impl<'de> Deserialize<'de> for FunctionSig {
         D: Deserializer<'de>,
     {
         let s: String = Deserialize::deserialize(deserializer)?;
-        // FAZA 6.1: `s` comes from the preset JSON. It must be at least a
+        // PHASE 6.1: `s` comes from the preset JSON. It must be at least a
         // `0x`-prefixed 4-byte selector; anything else is a deserialization
         // error, not a panic.
         let hex_part = s
@@ -83,14 +83,14 @@ impl<'de> Deserialize<'de> for FunctionSig {
 mod tests {
     use super::*;
 
-    /// FAZA 6.1 proof: a missing preset file yields a typed error, not a panic.
+    /// PHASE 6.1 proof: a missing preset file yields a typed error, not a panic.
     #[test]
     fn from_filename_missing_file_returns_error() {
         let err = ExploitTemplate::from_filename("/nonexistent/definitely-not-here.json".to_string());
         assert!(err.is_err(), "missing preset file must be an error");
     }
 
-    /// FAZA 6.1 proof: malformed preset JSON yields a typed error, not a panic.
+    /// PHASE 6.1 proof: malformed preset JSON yields a typed error, not a panic.
     #[test]
     fn from_filename_malformed_json_returns_error() {
         let path = std::env::temp_dir().join(format!("fs_preset_bad_{}.json", std::process::id()));
@@ -100,7 +100,7 @@ mod tests {
         let _ = std::fs::remove_file(&path);
     }
 
-    /// FAZA 6.1 proof: the `FunctionSig` deserializer rejects selectors that
+    /// PHASE 6.1 proof: the `FunctionSig` deserializer rejects selectors that
     /// are not `0x`-prefixed, not hex, or shorter than 4 bytes -- instead of
     /// panicking on a short slice as it used to.
     #[test]

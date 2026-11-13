@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """monitor.py -- continuous post-deployment watcher for a live contract.
 
 Pre-deployment testing (fuzzing, static analysis, invariant checks) can

@@ -78,17 +78,17 @@ what to do.
 Main menu (entry numbers are also the `MAIN_*` constants in the test):
 
 ```
-1) Nov tek          -> the 7-step run wizard
-2) Nastavitve       -> set the default key file / a per-chain RPC override
-3) Preveri okolje   -> the FULL doctor report on its own page
-4) Pomoč           -> what the tool does and what each step means
-5) Napredne nastavitve -> advanced run settings (persisted)
-6) Orodja           -> the OTHER onchain_scripts/ tools (monitor, triage,
-                       materialize, dashboard, DEX scanner, chain fixture)
-izhod / q           -> quit
+1) New run           -> the 7-step run wizard
+2) Settings          -> set the default key file / a per-chain RPC override
+3) Check environment -> the FULL doctor report on its own page
+4) Help              -> what the tool does and what each step means
+5) Advanced settings -> advanced run settings (persisted)
+6) Tools             -> the OTHER onchain_scripts/ tools (monitor, triage,
+                        materialize, dashboard, DEX scanner, chain fixture)
+exit / q             -> quit
 ```
 
-Entries 1–4 and the `Nastavitve` submenu's three entries are UNCHANGED (the
+Entries 1–4 and the `Settings` submenu's three entries are UNCHANGED (the
 wizard test pins those numbers). The two new entries were APPENDED (5, 6) so
 no existing number moved.
 
@@ -119,9 +119,9 @@ prints the URL). `dashboard_server.py --port` default is 4114.
 
 **Dashboard GUI = projection + control only.** `dashboard_static/`
 (`index.html`/`app.js`/`style.css`) is a modern sidebar shell: a fixed left
-nav with three submenus -- *Upravljanje* (Pregled, Zaženi operacijo, Aktivni
-teki, Konzola), *Nastavitve in konfiguracija* (Wallet policy, RPC override-i,
-Pogodbe), *Rezultati* (Najdbe, Dnevniki tekov, Procesi) -- a hash router, and
+nav with three submenus -- *Management* (Overview, Run an operation, Active
+runs, Console), *Settings and configuration* (Wallet policy, RPC overrides,
+Contracts), *Results* (Findings, Run logs, Processes) -- a hash router, and
 the live ETH/ETC network badge + watermark. It holds NO system logic: every
 view renders a `/api/state` key and every button calls a server endpoint that
 runs the real CLI script as a subprocess. The frontend hardcodes no address or
@@ -129,7 +129,7 @@ chain id. `test_dashboard_ui.py` pins this contract (every nav entry has a
 view, every state key has a renderer, every operation has a control, no
 hardcoded address/chain id).
 
-`Nastavitve`, `Preveri okolje` and `Pomoč` render on their own page
+`Settings`, `Check environment` and `Help` render on their own page
 (`new_page` + `matrix_logo`) and return to the main menu; the doctor page
 prints the full checklist by setting `CHECK_FULL=1` for the duration of
 `check_env` (the wizard preflight keeps the compact form). `reset_run_state`
@@ -138,8 +138,8 @@ menu can never inherit a stale chain/key/target. When the wizard's final
 `exec` would run in `--dry-run` it prints the command and returns to the main
 menu; a real (non-dry-run) run `exec`s and never returns.
 
-Navigation is by WORD: `nazaj`/`0` (previous), `glavni meni`/`MM`, and
-`izhod`/`q`. `menu()` takes `--root` for the main menu (which has no "back"
+Navigation is by WORD: `back`/`0` (previous), `main menu`/`MM`, and
+`exit`/`q`. `menu()` takes `--root` for the main menu (which has no "back"
 and no "main menu"), and `menu()`/`prompt_nav` treat a `read` failure (EOF) as
 "quit" so the wizard can never spin on a closed stdin.
 
@@ -147,9 +147,9 @@ and no "main menu"), and `menu()`/`prompt_nav` treat a `read` failure (EOF) as
 nav shortcuts to the numbers `1`/`2`/`3` as well as the words, so the first
 three entries of ANY menu were unreachable by number -- and the network-kind
 submenu has exactly two entries, so it could not be selected at all (the `1`
-went to "nazaj", the `2` to "glavni meni"). Numbers now select entries only;
-nav is word-only (`0` is the sole numeric alias, for "nazaj"). The wizard
-steps distinguish `quit` (2) from `main_menu` (3) so "glavni meni" actually
+went to "back", the `2` to "main menu"). Numbers now select entries only;
+nav is word-only (`0` is the sole numeric alias, for "back"). The wizard
+steps distinguish `quit` (2) from `main_menu` (3) so "main menu" actually
 returns to the menu instead of aborting the run.
 
 It only ever *offers* installs (exact
@@ -167,8 +167,8 @@ the first menu is not buried under a wall of `ok` rows. Prose lines are
 hard-wrapped to the terminal width (`gut_wrap`) and fixed-width list rows are
 truncated, never wrapped (`gut_fit`), so text never overflows or overlaps.
 The chain menu is a two-level submenu, each level on its own page: page 1
-picks the network kind ("Testna omrežja" / "Glavna omrežja"); choosing one
-opens page 2 (`new_page`, breadcrumb `1/7 · VERIGA › …`) listing that kind's
+picks the network kind ("Test networks" / "Main networks"); choosing one
+opens page 2 (`new_page`, breadcrumb `1/7 · CHAIN › …`) listing that kind's
 chains in a compact multi-column grid (`menu()` fills as many `NN) Name`
 columns as the width allows), so 21 chains are a few short rows, not a
 single-column wall. Chain names are short and human (`CHAIN_TITLES` /
@@ -176,9 +176,9 @@ single-column wall. Chain names are short and human (`CHAIN_TITLES` /
 the kind is the page, so rows carry no `[testnet]`/`[mainnet]` tag, and the
 loud ETH/ETC warning is not repeated (the short title already disambiguates;
 the warning is still enforced at the mainnet confirmation step and by
-`require_mainnet_confirmation()`). `0`/`nazaj` steps back one level, `q`
-quits. Every `prompt_nav` prompt carries a `(nazaj = prejšnji korak · izhod =
-prekini)` hint, so navigation is discoverable without the removed intro line.
+`require_mainnet_confirmation()`). `0`/`back` steps back one level, `q`
+quits. Every `prompt_nav` prompt carries a `(back = previous step · exit =
+abort)` hint, so navigation is discoverable without the removed intro line.
 A bare Enter at page 1 defaults to testnets; at page 2 to `sepolia`
 (`MENU_DEFAULT_VAL`).
 
@@ -237,9 +237,9 @@ concolic solution (evaluated directly, not through the mutator's
 `get_infant_state`) made the oracle see a post-state write that never happens
 on-chain. The stage now skips uninitialized testcases
 (`src/evm/concolic/concolic_stage.rs`). This closes THAT path; it does not
-make concolic fully storage-aware (FAZA 2 remains partly open -- see below).
+make concolic fully storage-aware (PHASE 2 remains partly open -- see below).
 
-**Symbolic storage, FAZA 2.1 (2026-11-07).** `symbolic_state` is now
+**Symbolic storage, PHASE 2.1 (2026-11-07).** `symbolic_state` is now
 `HashMap<EVMAddress, SymbolicStorage>` on `ConcolicHost` (NOT per-frame in
 `ConcolicCallCtx`): EVM storage is addressed by contract, so a slot written
 in one call must stay readable from a later call in the same transaction
@@ -265,7 +265,7 @@ so a mapping entry that existed BEFORE the tx (`require(m[k]==1)` for
 attacker-chosen `k`) stays unreachable -- inverting the hash would be needed.
 See `LIMITATIONS.md` 3/3b and `BLOCKERS.md` B3.
 
-**FAZA 2.3 (2026-11-07):** `build_plan_meta`
+**PHASE 2.3 (2026-11-07):** `build_plan_meta`
 (`src/evm/solution/script_generator.rs`) now forces `confidence = "sim-review"`
 whenever `trace_depends_on_control_leak` holds, even for a Confirmed-tier
 bug_type -- a `sim-confirmed` plan must never rest on control leak. The SAME
@@ -289,7 +289,7 @@ End-to-end proof (real binary, no mocks):
   that needs a keccak preimage) does NOT fire WITH `--concolic`, and the
   companion test asserts the stage actually ran (no vacuous pass).
 
-**FAZA 2.4 (2026-11-07): control leak OFF during concolic search.**
+**PHASE 2.4 (2026-11-07): control leak OFF during concolic search.**
 `concolic_stage.rs` raises `CONCOLIC_NO_CONTROL_LEAK` (`src/evm/host.rs`)
 for the duration of each testcase's `vm.execute`, so `control_leak_bypassed()`
 routes every call to `call_forbid_control_leak` -- the real callee, exactly
@@ -300,10 +300,10 @@ is unchanged. Proof: `host::control_leak_bypass_tests::
 concolic_flag_forces_control_leak_bypass`, plus E2E `tests/evm/concolic-2/`
 (cross-contract `CALL`) still finds `sim-confirmed` `0x3322`, and a fixed-seed
 baseline comparison shows no regression. Still open (R3): for non-concolic
-search the leak remains on by design; there the FAZA 2.3 label + downgrade
+search the leak remains on by design; there the PHASE 2.3 label + downgrade
 still prevent a `sim-confirmed` presentation.
 
-**FAZA 2.5 (2026-11-07): symbolic CALL return values.** The result of a
+**PHASE 2.5 (2026-11-07): symbolic CALL return values.** The result of a
 `CALL`/`STATICCALL`/`DELEGATECALL` is no longer blindly concrete. `RETURN`
 (0xf3) captures the callee's own symbolic memory window via
 `SymbolicMemory::get_slice_tracked` into `ConcolicCallCtx::return_bytes`;
@@ -332,7 +332,7 @@ fixtures are `tests/evm/concolic_retval/` (positive) and
 `--concolic-timeout 5000`. The concolic source map (`combined.json`) is
 gitignored, so that test regenerates it from the committed `.sol` with the
 pinned solc (`~/.svm/0.8.24`) and skips (never fails) if solc is absent.
-Still open (R3): symbolic CALL targets (FAZA 2.2), symbolic balances, and the
+Still open (R3): symbolic CALL targets (PHASE 2.2), symbolic balances, and the
 `keccak256` preimage case (3b). See `LIMITATIONS.md` 3c.
 
 ### Concolic runs on a bounded, campaign-wide worker pool
@@ -435,7 +435,7 @@ test does not exist (the real tests are the three named above).
 - `onchain_scripts/chains.py` — `NetworkProfile` + `verify_rpc_identity`
   read the endpoint's REAL `eth_chainId` and refuse to run on a mismatch
   before any signing. Never trust the `--chain` string alone.
-- FAZA 1 gas reality (`onchain_scripts/auto_pipeline.py`): the revm model has
+- PHASE 1 gas reality (`onchain_scripts/auto_pipeline.py`): the revm model has
   no gas metering, so the authoritative number is the node's own
   `eth_estimateGas` against the real `block.gasLimit`
   (`estimate_plan_gas_on_fork`). Those fields are stamped on the plan, and the
@@ -444,7 +444,7 @@ test does not exist (the real tests are the three named above).
   real C9f53_2 incident (~49.6M gas vs an 8,000,000 block limit).
   `batch_pipeline.py` measures gas the same way. Test:
   `test_gas_oversized_gate.py`.
-- `src/evm/multicore.rs` — FAZA 6.2 multi-core via **process isolation**
+- `src/evm/multicore.rs` — PHASE 6.2 multi-core via **process isolation**
   (`--jobs N`). Processes, not threads: `EVMFuzzState` is not `Send` and the
   coverage/cmp maps (`src/sync_utils.rs`) are process-global `RacyCell`s that
   are sound only under a single-threaded assumption. (The concolic worker pool
@@ -478,7 +478,7 @@ test does not exist (the real tests are the three named above).
   returning inside `--concolic-timeout` degrades to `unknown` (skip) instead of
   exhausting host RAM. Tests:
   `evm::concolic::concolic_host::concolic_memory_cap_tests`.
-- External-data hardening (FAZA 6.1): never `.unwrap()`/`.expect()` on data
+- External-data hardening (PHASE 6.1): never `.unwrap()`/`.expect()` on data
   from outside the process (RPC responses, solc/forge artifacts, ABIs,
   storage, user presets). Return a typed `Result` or a safe default. The
   remaining `.unwrap()`s are `.parse().unwrap()` on static literals,
@@ -524,4 +524,4 @@ depending on faucet funds.
 - Comments: only for genuinely non-obvious invariants, workarounds, or
   trade-offs. Do not narrate the diff or restate the code.
 - Proof tests live in a `#[cfg(test)] mod tests` beside the module they
-  cover, tagged with the phase they belong to (e.g. `FAZA 6.1`).
+  cover, tagged with the phase they belong to (e.g. `PHASE 6.1`).

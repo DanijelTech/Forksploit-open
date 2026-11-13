@@ -208,7 +208,7 @@ impl OffChainArtifact {
         }
 
         let bin = parts.remove(0);
-        // FAZA 6.1: a pre-1970 system clock is impossible in practice, but a
+        // PHASE 6.1: a pre-1970 system clock is impossible in practice, but a
         // fallback keeps this from panicking on an exotic host.
         let now_secs = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -252,7 +252,7 @@ impl OffChainArtifact {
                 }
             }
             "npx" | "npm" | "pnpm" | "yarn" => {
-                // FAZA 6.1: a non-UTF8 current dir returns an error, not a panic.
+                // PHASE 6.1: a non-UTF8 current dir returns an error, not a panic.
                 let cwd = std::env::current_dir()?;
                 let cwd = cwd
                     .to_str()
@@ -266,7 +266,7 @@ impl OffChainArtifact {
         }
 
         // execute the command and directly output to stdout
-        // FAZA 6.1: a spawn failure (binary missing) is a typed error, not a panic.
+        // PHASE 6.1: a spawn failure (binary missing) is a typed error, not a panic.
         let output = std::process::Command::new(bin)
             .args(parts)
             .status()
@@ -280,19 +280,19 @@ impl OffChainArtifact {
             "solc" => {
                 let mut metadata = vec![];
                 let combined_json = serde_json::from_str::<Value>(&std::fs::read_to_string(combined_json_path)?)?;
-                // FAZA 6.1: solc output is external; a non-object root is an
+                // PHASE 6.1: solc output is external; a non-object root is an
                 // error rather than a panic.
                 let output = combined_json.as_object().ok_or("solc combined-json is not an object")?;
                 for entry in std::fs::read_dir(folder.clone())? {
                     let entry = entry?;
                     let path = entry.path();
-                    // FAZA 6.1: skip entries whose name is not UTF-8.
+                    // PHASE 6.1: skip entries whose name is not UTF-8.
                     let Some(name) = path.file_name().and_then(|n| n.to_str()) else {
                         continue;
                     };
                     if path.is_file() && name.ends_with("_meta.json") {
                         let json = std::fs::read_to_string(path)?;
-                        // FAZA 6.1: a metadata file with an unexpected shape is
+                        // PHASE 6.1: a metadata file with an unexpected shape is
                         // skipped instead of panicking on the nested unwraps.
                         let Ok(value) = serde_json::from_str::<Value>(&json) else {
                             continue;

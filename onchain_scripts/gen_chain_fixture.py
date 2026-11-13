@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """gen_chain_fixture.py -- deterministically generate an N-step "chain" bug
 fixture, used to measure how deep a transaction SEQUENCE ForkSploit can reach
 (BLOCKERS.md B1).

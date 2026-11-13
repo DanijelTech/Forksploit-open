@@ -1,4 +1,4 @@
-//! FAZA 6.2: multi-core fuzzing via process isolation.
+//! PHASE 6.2: multi-core fuzzing via process isolation.
 //!
 //! Why processes and not threads: `EVMFuzzState` is not `Send` -- the
 //! compiler rejects `assert_send::<EVMFuzzState>()` because `StagedVMState`

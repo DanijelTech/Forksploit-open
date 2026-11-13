@@ -164,7 +164,7 @@ impl Drop for CallUntilGuard {
     }
 }
 
-/// FAZA 2.4: while set, the call dispatch below NEVER takes the control-leak
+/// PHASE 2.4: while set, the call dispatch below NEVER takes the control-leak
 /// path (`call_allow_control_leak`) -- every call runs the real callee code
 /// via `call_forbid_control_leak`, exactly as an on-chain transaction would.
 /// The concolic stage raises this for the duration of its execution so that
@@ -175,7 +175,7 @@ pub static CONCOLIC_NO_CONTROL_LEAK: AtomicBool = AtomicBool::new(false);
 
 /// Whether the current call must bypass the control-leak path. True when the
 /// caller is a "fast call" (never leak) or while the concolic stage has
-/// raised `CONCOLIC_NO_CONTROL_LEAK` (FAZA 2.4). Split out so the bypass
+/// raised `CONCOLIC_NO_CONTROL_LEAK` (PHASE 2.4). Split out so the bypass
 /// condition is unit-testable without constructing a full `FuzzHost`.
 #[inline]
 pub fn control_leak_bypassed() -> bool {
@@ -237,7 +237,7 @@ lazy_static! {
 
     /// `"<checksummed contract>|<checksummed address>"` for every address the
     /// SLOAD-harvest pulled out of THAT contract's own storage. This is the
-    /// semantic owner-gated signal (FAZA 3.2 of TASK_SPEC.md):
+    /// semantic owner-gated signal (PHASE 3.2 of TASK_SPEC.md):
     /// `HARVESTED_STORAGE_ADDRESSES` says an address came from SOME target's
     /// storage, but the exploit shape `require(msg.sender == owner)` is only
     /// proven when the address was read from the SAME contract that the trace
@@ -280,7 +280,7 @@ fn sender_guard_key(checksummed_contract: &str, checksummed_addr: &str) -> Strin
 
 /// Whether `checksummed_addr` is a privileged identity OF
 /// `checksummed_contract` -- i.e. it was harvested from THAT contract's own
-/// storage. This is the semantic owner-gated test (FAZA 3.2): the trace
+/// storage. This is the semantic owner-gated test (PHASE 3.2): the trace
 /// calls the contract AS an identity the contract itself stored, which is
 /// exactly `require(msg.sender == owner)` satisfied by impersonation.
 /// Distinct from `is_harvested_storage_address`, which is true for an
@@ -2430,15 +2430,15 @@ where
         // flag check
         if _topics.len() == 1 {
             let current_flag = _topics.last().unwrap().0;
-            // hex is "forksploit"
-            if current_flag[0] == 0x66 &&
-                current_flag[1] == 0x75 &&
-                current_flag[2] == 0x7a &&
-                current_flag[3] == 0x7a &&
-                current_flag[4] == 0x6c &&
-                current_flag[5] == 0x61 &&
-                current_flag[6] == 0x6e &&
-                current_flag[7] == 0x64 &&
+            // hex is "DanyTech"
+            if current_flag[0] == 0x44 &&
+                current_flag[1] == 0x61 &&
+                current_flag[2] == 0x6e &&
+                current_flag[3] == 0x79 &&
+                current_flag[4] == 0x54 &&
+                current_flag[5] == 0x65 &&
+                current_flag[6] == 0x63 &&
+                current_flag[7] == 0x68 &&
                 current_flag[8] == 0x00 &&
                 current_flag[9] == 0x00 ||
                 current_flag == SCRIBBLE_EVENT_HEX
@@ -2793,7 +2793,7 @@ mod harvest_tests {
         assert!(harvested_address_origin(&checksum(&addr)).is_none());
     }
 
-    /// FAZA 3.2: the semantic owner-gated pairing. An identity is a
+    /// PHASE 3.2: the semantic owner-gated pairing. An identity is a
     /// privileged sender FOR a contract only when it was harvested from
     /// THAT contract's own storage -- not merely from some target.
     #[test]
@@ -2821,7 +2821,7 @@ mod harvest_tests {
 mod control_leak_bypass_tests {
     use super::*;
 
-    /// FAZA 2.4: the concolic stage must be able to force every call through
+    /// PHASE 2.4: the concolic stage must be able to force every call through
     /// the REAL callee (`call_forbid_control_leak`), never the leak path.
     /// Asserted as an implication, not an absolute false, so a parallel test
     /// that happens to hold a fast-call flag cannot make this flaky: the

@@ -47,13 +47,13 @@ contributors and the honest list of known weak points are in
 
 ### Added
 
-- **`forksploit.sh`: "Napredne nastavitve" (main menu 5)** — persisted
+- **`forksploit.sh`: "Advanced settings" (main menu 5)** — persisted
   advanced run settings (`onchain_scripts/forksploit_settings.json`,
   gitignored, no secrets): `--fuzz-seconds`, `--detectors`, `--fund-eth`,
   `--no-preflight`, `--no-gas-oracle`. Each maps 1:1 onto a real
   `auto_pipeline.py`/`batch_pipeline.py` flag; with none set, the built
   command is byte-identical to before.
-- **`forksploit.sh`: "Orodja" (main menu 6)** — launches the tools the wizard
+- **`forksploit.sh`: "Tools" (main menu 6)** — launches the tools the wizard
   never ran: `monitor.py`, `triage_findings.py`, `materialize_plan.py`,
   `dashboard_server.py`, `dex_arbitrage_scanner.py`, `gen_chain_fixture.py`.
 - **`onchain_scripts/server_run.sh`** — the one place the dashboard GUI is
@@ -70,9 +70,9 @@ contributors and the honest list of known weak points are in
 
 - **Dashboard GUI redesigned into a modern sidebar shell** (projection +
   control only; no system logic). A fixed left sidebar groups everything into
-  three submenus — **Upravljanje** (Pregled, Zaženi operacijo, Aktivni teki,
-  Konzola), **Nastavitve in konfiguracija** (Wallet policy, RPC override-i,
-  Pogodbe) and **Rezultati** (Najdbe, Dnevniki tekov, Procesi). A hash router
+  three submenus — **Management** (Overview, Run an operation, Active runs,
+  Console), **Settings and configuration** (Wallet policy, RPC overrides,
+  Contracts) and **Results** (Findings, Run logs, Processes). A hash router
   makes each view linkable; the live ETH/ETC network badge + watermark are
   kept. Data the server already projected but the old UI dropped is now shown:
   `contracts`, `vulnerabilities_found` (plan.json), `dashboard_runs` (with a
@@ -193,7 +193,7 @@ increase) is ever presented as a demonstrated attack.
   all system prerequisites.
 - **`forksploit.sh`** — the single interactive entry point: preflight
   ("doctor"), a persistent main menu, and a 7-step run wizard, with navigation
-  by word (`nazaj` / `glavni meni` / `izhod`).
+  by word (`back` / `main menu` / `exit`).
 
 ### Changed
 
@@ -246,13 +246,13 @@ increase) is ever presented as a demonstrated attack.
   escape to the generic per-plan handler and be reported as `INCONCLUSIVE`,
   hiding a genuine "reverts on real state" result. It is now caught and
   returned as `NOT CONFIRMED` with the reason.
-- **FAZA 2.3 — a `sim-confirmed` finding never rests on control leak.**
+- **PHASE 2.3 — a `sim-confirmed` finding never rests on control leak.**
   `build_plan_meta` forces `confidence = "sim-review"` whenever
   `trace_depends_on_control_leak` holds, and the same rule is enforced at the
   finding level (`effective_confidence` in `oracle.rs`).
-- **FAZA 2.4 — control leak off during concolic search.** A concolic solution
+- **PHASE 2.4 — control leak off during concolic search.** A concolic solution
   can no longer rest on a faked/intercepted call return.
-- **FAZA 2.5 — symbolic CALL return values** (with a concrete fallback when
+- **PHASE 2.5 — symbolic CALL return values** (with a concrete fallback when
   the callee's return is not fully symbolic).
 
 ### Security

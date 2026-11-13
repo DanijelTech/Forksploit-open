@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """dex_arbitrage_scanner.py -- watches two real, independent Uniswap-V2-
 shaped DEXes on the SAME chain for a genuine, flashloan-fundable price
 gap on one token pair, and ALERTS (does not execute) when one is
@@ -62,7 +63,7 @@ structurally the same primitive real oracle-manipulation attacks use --
 see this file's own commit history, 2026-11-02, for the full reasoning.
 No automatic block is applied on a large shift (by explicit instruction,
 this stays a human-judgment matter for now) -- but --execute ALWAYS
-stops and asks a human to type the exact word "DA" before sending
+stops and asks a human to type the exact word "YES" before sending
 anything real, showing both pools' price impact and the expected profit
 first. There is no flag to skip this prompt.
 
@@ -497,32 +498,32 @@ def ask_human_confirmation(pair_name: str, opportunity: dict, tee: Tee) -> bool:
     price impact on BOTH pools (the SAME metric
     src/evm/oracles/twap_manipulation.rs's TwapManipulationOracle checks
     on-chain -- see price_impact_pct's own doc) plus the expected profit,
-    then waits for an unambiguous, EXACT "DA" on stdin. Anything else --
+    then waits for an unambiguous, EXACT "YES" on stdin. Anything else --
     a bare Enter, a typo, an EOF (no interactive terminal attached, e.g.
     running under a non-interactive scheduler), or an exception reading
     stdin -- is treated as a decline. There is no default-approve path
     anywhere in this function."""
     tee.log(
-        "=== POTREBNA JE ČLOVEŠKA POTRDITEV PRED IZVEDBO ===\n"
-        f"  Par: {pair_name}\n"
-        f"  Izposodi: {_eth(opportunity['x'])} token_a (Aave V3 flashloan)\n"
-        f"  Nakupni pool: {opportunity['buy_pair']} -- cenovni vpliv {opportunity['buy_impact_pct']:+.4f}%\n"
-        f"  Prodajni pool: {opportunity['sell_pair']} -- cenovni vpliv {opportunity['sell_impact_pct']:+.4f}%\n"
-        f"  Pričakovan čisti profit: {_eth(opportunity['net_profit_wei'])} token_a\n"
-        "  (Za primerjavo: TwapManipulationOracle v Rust fuzzerju oznaci manipulacijo pri premiku razmerja "
-        "rezerv za več kot +100%/-50% znotraj ene transakcije.)",
+        "=== HUMAN CONFIRMATION REQUIRED BEFORE EXECUTION ===\n"
+        f"  Pair: {pair_name}\n"
+        f"  Borrow: {_eth(opportunity['x'])} token_a (Aave V3 flashloan)\n"
+        f"  Buy pool: {opportunity['buy_pair']} -- price impact {opportunity['buy_impact_pct']:+.4f}%\n"
+        f"  Sell pool: {opportunity['sell_pair']} -- price impact {opportunity['sell_impact_pct']:+.4f}%\n"
+        f"  Expected net profit: {_eth(opportunity['net_profit_wei'])} token_a\n"
+        "  (For comparison: the TwapManipulationOracle in the Rust fuzzer flags manipulation when the "
+        "reserve ratio moves by more than +100%/-50% within a single transaction.)",
         alert=True,
     )
     try:
-        answer = input(f"Ali naj izvedem to trgovino na {pair_name}? Vtipkaj natanko 'DA' za potrditev, karkoli drugega zavrne: ")
+        answer = input(f"Execute this trade on {pair_name}? Type exactly 'YES' to confirm, anything else rejects: ")
     except EOFError:
-        tee.log(f"Ni interaktivnega vnosa (EOF na stdin) -- ne morem vprašati človeka, zato privzeto ZAVRNJENO za {pair_name}.", alert=True)
+        tee.log(f"No interactive input (EOF on stdin) -- cannot ask a human, so defaulting to REJECTED for {pair_name}.", alert=True)
         return False
     answer = answer.strip()
-    if answer == "DA":
-        tee.log(f"Človek je POTRDIL izvedbo na {pair_name}.")
+    if answer == "YES":
+        tee.log(f"The human CONFIRMED execution on {pair_name}.")
         return True
-    tee.log(f"Človek je ZAVRNIL izvedbo na {pair_name} (odgovor: {answer!r}).", alert=True)
+    tee.log(f"The human REJECTED execution on {pair_name} (answer: {answer!r}).", alert=True)
     return False
 
 

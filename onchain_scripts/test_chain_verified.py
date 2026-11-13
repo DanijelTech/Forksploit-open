@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""test_chain_verified.py -- the `chain-verified` tier (FAZA 7 of
+# Author: DanyTech
+"""test_chain_verified.py -- the `chain-verified` tier (PHASE 7 of
 TASK_SPEC.md) must be awarded ONLY to a plan that was actually
 executed on a real chain AND moved a strictly positive amount of real
 assets. It is the one tier that must never be handed out on the strength

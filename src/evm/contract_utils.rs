@@ -121,7 +121,7 @@ impl ContractLoader {
                     (addr.is_some() && contract.deployed_address == addr.unwrap())
                 {
                     debug!("Forcing ABI for {}", contract.name);
-                    // FAZA 6.1: a malformed forced ABI is reported and the
+                    // PHASE 6.1: a malformed forced ABI is reported and the
                     // contract keeps its previous ABI instead of panicking.
                     match ContractLoader::parse_abi_str(&abi) {
                         Ok(parsed) => contract.abi = parsed,
@@ -242,7 +242,7 @@ impl ContractLoader {
         Self::parse_abi_str(&data)
     }
 
-    /// FAZA 6.1: `ty`/`input` come from an external ABI JSON. Every malformed
+    /// PHASE 6.1: `ty`/`input` come from an external ABI JSON. Every malformed
     /// shape (missing `type`, non-array `components`, a non-numeric fixed
     /// array length, an unknown tuple variant) returns a descriptive error
     /// instead of panicking.
@@ -306,7 +306,7 @@ impl ContractLoader {
         }
     }
 
-    /// FAZA 6.1: `data` is external (a `.abi` file, solc output, or an
+    /// PHASE 6.1: `data` is external (a `.abi` file, solc output, or an
     /// explorer response). A body that is not a JSON array, or an entry whose
     /// `name`/`inputs`/`type` is malformed, returns an error instead of
     /// panicking.
@@ -396,7 +396,7 @@ impl ContractLoader {
             .map_err(|e| anyhow::anyhow!("invalid hex in {}: {e}", path.display()))
     }
 
-    /// FAZA 6.1: constructor arguments are user-supplied. An odd or
+    /// PHASE 6.1: constructor arguments are user-supplied. An odd or
     /// non-hex argument is skipped (zero-filled) with a warning rather than
     /// panicking; the rest of the arguments are still encoded.
     fn constructor_args_encode(constructor_args: &[String]) -> Vec<u8> {
@@ -446,7 +446,7 @@ impl ContractLoader {
         let contract_balance = if !constructor_args.is_empty() {
             let bal: String = constructor_args.last().cloned().unwrap_or_default();
             if bal.ends_with("wei") || bal.ends_with("gwei") || bal.ends_with("ether") {
-                // FAZA 6.1: `bal` is a user-supplied constructor argument; an
+                // PHASE 6.1: `bal` is a user-supplied constructor argument; an
                 // unparseable value falls back to zero instead of panicking.
                 EVMU256::from_str(parse_and_convert(bal.as_str()).as_str()).unwrap_or_else(|e| {
                     error!("cannot parse contract balance '{}': {e}", bal);
@@ -621,7 +621,7 @@ impl ContractLoader {
         for i in glob(p).expect("not such folder") {
             match i {
                 Ok(path) => {
-                    // FAZA 6.1: skip paths whose name is not valid UTF-8.
+                    // PHASE 6.1: skip paths whose name is not valid UTF-8.
                     let Some(path_str) = path.to_str() else {
                         continue;
                     };
@@ -663,7 +663,7 @@ impl ContractLoader {
 
         let (files, source_map_replacements, raw_sourcemaps) = match contract_combined_json_info {
             Some(json_filename) => {
-                // FAZA 6.1: the combined-json file path was discovered by
+                // PHASE 6.1: the combined-json file path was discovered by
                 // walking the target directory; a read failure degrades to
                 // "no source map" instead of panicking.
                 let mut buf = String::new();
@@ -858,7 +858,7 @@ impl ContractLoader {
                 }
             }
 
-            // FAZA 6.1: a config entry whose artifact is missing from the
+            // PHASE 6.1: a config entry whose artifact is missing from the
             // solc build output used to panic; skip it with a diagnostic.
             let Some(more_info) = more_info else {
                 error!(
@@ -1105,7 +1105,7 @@ impl ContractLoader {
         for (idx, artifact) in offchain_artifacts.iter().enumerate() {
             for (loc, contract) in &artifact.contracts {
                 if contract.deploy_bytecode.is_empty() {
-                    // FAZA 6.1: `deploy_bytecode_str` comes from solc output;
+                    // PHASE 6.1: `deploy_bytecode_str` comes from solc output;
                     // an unparseable value skips this candidate instead of
                     // panicking the whole artifact search.
                     let contract_deploy_bytecode = match hex::decode(contract.deploy_bytecode_str.trim()) {
@@ -1556,7 +1556,7 @@ impl ContractLoader {
             // finish link
             for (key, value) in _libs.unwrap().into_iter() {
                 let lib_bytecode = value.deploy_bytecode_str;
-                // FAZA 6.1: library bytecode comes from solc output; skip a
+                // PHASE 6.1: library bytecode comes from solc output; skip a
                 // library whose hex is malformed instead of panicking.
                 let lib_bytecode_hex = match hex::decode(lib_bytecode.trim()) {
                     Ok(b) => Bytes::from(b),
@@ -1575,7 +1575,7 @@ impl ContractLoader {
                 };
                 let lib_addr =
                     evm_executor.deploy(Bytecode::new_raw(lib_bytecode_hex.clone()), None, lib_addr, &mut state);
-                // FAZA 6.1: debug print only -- never panic if the deploy
+                // PHASE 6.1: debug print only -- never panic if the deploy
                 // returned None or the runtime code is missing.
                 if let Some(lib_addr) = lib_addr {
                     if let Some(code) = evm_executor.host.code.get(&lib_addr) {
@@ -1591,7 +1591,7 @@ impl ContractLoader {
                 assert!(lib_addr.is_some(), "failed to deploy lib");
             }
         }
-        // FAZA 6.1: setup contract bytecode comes from solc output; a
+        // PHASE 6.1: setup contract bytecode comes from solc output; a
         // malformed hex value is a hard setup failure, surfaced as a clear
         // error rather than a panic.
         let deploy_code = match hex::decode(deploy_code_str.trim()) {
@@ -1661,7 +1661,7 @@ impl ContractLoader {
                 let (res_bys, succ) = res[$nth].clone();
                 let mut addrs = vec![];
                 if succ {
-                    // FAZA 6.1: the setUp() return data is external contract
+                    // PHASE 6.1: the setUp() return data is external contract
                     // output; a decode failure yields no addresses instead of
                     // panicking.
                     match ethers::abi::decode(
@@ -1698,7 +1698,7 @@ impl ContractLoader {
                 let (res_bys, succ) = res[$nth].clone();
                 let mut sigs = vec![];
                 if succ {
-                    // FAZA 6.1: external setUp() return data; a decode or shape
+                    // PHASE 6.1: external setUp() return data; a decode or shape
                     // mismatch yields no selectors instead of panicking.
                     match ethers::abi::decode(
                         &[ethers::abi::ParamType::Array(Box::new(
@@ -1828,7 +1828,7 @@ type CombinedJsonOutput = (
 );
 // Return (vec_files, vec_replacements, vec_raw_source_map)
 pub fn extract_combined_json(json: String, target_path: String, base_path: Option<String>) -> CombinedJsonOutput {
-    // FAZA 6.1: `json` is solc `--combined-json` output (external data).
+    // PHASE 6.1: `json` is solc `--combined-json` output (external data).
     // Malformed input yields an empty result instead of panicking.
     let map_json = match serde_json::from_str::<serde_json::Value>(&json) {
         Ok(v) => v,
@@ -1853,7 +1853,7 @@ pub fn extract_combined_json(json: String, target_path: String, base_path: Optio
     // the base_path can be either absolute or relative
     // if absolute, then we use it as is
     // if relative, then we concat it with target_path
-    // FAZA 6.1: `target_path` carries a trailing '*' wildcard; fall back to
+    // PHASE 6.1: `target_path` carries a trailing '*' wildcard; fall back to
     // the path as-is rather than panicking if it is absent.
     let strip_wildcard = |p: &str| p.strip_suffix('*').unwrap_or(p).to_string();
     let root_path = match base_path.clone() {
@@ -1914,7 +1914,7 @@ pub fn extract_combined_json(json: String, target_path: String, base_path: Optio
 }
 
 pub fn extract_sig_from_contract(code: &str) -> Vec<[u8; 4]> {
-    // FAZA 6.1: `code` is external bytecode hex; invalid input yields no
+    // PHASE 6.1: `code` is external bytecode hex; invalid input yields no
     // signatures instead of panicking.
     let bytes = match hex::decode(code) {
         Ok(b) => b,
@@ -1937,7 +1937,7 @@ pub fn extract_sig_from_contract(code: &str) -> Vec<[u8; 4]> {
             // Solidity: check whether next ops is EQ
             // Vyper: check whether next 2 ops contain XOR
             if bytes[pc + 5] == 0x14 || bytes[pc + 5] == 0x18 || bytes[pc + 6] == 0x18 || bytes[pc + 6] == 0x14 {
-                // FAZA 6.1: bounds are checked above (pc + 6 < len); copy the
+                // PHASE 6.1: bounds are checked above (pc + 6 < len); copy the
                 // 4 selector bytes without unwrapping.
                 if let Some(sel) = bytes.get(pc + 1..pc + 5) {
                     let mut sig_bytes = [0u8; 4];
@@ -2109,7 +2109,7 @@ mod tests {
         assert_eq!(abi_cfg.abi, "(address)");
     }
 
-    /// FAZA 6.1: malformed ABI bodies must return `Err`, not panic.
+    /// PHASE 6.1: malformed ABI bodies must return `Err`, not panic.
     #[test]
     fn test_parse_abi_str_malformed_returns_err() {
         // Not JSON at all.

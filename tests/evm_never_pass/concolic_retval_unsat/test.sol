@@ -8,7 +8,7 @@ contract main {
         return x * 2;
     }
 
-    // NEGATIVE control for FAZA 2.5: `x * 2` is always EVEN, but the gate
+    // NEGATIVE control for PHASE 2.5: `x * 2` is always EVEN, but the gate
     // demands an ODD secret, so NO `y` satisfies it and `solved` can never
     // become 1. A correct concolic must NOT report this -- it proves the
     // return-value splice does not turn an unsatisfiable gate into a false

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """Confirmation engine for LLM-proposed attack hypotheses.
 
 This is the part the human (not the LLM) is required to build and fully

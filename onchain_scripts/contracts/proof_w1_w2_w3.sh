@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Author: DanyTech
 # proof_w1_w2_w3.sh -- reproducible proof (R1) that AttackWallet's W1/W2/W3
 # fixes actually hold, against a throwaway local anvil node. No forge-std,
 # no mocks: the REAL compiled AttackWallet is deployed and exercised.

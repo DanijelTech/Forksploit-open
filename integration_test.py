@@ -1,3 +1,4 @@
+# Author: DanyTech
 import glob
 import multiprocessing
 import os

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """test_server_run.py -- proof (R1) for onchain_scripts/server_run.sh, the one
 place the dashboard GUI is launched from.
 
@@ -117,8 +118,8 @@ class ServerRunTest(unittest.TestCase):
         port = _free_port()
         proc = _spawn(["bash", str(SERVER_RUN), str(port)])
         self._procs.append(proc)
-        out = self._read_until(proc, "Dashboard pripravljen", timeout=25)
-        self.assertIn("Dashboard pripravljen", out, out)
+        out = self._read_until(proc, "Dashboard ready", timeout=25)
+        self.assertIn("Dashboard ready", out, out)
         self.assertIn(f"http://127.0.0.1:{port}", out, out)
         # It really serves the GUI.
         self.assertTrue(_port_open(port), "server is not accepting connections")
@@ -136,7 +137,7 @@ class ServerRunTest(unittest.TestCase):
             ["bash", str(SERVER_RUN), str(port)],
             cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=30,
         ).stdout
-        self.assertIn("že teče", out, out)
+        self.assertIn("already running", out, out)
 
     def test_falls_back_when_port_taken_by_a_foreign_service(self):
         # A plain socket listener stands in for "some other program owns the
@@ -151,13 +152,13 @@ class ServerRunTest(unittest.TestCase):
 
         proc = _spawn(["bash", str(SERVER_RUN), str(port)])
         self._procs.append(proc)
-        out = self._read_until(proc, "Dashboard pripravljen", timeout=25)
-        self.assertIn("je zaseden", out, out)
+        out = self._read_until(proc, "Dashboard ready", timeout=25)
+        self.assertIn("is taken", out, out)
         self.assertNotIn(f"http://127.0.0.1:{port} ", out, "must not use the foreign port")
         # It found a different free port and serves there.
         used = None
         for line in out.splitlines():
-            if "Dashboard pripravljen" in line and "http://127.0.0.1:" in line:
+            if "Dashboard ready" in line and "http://127.0.0.1:" in line:
                 used = int(line.split("http://127.0.0.1:")[1].split()[0].rstrip(")"))
         self.assertIsNotNone(used, out)
         self.assertNotEqual(used, port)

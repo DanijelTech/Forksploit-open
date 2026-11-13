@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """test_gas_limit_cap.py -- the gas limit estimate_gas_limit() returns is a
 HARD ceiling: it may never exceed MAX_GAS_LIMIT (8,000,000), on any chain, no
 matter what eth_estimateGas says or what the block's own gasLimit currently is.

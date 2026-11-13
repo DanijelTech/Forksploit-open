@@ -117,7 +117,7 @@ impl Abi {
     }
 
     fn format_token(&mut self, token: &DynSolValue, token_type: Option<DynSolType>) -> String {
-        // FAZA 6.1: `as_type` is `Option` (None for a value alloy cannot
+        // PHASE 6.1: `as_type` is `Option` (None for a value alloy cannot
         // name). Fall back to a plain uint256 rather than `.expect()`
         // panicking on a decode that produced an unnamed value.
         let token_type = token_type
@@ -262,7 +262,7 @@ impl Abi {
         // change tuple array type to struct array type
         if ty.starts_with('(') && ty.ends_with("[]") {
             let tuple_sig = ty.trim_end_matches("[]");
-            // FAZA 6.1: the struct may legitimately be absent (e.g. a tuple
+            // PHASE 6.1: the struct may legitimately be absent (e.g. a tuple
             // array seen before its struct was built); indexing the map
             // would panic. Keep the raw tuple signature in that case.
             if let Some(def) = self.struct_defs.as_ref().and_then(|m| m.get(tuple_sig)) {
@@ -283,7 +283,7 @@ impl Abi {
                     .remove(&var_name)
                 {
                     Some(struct_instance) => struct_instance.value,
-                    // FAZA 6.1: previously `.expect("struct instance not
+                    // PHASE 6.1: previously `.expect("struct instance not
                     // found")`. Missing the instance only means we lose the
                     // struct wrapper; emitting the raw value is better than
                     // aborting the whole exploit-script generation.
@@ -296,7 +296,7 @@ impl Abi {
 }
 
 /// Best-effort Solidity type name for a decoded value; `uint256` when alloy
-/// cannot name the value. Never panics (FAZA 6.1).
+/// cannot name the value. Never panics (PHASE 6.1).
 fn value_type_name(value: &DynSolValue) -> String {
     value
         .as_type()

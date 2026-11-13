@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """test_pipeline_resilience.py -- one plan raising must not abort the plans
 after it.
 
@@ -76,7 +77,7 @@ class ChainAttemptsResilienceTest(unittest.TestCase):
 
 
 class ChainAttemptsGasFieldsTest(unittest.TestCase):
-    """FAZA 1.2: a composed attempt must surface the composed plan's OWN gas
+    """PHASE 1.2: a composed attempt must surface the composed plan's OWN gas
     reality, exactly like a standalone plan. The gate stamps the measured
     fields onto the merged plan; run_chain_attempts must carry them into the
     result so the report is not silent about a composed plan's gas."""

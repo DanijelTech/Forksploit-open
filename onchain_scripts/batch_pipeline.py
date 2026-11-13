@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """batch_pipeline.py -- runs auto_pipeline.py's full register -> fund ->
 fuzz -> exploit -> recover flow across MANY targets in one invocation,
 under exactly ONE funding wallet and ONE recovery wallet for the whole
@@ -198,11 +199,11 @@ def run_one_target(
         try:
             for finding in findings:
                 plan = finding["plan"]
-                # FAZA 1.2/1.3: stamp the plan's own gas reality (the node's
+                # PHASE 1.2/1.3: stamp the plan's own gas reality (the node's
                 # own eth_estimateGas vs the real block.gasLimit) BEFORE the
                 # gate, so an oversized plan is flagged and never sent. This
                 # mirrors auto_pipeline.main(); without it, batch runs would
-                # bypass the FAZA 1 gas guard entirely.
+                # bypass the PHASE 1 gas guard entirely.
                 gas_fit_info = None
                 if fork_w3 is not None:
                     gas_fit_info = estimate_plan_gas_on_fork(
@@ -237,7 +238,7 @@ def run_one_target(
                         chain=args.chain, return_units=True,
                     )
                 )
-                # FAZA 1.1: plan.json carries BOTH gas_estimate (stamped above)
+                # PHASE 1.1: plan.json carries BOTH gas_estimate (stamped above)
                 # and the actual gas_used; fall back to the fork estimate when
                 # the plan was never sent, mirroring auto_pipeline.main().
                 if not gas_units and gas_fit_info is not None:

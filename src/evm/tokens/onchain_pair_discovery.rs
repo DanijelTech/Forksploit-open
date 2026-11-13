@@ -17,7 +17,7 @@ use crate::evm::{
 };
 
 /// A Uniswap-V2-shaped DEX factory this module knows how to query directly
-/// on-chain, bypassing forksploit's own pairs-all.infra.danytech indexing
+/// on-chain, bypassing DanyTech's own pairs-all.infra.danytech indexing
 /// service entirely (see module doc below for why that matters).
 struct V2FactoryConfig {
     chain_id: u32,
@@ -190,13 +190,13 @@ fn lookup_pair_onchain(
 /// Why this exists: `fetch_uniswap_path` (uniswap.rs, via `find_path_onchain`)
 /// and `OnChainConfig::get_pair` (endpoints.rs) used to get their routes from
 /// `https://pairs-all.infra.danytech`, a service owned and operated by the
-/// upstream forksploit project, not this one. That service is no longer called
+/// upstream DanyTech project, not this one. That service is no longer called
 /// anywhere in this codebase, under any condition -- not as a first attempt,
 /// not as a fallback. It was the service responsible for 3 of this project's
 /// own persistently-failing tests (it returns malformed/empty responses for
 /// some queries, and was observed fully down -- Cloudflare 522 -- while this
 /// was being removed). It also never indexed Ethereum Classic at all -- ETC
-/// is not a chain forksploit's own infra was ever built to support -- so
+/// is not a chain DanyTech's own infra was ever built to support -- so
 /// discovery-time borrowing there would have stayed broken regardless of
 /// chain config, even if ETC had a real Aave/Balancer-equivalent lending
 /// protocol (it doesn't -- checked both official docs and on-chain; the only
@@ -269,10 +269,10 @@ pub fn fetch_pegged_pair_onchain(chain: &mut Box<dyn ChainConfig>, token_address
 
 /// Same on-chain lookup as `fetch_pegged_pair_onchain` above, but shaped
 /// as the lower-level `PairData` that `OnChainConfig::get_pair()`
-/// (endpoints.rs) used to get from forksploit's subgraph -- this is now
+/// (endpoints.rs) used to get from DanyTech's subgraph -- this is now
 /// that function's ONLY source of pairs, not a fallback, so `get_pair`/
 /// `fetch_uniswap_path` (uniswap.rs), not just Flashloan, never touch
-/// forksploit at all. `interface: "uniswapv2"` and the two `src` values
+/// DanyTech at all. `interface: "uniswapv2"` and the two `src` values
 /// used below (`"pegged"`, `"lp"`) are exact strings uniswap.rs pattern-
 /// matches on (see its `with_paths`'s `match pair.src.as_str()`) --
 /// anything else panics or is silently mishandled, so these aren't

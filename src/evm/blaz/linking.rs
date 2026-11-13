@@ -42,7 +42,7 @@ impl Linker {
         libs: BTreeMap<(String, String), ContractArtifact>,
     ) -> Vec<OffChainArtifact> {
         let mut offchain_artifacts_clone = offchain_artifacts.clone();
-        // FAZA 6.1: the deploy bytecode strings come from solc output; a
+        // PHASE 6.1: the deploy bytecode strings come from solc output; a
         // malformed value is skipped instead of panicking.
         let decode_bytecode = |s: &str| -> Option<Bytes> { hex::decode(s.trim()).ok().map(Bytes::from) };
         if !libs.is_empty() {
@@ -98,7 +98,7 @@ impl Linker {
                     for reference in lib_references {
                         let start = reference.start;
                         let length = reference.length;
-                        // FAZA 6.1: link reference offsets come from solc
+                        // PHASE 6.1: link reference offsets come from solc
                         // output; an out-of-range reference is skipped rather
                         // than panicking on the slice.
                         let Some(placeholder) = bytecode_str.get(start * 2..start * 2 + length * 2) else {
@@ -141,7 +141,7 @@ impl Linker {
     /// find all libs key
     #[allow(dead_code)] // exercised by unit tests; not called from the binary path
     pub fn find_all_libs_key(file_path: String) -> Result<BTreeSet<(String, String)>, Box<dyn Error>> {
-        // FAZA 6.1: the file path is external; surface read/parse failures as
+        // PHASE 6.1: the file path is external; surface read/parse failures as
         // errors instead of panicking.
         let json_data = fs::read_to_string(&file_path).map_err(|e| format!("cannot read {file_path}: {e}"))?;
         let mut all_libs_vec = BTreeSet::new();
@@ -196,7 +196,7 @@ impl Linker {
                             for reference in link_vec {
                                 let start = reference.start;
                                 let length = reference.length;
-                                // FAZA 6.1: guard the slice against out-of-range
+                                // PHASE 6.1: guard the slice against out-of-range
                                 // solc link references.
                                 let Some(placeholder) = bytecode_str.get(start * 2..start * 2 + length * 2) else {
                                     debug!("link reference out of range ({start}, {length}), skipping");
@@ -258,7 +258,7 @@ impl Linker {
 
     #[allow(dead_code)] // exercised by unit tests; not called from the binary path
     pub fn from_solc_json(json: String) -> Result<Vec<OffChainArtifact>, Box<dyn Error>> {
-        // FAZA 6.1: solc output is external data. Every structural access
+        // PHASE 6.1: solc output is external data. Every structural access
         // below returns a typed error instead of `.expect()`-panicking on a
         // truncated/malformed/older-schema build-info file.
         let arr = serde_json::from_str::<Value>(&json)?;
@@ -438,7 +438,7 @@ mod tests {
 
     use super::*;
 
-    /// FAZA 6.1/6.3: malformed solc build-info must yield an `Err`, never a
+    /// PHASE 6.1/6.3: malformed solc build-info must yield an `Err`, never a
     /// panic. Covers the shapes a truncated or older-schema file produces.
     #[test]
     fn test_from_solc_json_malformed_returns_err() {
@@ -480,14 +480,14 @@ mod tests {
         assert_eq!(arts[0].sources, vec![("A.sol".to_string(), "contract C {}".to_string())]);
     }
 
-    /// FAZA 6.1 proof: `find_all_libs_key` on a missing file returns an error
+    /// PHASE 6.1 proof: `find_all_libs_key` on a missing file returns an error
     /// instead of panicking.
     #[test]
     fn test_find_all_libs_key_missing_file_returns_err() {
         assert!(Linker::find_all_libs_key("/nonexistent/definitely-not-here.json".to_string()).is_err());
     }
 
-    /// FAZA 6.1 proof: `link_all_contract` must not panic when a contract's
+    /// PHASE 6.1 proof: `link_all_contract` must not panic when a contract's
     /// deploy bytecode is not valid hex; it skips the bad entry.
     #[test]
     fn test_link_all_contract_malformed_bytecode_does_not_panic() {

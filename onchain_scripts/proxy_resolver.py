@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """proxy_resolver.py -- discover a target's proxy stack over RPC, from the
 Python side, so the execution pipeline can fuzz and exploit the
 IMPLEMENTATION of a proxy target and not just the proxy's tiny dispatcher.

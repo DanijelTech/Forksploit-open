@@ -1,3 +1,4 @@
+// Author: DanyTech
 module.exports = async ({ github, context }, tagName) => {
   try {
     await github.rest.git.createRef({

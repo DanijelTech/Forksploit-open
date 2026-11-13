@@ -168,7 +168,7 @@ where
                     testcase_ref.clone(),
                     self.num_threads,
                 ))));
-                // FAZA 2.4: no control leak while concolic runs. A faked call
+                // PHASE 2.4: no control leak while concolic runs. A faked call
                 // return can make a branch reachable that the real callee
                 // never would, so a concolic "solution" resting on it names a
                 // transaction the chain cannot reproduce. Forcing the real

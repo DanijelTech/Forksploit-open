@@ -1,3 +1,4 @@
+# Author: DanyTech
 import json, urllib.request
 RPC="https://etc.etcdesktop.com"
 def call(to, data, frm=None, gas="0x7a1200"):

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """wallet_policy.py -- strict, per-chain wallet-role lock-in, enforced by
 every onchain_scripts/ tool that signs or sweeps a transaction.
 

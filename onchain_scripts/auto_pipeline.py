@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Author: DanyTech
 """auto_pipeline.py -- fully automated register -> fund -> fuzz -> exploit ->
 recover pipeline, driven from a single invocation.
 
@@ -205,7 +206,7 @@ FORK_SIM_PORT = 18545
 # the post-Cancun blob-gas header Anvil assumes under its default
 # `--hardfork latest`; every eth_call/eth_estimateGas then fails with
 # "Excess blob gas not set." (see skills/forksploit-contract-audit/
-# SKILL.md, FAZA 2). `shanghai` is the closest real match to ETC's
+# SKILL.md, PHASE 2). `shanghai` is the closest real match to ETC's
 # current Spiral hardfork.
 FORK_SIM_ETC_HARDFORK = "shanghai"
 # How long to wait for the Anvil fork to answer eth_chainId before
@@ -1347,14 +1348,14 @@ PLAN_SKIPPED_NOT_EXTRACTABLE = "skipped_not_extractable"
 # unlimited-gas simulation can be physically un-includable on-chain -- this
 # is exactly the real ETC mainnet incident (plan C9f53_2): the Rust side
 # said "Confirmed", the real send then failed with "exceeds block gas
-# limit" (~49.6M gas needed vs an 8,000,000 block limit). FAZA 1.3 requires
+# limit" (~49.6M gas needed vs an 8,000,000 block limit). PHASE 1.3 requires
 # such a plan to be FLAGGED (oversized_gas), not executed. Kept separate
 # from PLAN_SKIPPED_UNPROFITABLE ("it runs but costs more than it earns")
 # because "it cannot physically fit in a block" is a different, stronger
 # statement about why the plan was never sent.
 PLAN_OVERSIZED_GAS = "oversized_gas"
 
-# FAZA 7 / TASK_SPEC.md §3: `chain-verified` is the highest
+# PHASE 7 / TASK_SPEC.md §3: `chain-verified` is the highest
 # confidence tier, reserved EXCLUSIVELY for a plan that was actually
 # executed on a real chain AND moved real assets -- measured, not
 # estimated. It is deliberately NOT a stored status: it is derived here
@@ -1372,7 +1373,7 @@ def is_chain_verified(status: str, recovery_delta_wei: int) -> bool:
 
 @dataclass
 class Proof:
-    """FAZA 5.2 of TASK_SPEC.md: the three proof gates
+    """PHASE 5.2 of TASK_SPEC.md: the three proof gates
     (state replay, gas reality, independence from lies) collapsed into ONE
     structured, machine-readable object -- `{replayed, gas_used,
     net_profit_wei, blockers}` -- instead of scattered booleans a reader
@@ -1381,8 +1382,8 @@ class Proof:
     It is a pure VIEW over signals the pipeline already computes; it makes
     no new chain call and decides nothing on its own. `blockers` names
     every reason the plan did NOT clear the gates, so a rejection is
-    explained rather than silently dropped (nalog §6.8: "Brez skrivanja
-    napak")."""
+    explained rather than silently dropped (task spec §6.8: "No hiding of
+    errors")."""
     # (a) state replay: the plan's exact steps landed against real state.
     replayed: bool
     # (b) gas reality: real gas units this plan cost (0 when never sent).
@@ -1428,7 +1429,7 @@ def build_proof(
     # relies on any of these can never be an exploit no matter what the
     # other gates say.
     if _flag("owner_gated", False):
-        # FAZA 3.2: the SEMANTIC shape -- the trace calls the target AS an
+        # PHASE 3.2: the SEMANTIC shape -- the trace calls the target AS an
         # identity harvested from that contract's own storage, i.e.
         # `require(msg.sender == owner)` satisfied by impersonation. The
         # most specific form, so it takes precedence over the broad flag.
@@ -1687,7 +1688,7 @@ def execute_flat_plan_via_flashloan(
 
 
 def gas_oversized_reason(plan: dict) -> "str | None":
-    """FAZA 1.3 of TASK_SPEC.md: a plan whose OWN measured gas
+    """PHASE 1.3 of TASK_SPEC.md: a plan whose OWN measured gas
     footprint cannot fit in a block must be FLAGGED (oversized_gas), not
     executed. Returns a human reason when the plan is oversized, else None.
 
@@ -1754,7 +1755,7 @@ def metadata_skip_reason(finding: dict) -> "str | None":
     # address) is still reported as what it primarily is -- a heuristic --
     # rather than mislabelled an owner-impersonation finding.
     if finding.get("owner_gated", False):
-        # FAZA 3.2: the SEMANTIC form is the strongest statement -- the trace
+        # PHASE 3.2: the SEMANTIC form is the strongest statement -- the trace
         # calls the target AS an identity harvested from THAT contract's own
         # storage, i.e. `require(msg.sender == owner)` satisfied by
         # impersonation. Checked first so the report names the precise shape
@@ -1981,7 +1982,7 @@ def simulate_plan_on_fork(
 def estimate_plan_gas_on_fork(
     fork_w3: Web3, acct, attack_wallet: str, plan: dict, chain: str,
 ) -> "dict | None":
-    """FAZA 1.2: the plan's real gas footprint, measured with the node's own
+    """PHASE 1.2: the plan's real gas footprint, measured with the node's own
     `eth_estimateGas` against the throwaway fork -- the authoritative answer
     the un-metered revm model cannot give.
 
@@ -2058,7 +2059,7 @@ def preflight_skip_reason(
     if reason is not None:
         return f"metadata: {reason}"
     plan = finding["plan"]
-    # FAZA 1.2/1.3: a plan whose OWN measured gas footprint cannot fit in a
+    # PHASE 1.2/1.3: a plan whose OWN measured gas footprint cannot fit in a
     # block is flagged oversized_gas, not executed. A standalone plan already
     # carries these fields (stamped by main() before execution); a COMPOSED
     # plan (strategy_layer.compose_plan) does not, so measure it here, on the
@@ -2866,7 +2867,7 @@ def main() -> int:
         results = []
         for finding in findings:
             plan = finding["plan"]
-            # FAZA 1.2: stamp the plan's own gas reality (estimate vs the
+            # PHASE 1.2: stamp the plan's own gas reality (estimate vs the
             # chain's real block limit) from the fork, BEFORE execution --
             # this is the honest, non-metered answer to "does this fit in a
             # block". Written back into the plan.json so the report carries
@@ -2911,7 +2912,7 @@ def main() -> int:
             # proof still carries the real footprint of what WOULD have run.
             if not gas_units and gas_fit_info is not None:
                 gas_units = gas_fit_info.get("gas_estimate", 0)
-            # FAZA 1.1: the plan carries the ACTUAL gas (units) its own
+            # PHASE 1.1: the plan carries the ACTUAL gas (units) its own
             # execution consumed -- measured when it ran for real, or the
             # fork estimate when it was skipped/never sent (see above). This
             # is written back so plan.json carries BOTH `gas_estimate` and
@@ -3012,7 +3013,7 @@ def main() -> int:
             # execution (PLAN_EXECUTED_NO_PROFIT) is a different status and
             # can never appear here.
             tier = " [chain-verified]" if is_chain_verified(r["status"], r["recovery_delta_wei"]) else ""
-            # Nalog §6.8 ("Brez skrivanja napak"): when the plan did NOT
+            # Task spec §6.8 ("No hiding of errors"): when the plan did NOT
             # clear every gate, name the blockers inline instead of leaving
             # the reader to infer them from the status word alone.
             proof = r.get("proof") or {}
@@ -3064,7 +3065,7 @@ def main() -> int:
             tee.log(
                 f"{oversized_gas} plan(s) were flagged OVERSIZED GAS: their own measured gas footprint (the node's "
                 "eth_estimateGas against the real block.gasLimit) exceeds one block, so they are physically "
-                "un-includable and no real transaction was sent for them. This is the FAZA 1 guard for the un-metered "
+                "un-includable and no real transaction was sent for them. This is the PHASE 1 guard for the un-metered "
                 "revm model: a trace valid in an idealised, unlimited-gas simulation can never fit in a block on-chain."
             )
         if owner_impersonation_count:

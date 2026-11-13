@@ -453,7 +453,7 @@ pub fn get_uniswap_info(src_exact: &str) -> UniswapInfo {
         },
         // ETCswap V2 on Ethereum Classic -- see
         // onchain_pair_discovery.rs's KNOWN_V2_FACTORIES, the only
-        // producer of this key (forksploit's subgraph never indexed ETC,
+        // producer of this key (DanyTech's subgraph never indexed ETC,
         // so this key never came from there).
         "etcswapv2_etc" => UniswapInfo {
             pool_fee: 30,

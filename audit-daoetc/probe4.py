@@ -1,3 +1,4 @@
+# Author: DanyTech
 import json, urllib.request
 RPC="https://etc.etcdesktop.com"
 def rpc(m,p):
@@ -15,15 +16,15 @@ def fill_data(addr,amt): return "0x884b5dc2"+"%064x"%0x20+"%064x"%2+"%064x"%int(
 def t(label,to,data,frm):
     r=rpc("eth_call",[{"from":frm,"to":to,"data":data,"gas":"0x7a1200"},"latest"])
     print(f"  {label:52} ->", "OK" if "result" in r else "REVERT")
-print("=== TARGET fill: kdo lahko? ===")
+print("=== TARGET fill: who can? ===")
 t("TARGET.fill as RANDOM", T, fill_data(ATK,10**18), RND)
 t("TARGET.fill as OWNER",  T, fill_data(ATK,10**18), OWNER)
 t("TARGET.seal as RANDOM", T, "0x3fb27b85", RND)
-print("=== LEDGER fill: kdo lahko? ===")
+print("=== LEDGER fill: who can? ===")
 t("LEDGER.fill as RANDOM", LED, fill_data(ATK,10**18), RND)
 t("LEDGER.fill as LEDGER-OWNER", LED, fill_data(ATK,10**18), LEDOWNER)
 t("LEDGER.seal as RANDOM", LED, "0x3fb27b85", RND)
-print("=== poglej LEDGER fill disasm (0x3fb27b85 ali 0x884b5dc2?) ===")
+print("=== inspect LEDGER fill disasm (0x3fb27b85 or 0x884b5dc2?) ===")
 code=rpc("eth_getCode",[LED,"latest"])["result"]
 print("LEDGER code len:", (len(code)-2)//2, "bytes")
 print(code[:200])

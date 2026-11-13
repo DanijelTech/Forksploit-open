@@ -1,3 +1,4 @@
+# Author: DanyTech
 """
 gas_utils.py -- precise gas limit and fee calculation for onchain test/demo
 transactions (e.g. deploying and exercising the intentionally-vulnerable
@@ -177,9 +178,9 @@ def estimate_gas_limit(w3: Web3, tx: TxParams, margin: float = DEFAULT_GAS_LIMIT
             w3.eth.call(probe_tx)
         except Exception as probe_exc:
             raise GasExceedsBlockLimitError(
-                f"potreben gas ({estimated}) presega trdo mejo ({hard_ceiling} = min(MAX_GAS_LIMIT={MAX_GAS_LIMIT}, "
-                f"block_gas_limit={block_gas_limit})) -- preveril sem tudi z eth_call na tej meji, in TA se "
-                f"dejansko revert-ira ({probe_exc}), torej ta sled je res neizvedljiva na pravi verigi, ne glede na margin."
+                f"required gas ({estimated}) exceeds the hard ceiling ({hard_ceiling} = min(MAX_GAS_LIMIT={MAX_GAS_LIMIT}, "
+                f"block_gas_limit={block_gas_limit})) -- I also checked with eth_call at this ceiling, and it "
+                f"really does revert ({probe_exc}), so this trace is genuinely not executable on the real chain, regardless of margin."
             ) from probe_exc
         return hard_ceiling
     # Margin for state drift, but never past the hard ceiling: a trace that
@@ -453,7 +454,7 @@ class GasBudget:
 
 
 def gas_fit(gas_estimate: int, block_gas_limit: int, margin: float = DEFAULT_GAS_LIMIT_MARGIN) -> dict:
-    """FAZA 1.2/1.3: turn a real `eth_estimateGas` result and the chain's
+    """PHASE 1.2/1.3: turn a real `eth_estimateGas` result and the chain's
     current `block.gasLimit` into the three plan fields the report carries
     -- `gas_estimate`, `fits_block_gas_limit`, `gas_headroom_pct`.
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Author: DanyTech
 # Reproducible Echidna-vs-ForkSploit benchmark on the SAME real contract:
 # CyberScratchLottery 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee (ETC Mordor).
 #
