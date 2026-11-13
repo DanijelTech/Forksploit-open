@@ -100,7 +100,7 @@ setup scripts), `reentrancy.rs`, `sha3_bypass.rs` (symbolic SHA3, `--sha3-bypass
 `arbitrary_storage_write.rs`, `uninitialized_memory.rs`, `call_printer.rs`.
 
 ### Oracles (`src/evm/oracles/`) — 47 detection modules
-The full list and grouping is in the README's "Napadalne površine" section.
+The full list and grouping is in the README's "Attack surfaces ForkSploit covers" section.
 Each `EVMBugResult` carries a replayable trace (`ConciseEVMInput`) and a
 confidence tier (see below). Registration/selection lives in
 `OracleType::from_strs` (`src/evm/mod.rs`); the `all` list has **47 entries**.
