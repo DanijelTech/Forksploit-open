@@ -1,8 +1,8 @@
 # AGENTS.md — ForkSploit repository knowledge
 
 Persistent, repository-specific context for agents. See `CLAUDE.md` for the
-full architecture and `PROMPT_RESEN_SISTEM.md` for the task specification
-(in Slovenian). `PLAN.md` tracks progress per phase; `OMEJITVE.md` lists
+full architecture and `TASK_SPEC.md` for the task specification
+(in Slovenian). `PLAN.md` tracks progress per phase; `LIMITATIONS.md` lists
 what the system still cannot do (and why).
 
 ## Working rule R1 — proof before claim
@@ -256,7 +256,7 @@ keyed by calldata and WRITTEN in the same tx (`m[k] = v*2; require(m[k]==BIG)`)
 is also solved. STILL OPEN: `keccak256` is `concrete_eval!` (not modelled),
 so a mapping entry that existed BEFORE the tx (`require(m[k]==1)` for
 attacker-chosen `k`) stays unreachable -- inverting the hash would be needed.
-See `OMEJITVE.md` 3/3b and `BLOKATORJI.md` B3.
+See `LIMITATIONS.md` 3/3b and `BLOCKERS.md` B3.
 
 **FAZA 2.3 (2026-11-07):** `build_plan_meta`
 (`src/evm/solution/script_generator.rs`) now forces `confidence = "sim-review"`
@@ -326,7 +326,7 @@ fixtures are `tests/evm/concolic_retval/` (positive) and
 gitignored, so that test regenerates it from the committed `.sol` with the
 pinned solc (`~/.svm/0.8.24`) and skips (never fails) if solc is absent.
 Still open (R3): symbolic CALL targets (FAZA 2.2), symbolic balances, and the
-`keccak256` preimage case (3b). See `OMEJITVE.md` 3c.
+`keccak256` preimage case (3b). See `LIMITATIONS.md` 3c.
 
 ### Concolic runs on a bounded, campaign-wide worker pool
 
@@ -394,7 +394,7 @@ test does not exist (the real tests are the three named above).
   inter-step dependency). Proof:
   `onchain_scripts/contracts/proof_w1_w2_w3.sh` (needs `anvil`+`cast`+`solc`;
   7/7) and the `W4`/`W5` Python tests. A general symbolic planner is NOT
-  implemented -- see `OMEJITVE.md`.
+  implemented -- see `LIMITATIONS.md`.
 
 - **Fuzzer finding-dump name is bounded (X1).** `vuln_file_base` in
   `src/fuzzer.rs` bounds the `vulnerabilities/<comma-joined bug_idxs>` file

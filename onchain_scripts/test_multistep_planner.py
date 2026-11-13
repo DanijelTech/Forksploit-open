@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """test_multistep_planner.py -- end-to-end proof that ForkSploit reaches a
 bug that is ONLY reachable through a multi-transaction (setup -> attack)
-sequence (BLOKATORJI.md B1).
+sequence (BLOCKERS.md B1).
 
 Fixture: tests/evm/two_step/ (contract `TwoStep`):
 
@@ -29,9 +29,9 @@ against the real release binary (no mocks):
             proves the NEGATIVE result is a true negative (the oracle does
             evaluate on this fixture), not a silently-never-run check.
 
-Scope / honesty (BLOKATORJI.md B1): this proves the existing genealogy-driven
+Scope / honesty (BLOCKERS.md B1): this proves the existing genealogy-driven
 multi-step search works and is measured; it does NOT add an explicit
-sequence planner. See OMEJITVE.md for the measured depth curve (found-rate vs.
+sequence planner. See LIMITATIONS.md for the measured depth curve (found-rate vs.
 sequence length) and the remaining limitation.
 
 Run: python -m unittest onchain_scripts.test_multistep_planner -v

@@ -1354,7 +1354,7 @@ PLAN_SKIPPED_NOT_EXTRACTABLE = "skipped_not_extractable"
 # statement about why the plan was never sent.
 PLAN_OVERSIZED_GAS = "oversized_gas"
 
-# FAZA 7 / PROMPT_RESEN_SISTEM.md §3: `chain-verified` is the highest
+# FAZA 7 / TASK_SPEC.md §3: `chain-verified` is the highest
 # confidence tier, reserved EXCLUSIVELY for a plan that was actually
 # executed on a real chain AND moved real assets -- measured, not
 # estimated. It is deliberately NOT a stored status: it is derived here
@@ -1372,7 +1372,7 @@ def is_chain_verified(status: str, recovery_delta_wei: int) -> bool:
 
 @dataclass
 class Proof:
-    """FAZA 5.2 of PROMPT_RESEN_SISTEM.md: the three proof gates
+    """FAZA 5.2 of TASK_SPEC.md: the three proof gates
     (state replay, gas reality, independence from lies) collapsed into ONE
     structured, machine-readable object -- `{replayed, gas_used,
     net_profit_wei, blockers}` -- instead of scattered booleans a reader
@@ -1687,7 +1687,7 @@ def execute_flat_plan_via_flashloan(
 
 
 def gas_oversized_reason(plan: dict) -> "str | None":
-    """FAZA 1.3 of PROMPT_RESEN_SISTEM.md: a plan whose OWN measured gas
+    """FAZA 1.3 of TASK_SPEC.md: a plan whose OWN measured gas
     footprint cannot fit in a block must be FLAGGED (oversized_gas), not
     executed. Returns a human reason when the plan is oversized, else None.
 

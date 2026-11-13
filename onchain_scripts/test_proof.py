@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """test_proof.py -- the structured proof object (FAZA 5.2 of
-PROMPT_RESEN_SISTEM.md) must collapse the three gates (state replay, gas
+TASK_SPEC.md) must collapse the three gates (state replay, gas
 reality, independence from lies) into one record with an explicit,
 non-empty `blockers` list whenever a gate fails, so a rejection is
 explained rather than silently dropped (nalog §6.8).

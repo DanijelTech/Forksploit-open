@@ -53,7 +53,7 @@ from typing import Callable
 
 # Classification is driven entirely by the bug_type taxonomy the oracles
 # already produce (see src/evm/oracle.rs's classify_confidence and
-# skills/forksploit-contract-audit/references/zmogljivosti.md section 3) --
+# skills/forksploit-contract-audit/references/capabilities.md section 3) --
 # no new semantic understanding of what any function does, just a second
 # axis on top of the EXISTING, already-reviewed tier classification.
 #

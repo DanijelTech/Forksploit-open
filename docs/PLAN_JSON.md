@@ -1,27 +1,29 @@
-# PLAN_JSON — referenca sheme `*.plan.json`
+# PLAN_JSON — reference for the `*.plan.json` schema
 
-> Samostojen dokument. Sorodno: [OZICENJE_RUST_PYTHON.md](OZICENJE_RUST_PYTHON.md),
-> [ATTACKWALLET.md](ATTACKWALLET.md), [ORAKLI.md](ORAKLI.md).
+> Standalone document. Related: [RUST_PYTHON_WIRING.md](RUST_PYTHON_WIRING.md),
+> [ATTACKWALLET.md](ATTACKWALLET.md), [ORACLES.md](ORACLES.md).
 
-Shema je določena v `src/evm/solution/script_generator.rs` (strukturi
-`ExploitPlan` in `PlanMeta`, `write_plan`) ter `PlanStep`. Vsak `*.plan.json`
-je izpisan s `serde_json::to_writer_pretty` (lepo oblikovan JSON).
+The schema is defined in `src/evm/solution/script_generator.rs` (the
+`ExploitPlan` and `PlanMeta` structs, `write_plan`) and in `PlanStep`. Every
+`*.plan.json` is written with `serde_json::to_writer_pretty` (pretty-printed
+JSON).
 
 ---
 
-## 1. Mesto in ime
+## 1. Location and name
 
-* Mapa: `<work_dir>/vulnerabilities/`
-* Ime: `{contract_name}.plan.json`, kjer je `contract_name` iz
+* Directory: `<work_dir>/vulnerabilities/`
+* Name: `{contract_name}.plan.json`, where `contract_name` comes from
   `src/evm/solution/mod.rs::TemplateArgs::new`
   (`format!("{}_{}", make_contract_name(cli_args), BUG_COUNTER.fetch_add(1, ...))`).
 
-`make_contract_name(cli_args)` izpelje osnovno ime iz naslova/poti tarče;
-`BUG_COUNTER` je globalni `AtomicU64`, ki poskrbi, da ime ni podvojeno.
+`make_contract_name(cli_args)` derives the base name from the target address or
+path; `BUG_COUNTER` is a global `AtomicU64` that ensures the name is not
+duplicated.
 
 ---
 
-## 2. Vrhunjska shema (`ExploitPlan`)
+## 2. Top-level schema (`ExploitPlan`)
 
 ```json
 {
@@ -49,37 +51,37 @@ je izpisan s `serde_json::to_writer_pretty` (lepo oblikovan JSON).
 }
 ```
 
-Polja iz `#[serde(flatten)] meta: PlanMeta` so na istem nivoju kot
-`contract_name`/`kind`/... (zato `bug_types`, `confidence`, ... niso
-ugnježdeni).
+The fields from `#[serde(flatten)] meta: PlanMeta` are at the same level as
+`contract_name`/`kind`/... (that is why `bug_types`, `confidence`, ... are not
+nested).
 
 ---
 
-## 3. Polja — opis in vir
+## 3. Fields — description and source
 
-| Polje | Tip | Vir v kodi | Opis |
+| Field | Type | Source in code | Description |
 |-------|-----|-----------|------|
-| `contract_name` | str | `TemplateArgs::contract_name` | ime z unikatnim števcem |
-| `kind` | `"flat"` \| `"reentrancy"` | `generate_exploit_plan`/`generate_reentrancy_exploit_plan` | oblika napada |
-| `needs_funding` | bool | `TemplateArgs::needs_funding` | ali sled nosi `value > 0` |
-| `total_value` | str | vsota `Tx::value` | skupna vrednost (wei, kot niz) |
-| `steps` | PlanStep[] | `Tx::from` na minimizirani sledi | minimalni dokaz |
-| `full_trace_steps` | PlanStep[] | neminimizirana sled | za združevanje |
-| `repeat_step` | PlanStep \| null | `split_reentrant_trace` | ponovljeni klic za `receive()` |
-| `bug_types` | str[] | `parse_bug_report(&args.solution)` | vsi bug tipi najdbe |
-| `confidence` | `"sim-confirmed"` \| `"sim-review"` | `build_plan_meta` | nivo zaupanja |
-| `confirmed_exploitable` | bool | `is_confirmed_exploitable_bug` | ali je izvedljiva |
-| `atomic_replayable` | bool | `!requires_control_leak` | ali jo AttackWallet lahko ponovi |
-| `requires_control_leak` | bool | `trace_depends_on_control_leak` | odvisnost od faked returna |
-| `distinct_callers` | int | `callers.len()` | število različnih klicateljev |
-| `callers` | str[] | unikatni `Tx::caller` | urejeni, deduplicirani |
-| `owner_impersonation` | bool | `is_harvested_storage_address` (any) | klicatelj iz storage tarče |
-| `owner_impersonation_detail` | ImpersonatedCaller[] | `harvested_address_origin` | poreklo |
-| `owner_gated` | bool | `is_harvested_sender_for` (per step) | semantični owner-gated test |
-| `owner_gated_detail` | ImpersonatedCaller[] | `is_harvested_sender_for` | poreklo |
-| `step_count` | int | `trace.len()` | število korakov |
-| `target` | str | `CliArgs::target` | naslov/pot tarče |
-| `chain` | str | `CliArgs::chain` | ime verige |
+| `contract_name` | str | `TemplateArgs::contract_name` | a name with a unique counter |
+| `kind` | `"flat"` \| `"reentrancy"` | `generate_exploit_plan`/`generate_reentrancy_exploit_plan` | the attack shape |
+| `needs_funding` | bool | `TemplateArgs::needs_funding` | whether the trace carries `value > 0` |
+| `total_value` | str | the sum of `Tx::value` | total value (wei, as a string) |
+| `steps` | PlanStep[] | `Tx::from` on the minimized trace | the minimal proof |
+| `full_trace_steps` | PlanStep[] | the unminimized trace | for merging |
+| `repeat_step` | PlanStep \| null | `split_reentrant_trace` | the repeated call for `receive()` |
+| `bug_types` | str[] | `parse_bug_report(&args.solution)` | all bug types of the finding |
+| `confidence` | `"sim-confirmed"` \| `"sim-review"` | `build_plan_meta` | the confidence level |
+| `confirmed_exploitable` | bool | `is_confirmed_exploitable_bug` | whether it is exploitable |
+| `atomic_replayable` | bool | `!requires_control_leak` | whether AttackWallet can replay it |
+| `requires_control_leak` | bool | `trace_depends_on_control_leak` | dependency on a faked return |
+| `distinct_callers` | int | `callers.len()` | the number of distinct callers |
+| `callers` | str[] | unique `Tx::caller` | ordered, deduplicated |
+| `owner_impersonation` | bool | `is_harvested_storage_address` (any) | a caller from the target's storage |
+| `owner_impersonation_detail` | ImpersonatedCaller[] | `harvested_address_origin` | the origin |
+| `owner_gated` | bool | `is_harvested_sender_for` (per step) | the semantic owner-gated test |
+| `owner_gated_detail` | ImpersonatedCaller[] | `is_harvested_sender_for` | the origin |
+| `step_count` | int | `trace.len()` | the number of steps |
+| `target` | str | `CliArgs::target` | the target address/path |
+| `chain` | str | `CliArgs::chain` | the chain name |
 
 ---
 
@@ -97,15 +99,15 @@ ugnježdeni).
 }
 ```
 
-| Polje | Tip | Opis |
+| Field | Type | Description |
 |-------|-----|------|
-| `contract` | str | naslov cilja klica |
+| `contract` | str | the target address of the call |
 | `calldata` | str | calldata (hex, `0x`) |
-| `value` | str | vrednost (wei, kot niz) |
-| `caller` | str | `msg.sender`, s katerim je bil korak zabeležen |
-| `fn_selector` | str | 4-bajtni selektor (hex, `0x`) |
-| `stolen_asset` | str \| null | naslov ERC-20, če je korak prepoznan money-mover (`erc20_token_touched`) |
-| `call_leak` | u32 | `4294967295` (`u32::MAX`) = brez control leaka; drugo = odkrit z faked returnom |
+| `value` | str | value (wei, as a string) |
+| `caller` | str | the `msg.sender` the step was recorded with |
+| `fn_selector` | str | the 4-byte selector (hex, `0x`) |
+| `stolen_asset` | str \| null | the ERC-20 address if the step is a recognised money-mover (`erc20_token_touched`) |
+| `call_leak` | u32 | `4294967295` (`u32::MAX`) = no control leak; anything else = found with a faked return |
 
 ---
 
@@ -119,82 +121,82 @@ ugnježdeni).
 }
 ```
 
-Če poreklo ni bilo zabeleženo, se uporabijo oznake `"unknown"`.
+If the origin was not recorded, the label `"unknown"` is used.
 
 ---
 
-## 6. Pravila, ki jih shema kodira
+## 6. Rules the schema encodes
 
-1. **`confidence` = `sim-review`, če `requires_control_leak`** — ne glede na
-   bug_type (`build_plan_meta`, FAZA 2.3). `bug_types` je še vedno izpolnjen
-   kot pošten dokaz.
-2. **`atomic_replayable` = `!requires_control_leak`** — AttackWallet ne more
-   ponoviti faked returna.
-3. **`owner_impersonation`** je `any`, ne `all` — zadostuje en harvestan
-   klicatelj (dokumentiran realni primer je imel dva klicatelja).
-4. **`owner_gated`** je strožji od `owner_impersonation`: zahteva, da je
-   klicatelj harvestan iz **iste** pogodbe, ki se kliče.
-5. **`plan.json` se izpiše za vsako najdbo**, tudi Review-tier in
-   multi-caller; odločitev "izvesti ali ne" je na Python strani.
+1. **`confidence` = `sim-review` if `requires_control_leak`** — regardless of
+   bug_type (`build_plan_meta`, PHASE 2.3). `bug_types` is still populated as an
+   honest proof.
+2. **`atomic_replayable` = `!requires_control_leak`** — AttackWallet cannot
+   replay a faked return.
+3. **`owner_impersonation`** is `any`, not `all` — a single harvested caller is
+   enough (the documented real case had two callers).
+4. **`owner_gated`** is stricter than `owner_impersonation`: it requires the
+   caller to be harvested from the **same** contract being called.
+5. **A `plan.json` is written for every finding**, including Review-tier and
+   multi-caller; the "execute or not" decision is on the Python side.
 
 ---
 
-## 7. Polja, ki jih Python doda (povratna zanka)
+## 7. Fields Python adds (the feedback loop)
 
-Po branju plana `auto_pipeline.main` **prepiše** `plan.json` in doda:
+After reading a plan, `auto_pipeline.main` **rewrites** `plan.json` and adds:
 
-| Polje | Vir |
+| Field | Source |
 |-------|-----|
-| `gas_estimate` | `estimate_plan_gas_on_fork` (največji posamezni korak) |
+| `gas_estimate` | `estimate_plan_gas_on_fork` (the largest single step) |
 | `fits_block_gas_limit` | `gas_fit` |
 | `gas_headroom_pct` | `gas_fit` |
 | `block_gas_limit` | fork `eth.get_block("latest")["gasLimit"]` |
-| `gas_used` | dejansko porabljene enote plina (ali fork ocena, če ni bilo poslano) |
+| `gas_used` | the actual gas units used (or the fork estimate if nothing was sent) |
 
-Ta polja **niso** prisotna v izvornem Rust izpisu.
-
----
-
-## 8. Razlika med `steps` in `full_trace_steps`
-
-* `steps` je izhod `SequentialMinimizer` — najmanjše zaporedje, ki ponovno
-  sproži oracle. Primerno za `forge test` reprodukcijo.
-* `full_trace_steps` je **neminimizirana** sled (`generate_test_with_full_trace`
-  prejme `full_trace`). Minimizator odstrani zgodnje nastavitvene klice
-  (approve, prenos lastništva), ki jih sestavljen napad potrebuje.
-* `strategy_layer._steps_of` da prednost `full_trace_steps`.
-* Metapodatki (`step_count`, `distinct_callers`) opisujejo **isto** sled, kot
-  jo plan serializira (`build_plan_meta` prejme `meta_source`, ki je
-  `full_trace` kadar obstaja).
+These fields are **not** present in the original Rust output.
 
 ---
 
-## 9. Diagram: nastanek plan.json
+## 8. The difference between `steps` and `full_trace_steps`
+
+* `steps` is the output of `SequentialMinimizer` — the smallest sequence that
+  re-fires the oracle. Suitable for a `forge test` reproduction.
+* `full_trace_steps` is the **unminimized** trace (`generate_test_with_full_trace`
+  receives `full_trace`). The minimizer removes early setup calls (approve,
+  ownership transfer) that a composed attack needs.
+* `strategy_layer._steps_of` prefers `full_trace_steps`.
+* The metadata (`step_count`, `distinct_callers`) describes the **same** trace
+  the plan serializes (`build_plan_meta` receives `meta_source`, which is
+  `full_trace` when it exists).
+
+---
+
+## 9. Diagram: how plan.json comes to be
 
 ```mermaid
 flowchart TD
-    A[oracle vrne bug_idx] --> B[OracleFeedback → Solution]
+    A[oracle returns a bug_idx] --> B[OracleFeedback → Solution]
     B --> C[SequentialMinimizer.minimize]
     C --> D[prettify_concise_inputs]
     D --> E[generate_test_with_full_trace]
     E --> F[write .t.sol]
     E --> G{reentrancy?}
-    G -->|da| H[generate_reentrancy_exploit_plan]
-    G -->|ne| I[generate_exploit_plan]
+    G -->|yes| H[generate_reentrancy_exploit_plan]
+    G -->|no| I[generate_exploit_plan]
     H --> J[write_plan → *.plan.json]
     I --> J
-    E --> K{Confirmed + brez leaka + en klicatelj?}
-    K -->|da| L[generate_script → *.s.sol]
+    E --> K{Confirmed + no leak + one caller?}
+    K -->|yes| L[generate_script → *.s.sol]
 ```
 
 ---
 
-## 10. Odprto / neizmerjeno
+## 10. Open / unmeasured
 
-* **Nepreverjeno:** ali kateri koli potrošnik bere polje
-  `composed_from` (doda ga šele `strategy_layer.compose_plan` v Pythonu, ne
-  Rust). V Rust shemi ga ni.
-* **Neizmerjeno:** ta dokument ne navaja velikosti planov niti števila
-  planov na tek.
-* Polje `evidence` v `vuln_info.jsonl` (ne v `plan.json`) je
+* **Unverified:** whether any consumer reads the `composed_from` field (it is
+  added only by `strategy_layer.compose_plan` in Python, not Rust). It is not in
+  the Rust schema.
+* **Unmeasured:** this document does not state plan sizes nor the number of
+  plans per run.
+* The `evidence` field in `vuln_info.jsonl` (not in `plan.json`) is
   `"replayable_transaction_trace"` (`src/evm/oracle.rs::EVMBugResult::to_value`).

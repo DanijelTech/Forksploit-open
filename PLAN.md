@@ -1,93 +1,93 @@
-# PLAN.md — stanje ForkSploita po fazah
+# PLAN.md — ForkSploit state by phase
 
-> Pravilo (R1/R2): kar ni izmerjeno, je označeno kot **neizmerjeno**; kar ni
-> preverjeno v kodi, kot **nepreverjeno**. Ta dokument je **pregled stanja in
-> odprtega dela**, ne dnevnik. Zgodovino sprememb vodi `CHANGELOG.md`.
+> Rule (R1/R2): anything not measured is marked **unmeasured**; anything not
+> verified in code is marked **unverified**. This document is a **status and
+> open-work overview**, not a diary. The change history is kept in
+> `CHANGELOG.md`.
 
-ForkSploit je **avditorno-ofenzivna platforma za EVM pametne pogodbe**:
-odkriva napadalne površine in **dokaže** exploitabilnost tako, da exploit
-izvede na resničnem stanju verige in pobrana sredstva prenese na recovery
-denarnico. Deluje na **Ethereum (ETH)** in **Ethereum Classic (ETC)**, vsak v
-**testnet** in **mainnet** različici (Sepolia, Mordor / ETH id 1, ETC id 61),
-in pokriva **nativno valuto ter ERC tokene**.
+ForkSploit is an **audit-and-offensive platform for EVM smart contracts**: it
+discovers attack surfaces and **proves** exploitability by executing the exploit
+against the real chain state and moving the extracted funds to the recovery
+wallet. It works on **Ethereum (ETH)** and **Ethereum Classic (ETC)**, each in a
+**testnet** and **mainnet** variant (Sepolia, Mordor / ETH id 1, ETC id 61), and
+covers the **native currency and ERC tokens**.
 
 ---
 
-## 1. Faze — kaj je zaprto, kaj odprto
+## 1. Phases — what is closed, what is open
 
-| Faza | Prioriteta | Stanje |
+| Phase | Priority | State |
 |---|---|---|
-| **1 — Gas realnost** | kritično | **Delno.** Model `revm` ne meri gasa. Avtoritativna meritev je na Python strani (`eth_estimateGas` + živi `block.gasLimit`, `gas_utils.estimate_gas_limit`), pre-flight vrata prevelik plan označijo z `oversized_gas`. *Manjka:* merjenje v modelu. |
-| **2 — Storage-aware SMT** | kritično | **Delno.** Simbolični storage (po naslovu, obstojen čez okvire) in simbolične vrnjene vrednosti klica so zaprte (FAZA 2.1/2.5). *Manjka:* simbolični `CALL` target, simbolične bilance, `keccak256` predslika. |
-| **3 — Napadalec / privilegirana stranka** | kritično | **Delno.** `owner_impersonation` + strukturiran `owner_impersonation_detail` + semantični `owner_gated`. *Manjka:* splošen semantični test privilegiranih pogojev onkraj "naslov iz lastnega storage-a". |
-| **4 — Semantična analiza** | srednja | **Odprto.** Vgrajeni orakli so vzorec-vezani; deklarativni invariant pokriva le izrazljive oblike. |
-| **5 — Proof gate (3 vrata)** | kritično | **Večinoma.** `simulate_plan_on_fork` + gas reality + `atomic_replayable`/`owner_impersonation`; strukturiran `Proof` (`build_proof`) z `blockers`. *Manjka:* agregat dokaza na nivoju celega teka. |
-| **6 — Zanesljivost / paralelizem** | srednja | **Rešeno.** Meje zunanjih podatkov utrjene (`Result`); multi-core prek procesne izolacije (`multicore.rs`, `--jobs`, clamp na jedra); concolic na omejenem bazenu (`MAX_CONCOLIC_THREADS = 2`). |
-| **7 — Poročanje** | srednja | **Delno.** `chain-verified` obstaja (`is_chain_verified`, test `test_chain_verified.py`). *Manjka:* `severity`/CVSS. |
-| **8 — Dokumentacija** | obvezno | **To v teku** — ta dokument, `README.md`, `OMEJITVE.md`, `BLOKATORJI.md`, `CLAUDE.md`, `AGENTS.md`. |
+| **1 — Gas reality** | critical | **Partial.** The `revm` model does not measure gas. The authoritative measurement is on the Python side (`eth_estimateGas` + live `block.gasLimit`, `gas_utils.estimate_gas_limit`), and the pre-flight gate marks an oversized plan with `oversized_gas`. *Missing:* measurement in the model. |
+| **2 — Storage-aware SMT** | critical | **Partial.** Symbolic storage (by address, persistent across frames) and symbolic call return values are closed (PHASE 2.1/2.5). *Missing:* symbolic `CALL` target, symbolic balances, `keccak256` preimage. |
+| **3 — Attacker / privileged party** | critical | **Partial.** `owner_impersonation` + structured `owner_impersonation_detail` + semantic `owner_gated`. *Missing:* a general semantic test of privileged conditions beyond "an address from its own storage". |
+| **4 — Semantic analysis** | medium | **Open.** The built-in oracles are pattern-bound; the declarative invariant covers only expressible shapes. |
+| **5 — Proof gate (3 gates)** | critical | **Mostly.** `simulate_plan_on_fork` + gas reality + `atomic_replayable`/`owner_impersonation`; a structured `Proof` (`build_proof`) with `blockers`. *Missing:* a proof aggregate at the level of the whole run. |
+| **6 — Reliability / parallelism** | medium | **Solved.** External-data boundaries hardened (`Result`); multi-core via process isolation (`multicore.rs`, `--jobs`, clamp to cores); concolic on a bounded pool (`MAX_CONCOLIC_THREADS = 2`). |
+| **7 — Reporting** | medium | **Partial.** `chain-verified` exists (`is_chain_verified`, test `test_chain_verified.py`). *Missing:* `severity`/CVSS. |
+| **8 — Documentation** | mandatory | **In progress** — this document, `README.md`, `LIMITATIONS.md`, `BLOCKERS.md`, `CLAUDE.md`, `AGENTS.md`. |
 
 ---
 
-## 2. Devet prvotnih vrzeli (iz naloga) — stanje
+## 2. The nine original gaps (from the task) — state
 
-| # | Vrzel | Stanje |
+| # | Gap | State |
 |---|---|---|
-| 1 | Ni merjenja gasa v modelu | Odprto v modelu; nadomeščeno na Python strani (+ `oversized_gas`). |
-| 2 | Ni mempoola / front-runninga | Odprto (zunaj modela). |
-| 3 | Ozek concolic | Delno — storage + return zaprta; CALL target/balance/keccak odprti. |
-| 4 | Control leak injicira lažno vrnjeno vrednost | Omejeno: concolic ne uporablja leak-a; `sim-confirmed` nikoli ne sloni na leaku. |
-| 5 | Mešanje privilegiranega in napadalca | Delno rešeno: `owner_impersonation`/`owner_gated` oznaka + strukturiran zapis. |
-| 6 | Pattern-based, ne semantic | Odprto (FAZA 4). |
-| 7 | Enonitno | Rešeno: procesna izolacija (`--jobs`). |
-| 8 | Panic-prone `.unwrap()` na zunanjih podatkih | Pretežno rešeno; ostanek ni na zunanjih podatkih. |
-| 9 | Ni formalnega poročanja | Delno: `confidence`/`net_profit_wei`/`chain-verified`; `severity`/CVSS manjka. |
+| 1 | No gas measurement in the model | Open in the model; replaced on the Python side (+ `oversized_gas`). |
+| 2 | No mempool / front-running | Open (outside the model). |
+| 3 | Narrow concolic | Partial — storage + return closed; CALL target/balance/keccak open. |
+| 4 | Control leak injects a fake return value | Bounded: concolic does not use the leak; `sim-confirmed` never rests on the leak. |
+| 5 | Conflation of privileged party and attacker | Partly solved: `owner_impersonation`/`owner_gated` tag + a structured record. |
+| 6 | Pattern-based, not semantic | Open (PHASE 4). |
+| 7 | Single-threaded | Solved: process isolation (`--jobs`). |
+| 8 | Panic-prone `.unwrap()` on external data | Mostly solved; the remainder is not on external data. |
+| 9 | No formal reporting | Partial: `confidence`/`net_profit_wei`/`chain-verified`; `severity`/CVSS missing. |
 
 ---
 
-## 3. Merila uspeha (razdelek 4 naloga)
+## 3. Success criteria (task section 4)
 
-Cilj: **vsaj en** plan, ki na testni tarči prestane vsa tri vrata (state
-replay, gas reality, neodvisnost od laži) in se izvede z **izmerjenim neto
-dobičkom**.
+Goal: **at least one** plan that passes all three gates on a test target (state
+replay, gas reality, independence from a fake) and executes with a **measured
+net profit**.
 
-**Stanje: DELNO PREVERJENO.**
-- V **čistem sandboxu** tega repozitorija ni RPC egressa, zato meritev tam ni
-  mogoča.
-- **Zunaj sandboxa je bila izmerjena:** `benchmarks/forksploit_full_live_mordor/`
-  je polni tek neposredno na živi ETC Mordor (`CyberScratchLottery`), dva
-  neodvisna seed-a; `benchmarks/echidna_vs_forksploit/` primerja z Echidno na
-  isti pravi pogodbi — oba neodvisno najdeta isti resnični hrošč (slaba
-  naključnost, SWC-120). Glej tudi `OMEJITVE.md` §C2.
+**State: PARTIALLY VERIFIED.**
+- In the **clean sandbox** of this repository there is no RPC egress, so the
+  measurement is not possible there.
+- **Outside the sandbox it was measured:** `benchmarks/forksploit_full_live_mordor/`
+  is a full run directly against live ETC Mordor (`CyberScratchLottery`), two
+  independent seeds; `benchmarks/echidna_vs_forksploit/` compares it with
+  Echidna on the same real contract — both independently find the same real bug
+  (weak randomness, SWC-120). See also `LIMITATIONS.md` §C2.
 
 ---
 
-## 4. Baseline meritev (izmerjeno)
+## 4. Baseline measurement (measured)
 
-- **Build:** `cargo build --release` → 0 napak, 0 projektnih opozoril.
-- **Rust testi:** `cargo test --release` → **140 pass, 10 fail**. Vseh 10 je
-  omrežno/stanjsko odvisnih (`onchain_pair_discovery::*` (8),
+- **Build:** `cargo build --release` → 0 errors, 0 project warnings.
+- **Rust tests:** `cargo test --release` → **140 pass, 10 fail**. All 10 are
+  network/state dependent (`onchain_pair_discovery::*` (8),
   `uniswap::{test_get_pair, test_fetch_uniswap_path}`, `endpoints::test_get_balance`)
-  in padejo **tudi z egressom**; CI jih preskoči z `--skip`.
-- **Python testi:** `pytest onchain_scripts` → **232 pass** (brez `anvil`/`solc`).
-- **CI:** `.github/workflows/ci.yml` (GitHub-hosted Linux, brezplačno) teče
-  zgornja dva zelena vrata.
+  and fail **even with egress**; CI skips them with `--skip`.
+- **Python tests:** `pytest onchain_scripts` → **232 pass** (without `anvil`/`solc`).
+- **CI:** `.github/workflows/ci.yml` (GitHub-hosted Linux, free) runs the two
+  green gates above.
 
 ---
 
-## 5. Odprto delo (prioritizirano)
+## 5. Open work (prioritised)
 
-1. **FAZA 2.2/2.6** — simbolični `CALL` target in simbolične bilance (concolic).
-2. **FAZA 4** — semantična analiza onkraj vzorcev (storage-layout, splošne
-   invariante).
-3. **FAZA 5** — agregat strukturiranega dokaza čez cel tek.
-4. **FAZA 7** — `severity`/CVSS.
-5. **Model gas metering** v `revm` (ali trajni zapis gas polj v `PlanMeta`).
-6. **Meritev več-jedrnega pospeška** na pravi tarči (trenutno neizmerjeno).
+1. **PHASE 2.2/2.6** — symbolic `CALL` target and symbolic balances (concolic).
+2. **PHASE 4** — semantic analysis beyond patterns (storage layout, general invariants).
+3. **PHASE 5** — an aggregate structured proof across a whole run.
+4. **PHASE 7** — `severity`/CVSS.
+5. **Gas metering model** in `revm` (or a persistent write of gas fields into `PlanMeta`).
+6. **Measurement of the multi-core speedup** on a real target (currently unmeasured).
 
 ---
 
-## 6. Kaj namenoma NE delamo
+## 6. What we deliberately do NOT do
 
-- Ne dodajamo novih oraklov, dokler faze 1–3/5 niso zaprte (nalog).
-- Ne odstranjujemo harvest heuristike (nalog) — le označujemo jo.
-- Ne trdimo ničesar brez meritve (R1). "Ni najdeno" ≠ "ni ranljivosti".
+- We do not add new oracles until phases 1–3/5 are closed (task).
+- We do not remove the harvest heuristic (task) — we only tag it.
+- We claim nothing without a measurement (R1). "Not found" ≠ "not vulnerable".

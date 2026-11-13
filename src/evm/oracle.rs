@@ -76,7 +76,7 @@ impl ConfidenceTier {
 /// `call_leak == u32::MAX` is CALL_UNTIL's neutral default and means the call
 /// ran normally; any other value means the violated state was only reachable
 /// because a call return was injected, so claiming `sim-confirmed` would
-/// overstate what was actually observed (FAZA 2.3, PROMPT_RESEN_SISTEM.md).
+/// overstate what was actually observed (FAZA 2.3, TASK_SPEC.md).
 fn effective_confidence(base: ConfidenceTier, call_leak: u32) -> ConfidenceTier {
     if call_leak != u32::MAX {
         ConfidenceTier::Review
@@ -162,7 +162,7 @@ pub struct EVMBugResult {
 
 impl EVMBugResult {
     pub fn to_value(&self) -> serde_json::Value {
-        // FAZA 2.3 (PROMPT_RESEN_SISTEM.md): the acceptance criterion is that
+        // FAZA 2.3 (TASK_SPEC.md): the acceptance criterion is that
         // a `sim-confirmed` finding NEVER rests on control leak. The plan
         // generator already enforces this (`build_plan_meta`), but this JSON
         // is also printed verbatim and re-parsed (`parse_bug_report`), so the

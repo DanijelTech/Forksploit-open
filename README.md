@@ -2,9 +2,9 @@
 
 <div align="center">
 
-**Avditorno-ofenzivna platforma za pametne pogodbe EVM, ki pod strogim nadzorom operaterja dokaže, da je pogodba ranljiva — in to dokaže z dejanjem.**
+**An audit-and-offensive platform for EVM smart contracts that, under strict operator control, proves a contract is vulnerable — and proves it by action.**
 
-**Zgrajen in preverjen za Ethereum (ETH) in Ethereum Classic (ETC) — na obeh testnetih (Sepolia, Mordor) in na obeh mainnetih — ter za vse tipe sredstev: nativno valuto (ETH/ETC) in vse ERC tokene (ERC-20, ERC-721, ERC-1155, ERC-4626 in druge).** ForkSploit dela na obeh omrežjih v obeh različicah (testnet in mainnet) in na vsakem sredstvu, ki ga pogodba uporablja.
+**Built and verified for Ethereum (ETH) and Ethereum Classic (ETC) — on both testnets (Sepolia, Mordor) and both mainnets — and for all asset types: native currency (ETH/ETC) and all ERC tokens (ERC-20, ERC-721, ERC-1155, ERC-4626 and others).** ForkSploit works on both networks in both variants (testnet and mainnet) and on every asset the contract uses.
 
 <!-- Badges: all values are VERIFIED against the source in this repo (R1).
      47 = entries in OracleType::from_strs "all" (src/evm/mod.rs);
@@ -13,298 +13,277 @@
      at the "CI" workflow (.github/workflows/ci.yml), which runs on main. -->
 [![CI](https://github.com/DanijelTech/ForkSploit/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/DanijelTech/ForkSploit/actions/workflows/ci.yml)
 [![Rust nightly](https://img.shields.io/badge/Rust-nightly--2026--10--15-000000?logo=rust&logoColor=white)](rust-toolchain.toml)
-[![Detectors](https://img.shields.io/badge/attack%20surfaces-47%20oracles-blue)](#napadalne-površine-ki-jih-forksploit-pokriva)
-[![Chains](https://img.shields.io/badge/chains-25%20EVM-627EEA)](#verige)
-[![Proof](https://img.shields.io/badge/proof-100%25%20on--chain%20exploitability-2ea043)](#zakaj-je-dokaz-drugačen-od-ugibanja)
+[![Detectors](https://img.shields.io/badge/attack%20surfaces-47%20oracles-blue)](#attack-surfaces-forksploit-covers)
+[![Chains](https://img.shields.io/badge/chains-25%20EVM-627EEA)](#chains)
+[![Proof](https://img.shields.io/badge/proof-100%25%20on--chain%20exploitability-2ea043)](#why-proof-is-different-from-guessing)
 [![License: Proprietary](https://img.shields.io/badge/license-Proprietary%20(All%20Rights%20Reserved)-red.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Docker-555)](#namestitev)
+[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Docker-555)](#installation)
 
 </div>
 
-ForkSploit ni fuzzer. Je celovita platforma, ki odgovori na vprašanje, ki ga nobeno statično orodje in noben fuzzer ne zmore odgovoriti z gotovostjo: *"Je ta pogodba res ranljiva, kje točno, kaj vse je exploitabilno, in ali napadalec zares odnese sredstva?"* Odgovor ni verjetnostni — je **determinističen dokaz**, ker ForkSploit exploit ne le najde, ampak ga **izvede na resničnem stanju verige** in pobrana sredstva **prenese na recovery denarnico kot dokaz**.
+ForkSploit is not a fuzzer. It is a complete platform that answers the question no static tool and no fuzzer can answer with certainty: *"Is this contract really vulnerable, where exactly, what is exploitable, and does an attacker actually walk away with the funds?"* The answer is not probabilistic — it is a **deterministic proof**, because ForkSploit does not merely find the exploit: it **executes it against the real chain state** and **moves the extracted funds to the recovery wallet as proof**.
 
-> **Edinstvena prednost:** ForkSploit je edini znani sistem te vrste, ki poveže *odkritje* in *dokaz izvedbe* v eno neprekinjeno verigo — od napadalne površine v bajtkodu do resničnega premika sredstev na recovery denarnico. In to **na obeh omrežjih — Ethereum (ETH) in Ethereum Classic (ETC) — tako na testnetu (Sepolia, Mordor) kot na mainnetu (id 1 / 61) — ter za vsa sredstva, ki jih pogodba uporablja: nativno valuto (ETH/ETC) in ERC tokene (ERC-20, ERC-721, ERC-1155, ERC-4626).** Rezultat ni "našli smo vzorec, ki bi lahko bil ranljivost", temveč **"ta pogodba je izgubila X ETH/ETC ali X ERC-20/721/1155/4626 tokenov na ta način, tukaj je pot, tukaj je dokaz."**
-
----
-
-## Kazalo
-
-1. [Kaj ForkSploit je (in kaj ni)](#kaj-forksploit-je-in-kaj-ni)
-2. [Obseg podpore: ETH + ETC, testnet + mainnet, vsa sredstva](#obseg-podpore-eth--etc-testnet--mainnet-vsa-sredstva)
-3. [Zakaj je dokaz drugačen od ugibanja](#zakaj-je-dokaz-drugačen-od-ugibanja)
-4. [Kje v življenjskem ciklu pogodbe nastopi](#kje-v-življenjskem-ciklu-pogodbe-nastopi)
-5. [Arhitektura: dve plasti](#arhitektura-dve-plasti)
-6. [Napadalne površine, ki jih ForkSploit pokriva](#napadalne-površine-ki-jih-forksploit-pokriva)
-7. [Pot dokaza: od najdbe do recovery denarnice](#pot-dokaza-od-najdbe-do-recovery-denarnice)
-8. [Varnostni model in nadzor operaterja](#varnostni-model-in-nadzor-operaterja)
-9. [Namestitev](#namestitev)
-10. [Hitri zagon](#hitri-zagon)
-11. [Konfiguracija](#konfiguracija)
-12. [Referenca CLI](#referenca-cli)
-13. [Pomožna orodja](#pomožna-orodja)
-14. [Razvoj, testi in gradnja](#razvoj-testi-in-gradnja)
-15. [Omejitve (pošteno)](#omejitve-pošteno)
-16. [Pravna in etična uporaba](#pravna-in-etična-uporaba)
+> **Unique advantage:** ForkSploit is the only known system of its kind that links *discovery* and *proof of execution* into one unbroken chain — from the attack surface in the bytecode to a real movement of funds into the recovery wallet. And it does so **on both networks — Ethereum (ETH) and Ethereum Classic (ETC) — both on testnet (Sepolia, Mordor) and on mainnet (id 1 / 61) — and for all assets the contract uses: native currency (ETH/ETC) and ERC tokens (ERC-20, ERC-721, ERC-1155, ERC-4626).** The result is not "we found a pattern that could be a vulnerability" but **"this contract lost X ETH/ETC or X ERC-20/721/1155/4626 tokens in this way, here is the path, here is the proof."**
 
 ---
 
-## Kaj ForkSploit je (in kaj ni)
+## Table of contents
 
-**Je:**
-
-- **Platforma za odkrivanje napadalnih površin** na pametnih pogodbah EVM — pred deployem (na lokalnem bajtkodu iz `.sol`/`.bin`) in po njem (na živo deployani pogodbi prek RPC-ja, z ali brez izvorne kode).
-- **Dokazovalec exploitabilnosti.** Za vsako resnično najdbo generira **strukturiran, ponovljiv plan** (`*.plan.json`) in ga poskusi izvesti. Če uspe in se stanje recovery denarnice realno poveča, je to **dokaz** — ne ocena.
-- **Izvajalec.** Plan izvede prek ene, ponovno uporabljene `AttackWallet` pogodbe (deploy + resnični klici, po potrebi z Aave flashloanom za nič kapitala), nato **pobrana sredstva pobere na zaklenjeno recovery denarnico**.
-- **Nadzornik po deployu.** `monitor.py` neprekinjeno spremlja živo pogodbo in ob sumu odliva poskusi rešiti še preostala sredstva z že znanimi plani.
-
-**Ni:**
-
-- **Ni generator lažnih alarmov.** Vsaka trditev o exploitabilnosti je vezana na izmerjen premik sredstev. Kar ne premakne vrednosti, se poroča kot `EXECUTED, NO PROFIT` ali `SKIPPED`, nikoli kot potrjen napad.
-- **Ni nadomestilo za Foundry/Echidna, a jih dopolnjuje.** Za fuzz testiranje *lastne* izvorne kode v Solidity z ročno pisanimi harnessi ostajata [Foundry](https://github.com/foundry-rs/foundry) in [Echidna](https://github.com/crytic/echidna) odlična izbira — a ForkSploit **ni vezan le na že deployan bajtkod**. Pregleduje **tudi pogodbe pred deployem**: lokalni `.sol` (prevede ga sam) ali `.bin` (že preveden bajtkod) — takšno pogodbo v teku **deploya in napade na svežem stanju**, še preden gre na glavno omrežje. Poleg tega ima **lasten deklarativni invariantni orakel** (`--invariants file.json`, brez Rusta), tako da ekonomske invariante lahko izraziš neposredno v ForkSploitu. Deluje na **Ethereum (ETH)** in **Ethereum Classic (ETC)**, na **testnetu in mainnetu**, ter na **nativni valuti in ERC tokenih** — na lokalnem bajtkodu (pred deployem), na lokalnem/fork stanju in na živi deployani pogodbi (z ali brez izvorne kode).
-- **Ni orodje brez nadzora.** Ne podpiše in ne pošlje **ničesar** brez izrecne potrditve operaterja; glej [Varnostni model](#varnostni-model-in-nadzor-operaterja).
+1. [What ForkSploit is (and is not)](#what-forksploit-is-and-is-not)
+2. [Support scope: ETH + ETC, testnet + mainnet, all assets](#support-scope-eth--etc-testnet--mainnet-all-assets)
+3. [Why proof is different from guessing](#why-proof-is-different-from-guessing)
+4. [Where in the contract lifecycle it fits](#where-in-the-contract-lifecycle-it-fits)
+5. [Architecture: two layers](#architecture-two-layers)
+6. [Attack surfaces ForkSploit covers](#attack-surfaces-forksploit-covers)
+7. [The proof path: from finding to recovery wallet](#the-proof-path-from-finding-to-recovery-wallet)
+8. [Security model and operator control](#security-model-and-operator-control)
+9. [Installation](#installation)
+10. [Quick start](#quick-start)
+11. [Configuration](#configuration)
+12. [CLI reference](#cli-reference)
+13. [Helper tools](#helper-tools)
+14. [Development, tests and build](#development-tests-and-build)
+15. [Limitations (honest)](#limitations-honest)
+16. [Legal and ethical use](#legal-and-ethical-use)
 
 ---
 
-## Obseg podpore: ETH + ETC, testnet + mainnet, vsa sredstva
+## What ForkSploit is (and is not)
 
-To so **ključne informacije** o tem, kje ForkSploit dela in kaj vse pokriva.
+**It is:**
 
-### Omrežja — Ethereum in Ethereum Classic, vsako v obeh različicah
+- **An attack-surface discovery platform** for EVM smart contracts — before deploy (on local bytecode from `.sol`/`.bin`) and after it (on a live deployed contract over RPC, with or without source code).
+- **An exploitability prover.** For every real finding it generates a **structured, reproducible plan** (`*.plan.json`) and attempts to execute it. If it succeeds and the recovery wallet balance really increases, that is a **proof** — not an estimate.
+- **An executor.** It executes the plan through one reused `AttackWallet` contract (deploy + real calls, with an Aave flashloan when needed for zero capital), then **sweeps the extracted funds to the locked recovery wallet**.
+- **A post-deploy monitor.** `monitor.py` continuously watches a live contract and, on suspicion of an outflow, attempts to rescue the remaining funds with already-known plans.
 
-| Omrežje | Vrsta | Chain ID | Vloga |
+**It is not:**
+
+- **Not a false-alarm generator.** Every claim of exploitability is tied to a measured movement of funds. Anything that does not move value is reported as `EXECUTED, NO PROFIT` or `SKIPPED`, never as a confirmed attack.
+- **Not a replacement for Foundry/Echidna, but it complements them.** For fuzz testing *your own* Solidity source with hand-written harnesses, [Foundry](https://github.com/foundry-rs/foundry) and [Echidna](https://github.com/crytic/echidna) remain excellent choices — but ForkSploit is **not limited to already-deployed bytecode**. It also reviews **pre-deploy contracts**: local `.sol` (it compiles it itself) or `.bin` (already-compiled bytecode) — such a contract is **deployed and attacked in a run on fresh state**, before it ever goes to mainnet. In addition it has **its own declarative invariant oracle** (`--invariants file.json`, no Rust), so you can express economic invariants directly in ForkSploit. It works on **Ethereum (ETH)** and **Ethereum Classic (ETC)**, on **testnet and mainnet**, and on **native currency and ERC tokens** — on local bytecode (pre-deploy), on local/fork state, and on a live deployed contract (with or without source code).
+- **Not an unsupervised tool.** It signs and sends **nothing** without the operator's explicit confirmation; see [Security model](#security-model-and-operator-control).
+
+---
+
+## Support scope: ETH + ETC, testnet + mainnet, all assets
+
+This is **key information** about where ForkSploit works and what it covers.
+
+### Networks — Ethereum and Ethereum Classic, each in both variants
+
+| Network | Type | Chain ID | Role |
 |---|---|---|---|
-| **Ethereum (ETH)** | **mainnet** | 1 | Prvorazredno, živo preverjeno |
-| **Sepolia** | ETH **testnet** | 11155111 | Prvorazredno, živo preverjeno |
-| **Ethereum Classic (ETC)** | **mainnet** | 61 | Prvorazredno, živo preverjeno |
-| **Mordor** | ETC **testnet** | 63 | Prvorazredno, živo preverjeno |
+| **Ethereum (ETH)** | **mainnet** | 1 | First-class, live-verified |
+| **Sepolia** | ETH **testnet** | 11155111 | First-class, live-verified |
+| **Ethereum Classic (ETC)** | **mainnet** | 61 | First-class, live-verified |
+| **Mordor** | ETC **testnet** | 63 | First-class, live-verified |
 
-Proti tem **štirim** so bili živo preverjeni tako gradnja planov kot izvedba
-exploitov. Za vsako od obeh omrežij ForkSploit dela **tako na testnetu kot na
-mainnetu** — testnet za varen razvoj in preizkus, mainnet za resnično
-validacijo (z `--confirm-mainnet`).
+Against these **four**, both plan generation and exploit execution have been live-verified. For each of the two networks ForkSploit works **both on testnet and on mainnet** — testnet for safe development and rehearsal, mainnet for real validation (with `--confirm-mainnet`).
 
-Poleg tega Rust jedro podpira **25 verig** (BSC, Polygon, Arbitrum, Optimism,
-Base, Avalanche, Fantom, Gnosis, Celo, Scroll, Linea, Blast, zkEVM, Iotex,
-Vana, Story, …), a sta ETH in ETC edini, ki jih projekt obravnava kot
-prvorazredni in proti katerima je bila izvedba živo potrjena.
+In addition, the Rust core supports **25 chains** (BSC, Polygon, Arbitrum, Optimism, Base, Avalanche, Fantom, Gnosis, Celo, Scroll, Linea, Blast, zkEVM, Iotex, Vana, Story, …), but ETH and ETC are the only two the project treats as first-class and against which execution has been live-confirmed.
 
-### Sredstva — nativna valuta in ERC tokeni
+### Assets — native currency and ERC tokens
 
-ForkSploit sledi in pobira sredstva, ki jih ciljna pogodba uporablja:
+ForkSploit tracks and extracts the assets the target contract uses:
 
-- **Nativna valuta** — ETH (na Ethereumu) in ETC (na Ethereum Classic),
-  vključno s sredstvi, ki jih pogodba drži kot `address(this).balance`.
-  Pobira jih `AttackWallet.sweep()` (brez parametra destinacije).
-- **ERC-20** — avtomatsko: vsak korak, ki je raw ERC-20 klic
-  (`transfer`/`transferFrom`/`approve`/`mint`/`burn`/`skim`) na token pogodbi,
-  se označi s `stolen_asset`, po izvedbi pa `AttackWallet.sweepToken()` pobere
-  preostanek iz `AttackWallet` na recovery denarnico.
-- **ERC-721 / ERC-1155 / ERC-4626** — **zaznava** napadalnih površin je
-  pokrita z orakli (`Unauthorized NFT Transfer`, `Unauthorized ERC1155
-  Transfer`, `ERC4626 Share Inflation`, `ERC4626 Rounding Favors User`,
-  `nft_transfer`, `erc4626`), vključno z `safeTransferFrom`/`setApprovalForAll`
-  (ki ju `strategy_layer` prepozna pri urejanju odvisnosti). Opomba (R3):
-  avtomatski `sweepToken` je vezan na ERC-20 selektorje; za NFT-je se izvleček
-  izvede prek samega exploit plan-a (prenos na recovery denarnico), ne prek
-  ločenega "sweep NFT" klica.
-- **Wrapped native** (WETH9 / WETC) — odvijanje/zavijanje za flashloan
-  financiranje.
-- **Aave V3 / Balancer V2** — flashloan za izvedbo brez kapitala napadalca.
+- **Native currency** — ETH (on Ethereum) and ETC (on Ethereum Classic), including funds the contract holds as `address(this).balance`. Extracted by `AttackWallet.sweep()` (no destination parameter).
+- **ERC-20** — automatic: every step that is a raw ERC-20 call (`transfer`/`transferFrom`/`approve`/`mint`/`burn`/`skim`) on a token contract is tagged with `stolen_asset`, and after execution `AttackWallet.sweepToken()` extracts the remainder from `AttackWallet` to the recovery wallet.
+- **ERC-721 / ERC-1155 / ERC-4626** — **detection** of attack surfaces is covered by oracles (`Unauthorized NFT Transfer`, `Unauthorized ERC1155 Transfer`, `ERC4626 Share Inflation`, `ERC4626 Rounding Favors User`, `nft_transfer`, `erc4626`), including `safeTransferFrom`/`setApprovalForAll` (which `strategy_layer` recognises when ordering dependencies). Note (R3): the automatic `sweepToken` is tied to ERC-20 selectors; for NFTs the extraction is performed through the exploit plan itself (transfer to the recovery wallet), not through a separate "sweep NFT" call.
+- **Wrapped native** (WETH9 / WETC) — unwrap/wrap for flashloan funding.
+- **Aave V3 / Balancer V2** — flashloan for execution without attacker capital.
 
-### Dvojezično pokritje
+### Both-phase coverage
 
-Vse zgoraj velja **pred deployem** (na lokalnem `.sol`/`.bin`) in **po njem**
-(na živi deployani pogodbi na ETH/ETC mainnetu ali Sepolia/Mordor testnetu),
-z ali brez izvorne kode.
+Everything above holds **before deploy** (on a local `.sol`/`.bin`) and **after it** (on a live deployed contract on ETH/ETC mainnet or Sepolia/Mordor testnet), with or without source code.
 
 ---
 
-## Zakaj je dokaz drugačen od ugibanja
+## Why proof is different from guessing
 
-Klasična varnostna orodja se ustavijo pri *"to bi lahko bilo ranljivo"*. ForkSploit gre korak dlje in loči tri ravni, ki jih nikoli ne zameša:
+Classic security tools stop at *"this could be vulnerable"*. ForkSploit goes a step further and separates three levels that it never conflates:
 
-| Raven | Kje nastane | Kaj pomeni | Kako se poroča |
+| Level | Where it arises | What it means | How it is reported |
 |---|---|---|---|
-| **Najdba (napadalna površina)** | Rust jedro (revm + 47 oraklov) | Opazen vzorec ali direktno opažena kršitev v simulaciji | `sim-confirmed` / `sim-review` (vedno s predpono `sim-`) |
-| **Replayable dokaz** | `*.plan.json` | Vsaka najdba nosi **ponovljivo transakcijsko sled** (kdo, kaj, calldata, vrednost) | polje `evidence: "replayable_transaction_trace"` |
-| **Verižni dokaz** | Python izvedbena plast | Realna transakcija je bila poslana in **recovery denarnica je zares dobila sredstva** | `CONFIRMED` + izmerjen `recovery_delta_wei` |
+| **Finding (attack surface)** | Rust core (revm + 47 oracles) | An observable pattern or a directly observed violation in simulation | `sim-confirmed` / `sim-review` (always with the `sim-` prefix) |
+| **Replayable proof** | `*.plan.json` | Every finding carries a **reproducible transaction trace** (who, what, calldata, value) | field `evidence: "replayable_transaction_trace"` |
+| **On-chain proof** | Python execution layer | A real transaction was sent and the **recovery wallet really received funds** | `CONFIRMED` + measured `recovery_delta_wei` |
 
-Ključno: raven 1 je **simulacija**. Zato je oznaka `sim-confirmed`, nikoli gola `confirmed`. Raven 3 je **resnica** — edini trenutek, ko ForkSploit trdi, da je pogodba ranljiva, je, ko je sredstvo dejansko prešlo na recovery denarnico.
+The key point: level 1 is a **simulation**. That is why the label is `sim-confirmed`, never a bare `confirmed`. Level 3 is **truth** — the only moment ForkSploit claims a contract is vulnerable is when an asset has actually moved into the recovery wallet.
 
 ---
 
-## Kje v življenjskem ciklu pogodbe nastopi
+## Where in the contract lifecycle it fits
 
-Cilj ForkSploita je **pravočasna, dokazana pot eksploatacije — še preden lastnik naloži glavna sredstva** na pogodbo:
+ForkSploit's goal is a **timely, proven exploitation path — before the owner loads the main funds** into the contract:
 
 ```
-   razvoj               PRED DEPLOYEM                DEPLOY             PO DEPLOYU
+   development          BEFORE DEPLOY              DEPLOY            AFTER DEPLOY
  ─────────────        ─────────────────────        ──────────        ────────────────────
-   .sol/.bin  ───────►  ForkSploit dokaže   ───────►  pogodba  ───────►  monitor.py čuva
-                        exploitabilnost                gre na            in ob odlivu rešuje
-                        BREZ tveganja                  verigo            preostala sredstva
+   .sol/.bin  ───────►  ForkSploit proves  ───────►  contract  ───────►  monitor.py guards
+                        exploitability                goes to           and on outflow rescues
+                        WITHOUT risk                  the chain         the remaining funds
                              │
                              ▼
-                  "ali bo ta pogodba izgubila
-                   sredstva, ko jih naložim?"
+                  "will this contract lose
+                   funds when I load them?"
                              │
-                    DA ──────┴────── NE
+                    YES ─────┴────── NO
                      │               │
-             dokaz + exploit    negativen rezultat
-             na testnetu        (omejen, pošten)
+             proof + exploit    negative result
+             on testnet         (bounded, honest)
 ```
 
-ForkSploit tako rešuje ključno poslovno vprašanje: **ali je varno naložiti sredstva na to pogodbo** — in če ni, kje točno je luknja in kako se zapre.
+ForkSploit thus answers a key business question: **is it safe to load funds into this contract** — and if not, exactly where the hole is and how to close it.
 
 ---
 
-## Arhitektura: dve plasti
+## Architecture: two layers
 
-Delitev je stroga in namerna. Rust **nikoli** ne podpisuje; Python **nikoli** ne odloča o tem, ali je vzorec ranljivost.
+The split is strict and deliberate. Rust **never** signs; Python **never** decides whether a pattern is a vulnerability.
 
-### 1. Rust jedro — odkrivanje in sinteza planov
+### 1. Rust core — discovery and plan synthesis
 
-- **Enota fuzzinga je ena transakcija** (`EVMInput`: klicatelj, ciljna pogodba, calldata, vrednost). Večkoračno vedenje nastane **čez genealogijo korpusa** — vsak nov testcase izhaja iz shranjenega VM stanja prejšnjega, zato se stanje akumulira skozi generacije (`full_trace` + `print_txn_corpus` sta privzeti funkciji).
-- **Coverage-guided fuzzer** na `revm`, s **concolic/Z3 reševanjem** (`--concolic`, `--concolic-caller`) nad vejami, ki jih naključno mutiranje ne bi zadelo.
-- **47 oraklov** (glej [napadalne površine](#napadalne-površine-ki-jih-forksploit-pokriva)) — ob vsaki najdbi Rust izpiše `*.plan.json` z natanko opaženimi koraki.
-- **Naslovi in klicatelji so pristranski**: `addresses_pool` preferira deployane kontrakte (75%), klicatelji pa sveže identitete — tako so cross-contract razredi (vault, ki bere `token.balanceOf(self)`, par, ki kliče oba svoja tokena) dosegljivi.
-- **Proxy razširitev**: `from_address()` razdre EIP-1967 (impl/beacon), EIP-1822 (UUPS), EIP-1167 (minimal proxy) in EIP-7702, zato fuzzа **implementacijo, ne ~45-bajtnega dispatcherja**.
+- **The unit of fuzzing is one transaction** (`EVMInput`: caller, target contract, calldata, value). Multi-step behaviour arises **across the corpus genealogy** — each new testcase descends from the stored VM state of the previous one, so state accumulates across generations (`full_trace` + `print_txn_corpus` are default features).
+- **Coverage-guided fuzzer** over `revm`, with **concolic/Z3 solving** (`--concolic`, `--concolic-caller`) over branches that random mutation would not reach.
+- **47 oracles** (see [attack surfaces](#attack-surfaces-forksploit-covers)) — on each finding Rust emits `*.plan.json` with the exact observed steps.
+- **Addresses and callers are biased**: `addresses_pool` prefers deployed contracts (75%), while callers are fresh identities — so cross-contract classes (a vault reading `token.balanceOf(self)`, a pair calling both of its tokens) are reachable.
+- **Proxy expansion**: `from_address()` unwraps EIP-1967 (impl/beacon), EIP-1822 (UUPS), EIP-1167 (minimal proxy) and EIP-7702, so it fuzzes the **implementation, not the ~45-byte dispatcher**.
 
-### 2. Python orkestracija — denarnice, izvedba, dokaz
+### 2. Python orchestration — wallets, execution, proof
 
-`auto_pipeline.py` prebere **vse** plane iz `work_dir/vulnerabilities/`, jih prek `strategy_layer.compose_plan()` **združi v en sam logičen, urejen večkoračni plan** (`unlock → neutral → objective → reentrancy zadnji`), ga izvede prek `AttackWallet` in **vsa pridobljena sredstva prenese na recovery denarnico**.
+`auto_pipeline.py` reads **all** plans from `work_dir/vulnerabilities/`, via `strategy_layer.compose_plan()` **merges them into a single logical, ordered multi-step plan** (`unlock → neutral → objective → reentrancy last`), executes it through `AttackWallet`, and **moves all obtained funds to the recovery wallet**.
 
 ---
 
-## Napadalne površine, ki jih ForkSploit pokriva
+## Attack surfaces ForkSploit covers
 
-ForkSploit preverja **47 napadalnih površin**, implementiranih kot orakli v `src/evm/oracles/`. Vsak je označen s svojo stopnjo zaupanja (`Confirmed` = direktno opažena kršitev, `Review` = heuristika z znanim tveganjem lažnega zadetka).
+ForkSploit checks **47 attack surfaces**, implemented as oracles in `src/evm/oracles/`. Each is tagged with its confidence level (`Confirmed` = directly observed violation, `Review` = heuristic with a known false-positive risk).
 
-**Dostop in avtorizacija**
+**Access and authorization**
 
-- `access_control` — neavtorizirana sprememba lastnika, preklop pavze, proxy nadgradnja
+- `access_control` — unauthorized ownership change, pause toggle, proxy upgrade
 - `tx_origin` — `tx.origin` phishing bypass
-- `initializer_front_run` — front-running inicializatorja
-- `centralization_risk` — centralizirane točke odpovedi (Review)
+- `initializer_front_run` — initializer front-running
+- `centralization_risk` — central points of failure (Review)
 - `ecrecover` — unchecked `ecrecover(0)`
-- `signature_malleability`, `signature_replay` — krhkost in ponovitev podpisov
-- `forged_proof` — ponarejen Merkle/dokaz
+- `signature_malleability`, `signature_replay` — signature malleability and replay
+- `forged_proof` — forged Merkle/proof
 
-**Izvajanje in nadzor toka**
+**Execution and control flow**
 
-- `reentrancy`, `readonly_reentrancy` — klasična in read-only reentranca
-- `arbitrary_storage_write` — pisanje v poljubno shrambeno mesto
-- `storage_collision`, `proxy_integrity`, `proxy_upgrade_hijack` — kolizije shrambe in integriteta proxyja
-- `delegatecall`, `delegatecall_target` — injekcija in poljubna tarča delegatecall
-- `arb_call`, `arb_transfer` — poljubni klici in prenosi
-- `unchecked_call` — nepreverjeni nizkonivojski klici
-- `selfdestruct` — samouničenje
-- `gas_stipend` — trdo-kodiran gas limit (SWC-134)
-- `assert_violation`, `uninitialized_memory` — kršitev `assert` in branje neinicializiranega spomina
-- `transient_guard` — napake v transient storage guardih
+- `reentrancy`, `readonly_reentrancy` — classic and read-only reentrancy
+- `arbitrary_storage_write` — write to an arbitrary storage slot
+- `storage_collision`, `proxy_integrity`, `proxy_upgrade_hijack` — storage collisions and proxy integrity
+- `delegatecall`, `delegatecall_target` — delegatecall injection and arbitrary target
+- `arb_call`, `arb_transfer` — arbitrary calls and transfers
+- `unchecked_call` — unchecked low-level calls
+- `selfdestruct` — self-destruct
+- `gas_stipend` — hard-coded gas limit (SWC-134)
+- `assert_violation`, `uninitialized_memory` — `assert` violation and reading uninitialized memory
+- `transient_guard` — bugs in transient storage guards
 
-**Aritmetika in ekonomija**
+**Arithmetic and economics**
 
-- `overflow` — celoštevilski preliv
-- `precision_loss`, `preview_rounding` — izguba natančnosti in zaokroževanje v korist uporabnika
-- `token_accounting_mismatch`, `unbacked_mint`, `forced_eth_accounting` — neskladja v računovodstvu, nekrita kovanca
-- `eth_backing` — obljubljena nativna vrednost presega resnično stanje
-- `erc20`, `nft_transfer`, `erc4626` — napake v ERC20/721/1155 in ERC4626 (share inflation)
-- `curve_virtual_price`, `twap_manipulation`, `price_feed_staleness` — manipulacija cen in zastareli podatki
-- `imbalanced_pair` (v2_pair) — neuravnotežen Uniswap par
+- `overflow` — integer overflow
+- `precision_loss`, `preview_rounding` — precision loss and rounding in the user's favour
+- `token_accounting_mismatch`, `unbacked_mint`, `forced_eth_accounting` — accounting mismatches, unbacked mint
+- `eth_backing` — promised native value exceeds the real balance
+- `erc20`, `nft_transfer`, `erc4626` — bugs in ERC20/721/1155 and ERC4626 (share inflation)
+- `curve_virtual_price`, `twap_manipulation`, `price_feed_staleness` — price manipulation and stale data
+- `imbalanced_pair` (v2_pair) — imbalanced Uniswap pair
 
-**Logika in zanesljivost**
+**Logic and reliability**
 
-- `unbounded_loop`, `revert_in_loop` — neomejene zanke in revert znotraj zanke (DoS)
-- `stale_guard` — zastarel števec stražarja (Review)
-- `self_referral` — plačilo ne glede na validacijo (dvosmerno opaženo — Confirmed)
-- `zero_address_setter` — nastavljanje na naslov nič
-- `weak_randomness` — šibka/predvidljiva naključnost (SWC-120)
-- `invariant` — **uporabniško deklarirane ekonomske invariante** (`--invariants file.json`), ovrednotene po vsaki transakciji
+- `unbounded_loop`, `revert_in_loop` — unbounded loops and revert inside a loop (DoS)
+- `stale_guard` — stale guard counter (Review)
+- `self_referral` — payment regardless of validation (observed two-way — Confirmed)
+- `zero_address_setter` — setting to the zero address
+- `weak_randomness` — weak/predictable randomness (SWC-120)
+- `invariant` — **user-declared economic invariants** (`--invariants file.json`), evaluated after every transaction
 
-> **Opomba o pokritosti:** ForkSploit namerno privzeto teče z `--detectors all`. Zgodnja različica je privzeto uporabljala `high_confidence`, a je to povzročilo, da uporabnik "nič ni najdeno" prebere kot "ni ranljivosti" na pogodbi, katere edina resnična najdba je bila izključena iz `high_confidence`. Ožanje iskanja po tihem je slabša napaka kot občasni lažni zadetek.
+> **Note on coverage:** ForkSploit deliberately runs with `--detectors all` by default. An early version defaulted to `high_confidence`, but that caused the user to read "nothing found" as "no vulnerability" on a contract whose only real finding was excluded from `high_confidence`. Silently narrowing the search is a worse mistake than an occasional false positive.
 
 ---
 
-## Pot dokaza: od najdbe do recovery denarnice
+## The proof path: from finding to recovery wallet
 
-ForkSploit izvede naslednjo verigo — vsak korak je viden v terminalu **in** v časovno-žigosani datoteki pod `onchain_scripts/logs/`:
+ForkSploit performs the following chain — every step is visible in the terminal **and** in a time-stamped file under `onchain_scripts/logs/`:
 
-1. **Registracija / deploy.** Iz `.sol`/`.bin` (fresh deploy) ali `0x…` (že deployano). Opcijsko statična analiza (Slither) in financiranje cilja.
-2. **Razrešitev proxyja.** `resolve_proxy_chain()` razdre sklad in doda vsako implementacijo kot dodatno tarčo.
-3. **Fuzzing.** Zagon Rust jedra z `--run-forever` (ne ustavi se ob prvi najdbi) in concolic reševanjem.
-4. **Združevanje planov.** `strategy_layer` združi vse plane v en koherenten večkoračni plan; vsak plan se poskusi tudi **samostojno**.
-5. **Pre-flight vrata izplativosti (privzeto VKLOPLJENA).** Preden se katerikoli plan pošlje za res, ga ovrednoti v dveh plasteh:
-   - *Metapodatki (brez omrežja):* plan z `atomic_replayable=false`, z več kot enim `msg.sender`, ali z `confirmed_exploitable=false` se preskoči takoj.
-   - *Fork-simulacija:* če je `anvil` na voljo, se zažene začasni fork **istega** stanja vozlišča, plan se ponovi korak za korakom, in izmeri se **resnična** delta recovery denarnice **in** resničen porabljen gas. Plan se preskoči, če revertira ali če iztrži manj, kot znaša njegov gas.
-6. **Izvedba.** Prek `AttackWallet.executeBatch` (atomsko, v eni transakciji) ali zaporedno (reentranca), po potrebi z **Aave V3 flashloanom** (nič kapitala napadalca).
-7. **Pobiranje.** `sweep()` / `sweepToken()` — **brez parametra za destinacijo**, vedno na zaklenjeno recovery denarnico.
-8. **Poročilo.** Za vsak plan status + izmerjen dokaz (glej [statuse](#statusi-in-dokaz)).
+1. **Registration / deploy.** From `.sol`/`.bin` (fresh deploy) or `0x…` (already deployed). Optionally static analysis (Slither) and funding of the target.
+2. **Proxy resolution.** `resolve_proxy_chain()` unwraps the stack and adds each implementation as an extra target.
+3. **Fuzzing.** Launch the Rust core with `--run-forever` (it does not stop at the first finding) and concolic solving.
+4. **Plan merging.** `strategy_layer` merges all plans into one coherent multi-step plan; each plan is also attempted **on its own**.
+5. **Pre-flight profitability gate (ON by default).** Before any plan is sent for real, it is evaluated in two layers:
+   - *Metadata (no network):* a plan with `atomic_replayable=false`, with more than one `msg.sender`, or with `confirmed_exploitable=false` is skipped immediately.
+   - *Fork simulation:* if `anvil` is available, a temporary fork of the node's **same** state is started, the plan is replayed step by step, and the **real** recovery-wallet delta **and** real gas used are measured. The plan is skipped if it reverts or if it extracts less than its gas costs.
+6. **Execution.** Via `AttackWallet.executeBatch` (atomic, in one transaction) or sequentially (reentrancy), with an **Aave V3 flashloan** when needed (zero attacker capital).
+7. **Extraction.** `sweep()` / `sweepToken()` — **no destination parameter**, always to the locked recovery wallet.
+8. **Report.** For each plan a status + measured proof (see [statuses](#statuses-and-proof)).
 
-### Statusi in dokaz
+### Statuses and proof
 
-Vsak plan dobi enega od naslednjih statusov, in **le `CONFIRMED` je dokazan napad**:
+Each plan gets one of the following statuses, and **only `CONFIRMED` is a proven attack**:
 
-| Status | Pomen |
+| Status | Meaning |
 |---|---|
-| `CONFIRMED` | Resnična, na verigi reproducirana izvedba — recovery denarnica je **izmerjeno** dobila sredstva (`recovery_delta_wei`) |
-| `EXECUTED, NO PROFIT` | Vsi koraki so uspeli brez reverta, a saldo recovery denarnice se ni dvignil — **ni** potrjen napad |
-| `NOT CONFIRMED` | Revert proti pravemu stanju — verjetno lažni zadetek ali potrebuje drugačne predpogoje |
-| `INCONCLUSIVE` | Ni bilo dejansko poskušeno (npr. nerealistična vsota) — ni signal v nobeno smer |
-| `SKIPPED, UNPROFITABLE` | Brezplačna pre-flight je že dokazala revert ali neizplativost — **noben** transakcijski ni bil podpisan |
-| `SKIPPED, NOT EXTRACTABLE` | Najdeno, a brez izvedljivega koraka za izvlečenje (Review-tier heuristika, ne-predvajljiva ali več-klicateljska sled) |
-| `OVERSIZED GAS` | Izmerjen gas presega blok gas limit — fizično ne-vključljivo v en blok |
+| `CONFIRMED` | A real, on-chain reproduced execution — the recovery wallet **measurably** received funds (`recovery_delta_wei`) |
+| `EXECUTED, NO PROFIT` | All steps succeeded without reverting, but the recovery wallet balance did not rise — **not** a confirmed attack |
+| `NOT CONFIRMED` | Revert against real state — likely a false positive or it needs different preconditions |
+| `INCONCLUSIVE` | Not actually attempted (e.g. an unrealistic amount) — no signal either way |
+| `SKIPPED, UNPROFITABLE` | The free pre-flight already proved a revert or unprofitability — **no** transaction was signed |
+| `SKIPPED, NOT EXTRACTABLE` | Found, but with no executable extraction step (Review-tier heuristic, non-replayable or multi-caller trace) |
+| `OVERSIZED GAS` | Measured gas exceeds the block gas limit — physically not includable in one block |
 
-Za vsako najdbo se zapiše tudi strukturiran dokaz (`build_proof`): `replayed`, `gas_used`, `net_profit_wei`, in `blockers` (npr. `owner_gated`, `owner_impersonation`, `atomic_replayable=false`).
+For each finding a structured proof is also written (`build_proof`): `replayed`, `gas_used`, `net_profit_wei`, and `blockers` (e.g. `owner_gated`, `owner_impersonation`, `atomic_replayable=false`).
 
 ---
 
-## Varnostni model in nadzor operaterja
+## Security model and operator control
 
-ForkSploit podpisuje in pošilja resnične transakcije, zato je nadzor operaterja vgrajen v vsako raven — ne kot priporočilo, ampak kot trda pravila v kodi.
+ForkSploit signs and sends real transactions, so operator control is built into every layer — not as a recommendation, but as hard rules in code.
 
-### 1. Zaklenjena destinacija profita (`safeWallet`)
+### 1. Locked profit destination (`safeWallet`)
 
-`AttackWallet.sol` ima `safeWallet` — naslov, ki se nastavi **enkrat**, ob prvi uporabi, prek `setSafeWallet()` (ponovni klic revertira). Vsaka funkcija, ki pobira sredstva (`sweep()`, `sweepToken()`, `sweepWithBuilderTip()`) **nima parametra za destinacijo** — vse nepogojno pošljejo na `safeWallet`. Noben klicni podatek, niti od ogroženega owner ključa, ne more preusmeriti profita drugam. Sprememba destinacije pomeni deploy nove `AttackWallet`, nikoli klica na tej.
+`AttackWallet.sol` has `safeWallet` — an address set **once**, on first use, via `setSafeWallet()` (a second call reverts). Every function that extracts funds (`sweep()`, `sweepToken()`, `sweepWithBuilderTip()`) **has no destination parameter** — they all unconditionally send to `safeWallet`. No call data, not even from a compromised owner key, can redirect the profit elsewhere. Changing the destination means deploying a new `AttackWallet`, never calling into this one.
 
-### 2. Pravilo dveh denarnic (`wallet_policy.py`)
+### 2. Two-wallet rule (`wallet_policy.py`)
 
-Preden kateri koli skript kaj podpiše, je treba enkrat, **za vsako verigo**, zakleniti natanko dve vlogi. Vsak klic `auto_pipeline.py`, `batch_pipeline.py`, `monitor.py` (z `--key`/`--safe-wallet`), `aave_flashloan_runner.py` in `dex_arbitrage_scanner.py` (z `--execute`) pred vsakim podpisovanjem preveri:
+Before any script signs anything, exactly two roles must be locked once, **per chain**. Every call of `auto_pipeline.py`, `batch_pipeline.py`, `monitor.py` (with `--key`/`--safe-wallet`), `aave_flashloan_runner.py` and `dex_arbitrage_scanner.py` (with `--execute`) checks before every signing:
 
-1. da naslov, na katerega se razreši `--key` datoteka, ujema z registriranim `funding_wallet` za to verigo,
-2. da `--recovery-wallet`/`--safe-wallet` ujema z registriranim `recovery_wallet`.
+1. that the address the `--key` file resolves to matches the registered `funding_wallet` for that chain,
+2. that `--recovery-wallet`/`--safe-wallet` matches the registered `recovery_wallet`.
 
-`--confirm-chain` je obvezen in vanj je treba **ročno vtipkati** isto ime verige kot v `--chain` — anti-tipkarski ukrep, ker sta `eth` in `etc` eno črko narazen in obe resnični mainnet verigi.
+`--confirm-chain` is mandatory and you must **manually type** the same chain name as in `--chain` — an anti-typo measure, because `eth` and `etc` are one letter apart and both are real mainnet chains.
 
-### 3. Samodejno zaznavanje omrežja
+### 3. Automatic network detection
 
-Ob vsakem zagonu ForkSploit prebere **dejanski `eth_chainId`** s konfiguriranega RPC-ja (`chains.verify_rpc_identity`) in **zavrne** tek ob neujemanju z `--chain` — še preden je karkoli podpisano. Nato vse mehanizme, ki se obnašajo različno po omrežju (Flashbots relay, mempool-privacy preusmeritev, oznaka nativnega žetona, mainnet-potrditev, `--hardfork` za Anvil fork), prilagodi **zaznanemu** omrežju, ne vtipkanemu imenu. To zapre past `eth`/`etc` z obeh strani: napačno ime na pravem RPC-ju in pravo ime na napačnem RPC-ju.
+On every launch ForkSploit reads the **actual `eth_chainId`** from the configured RPC (`chains.verify_rpc_identity`) and **refuses** to run on a mismatch with `--chain` — before anything is signed. It then adapts every mechanism that behaves differently per network (Flashbots relay, mempool-privacy rerouting, native-token label, mainnet confirmation, `--hardfork` for the Anvil fork) to the **detected** network, not the typed name. This closes the `eth`/`etc` trap from both sides: a wrong name on the right RPC and a right name on the wrong RPC.
 
-### 4. Stroga mainnet potrditev
+### 4. Strict mainnet confirmation
 
-Za vsako verigo, ki ni v `TESTNET_CHAINS` (`sepolia`, `chapel`, `mordor`), je obvezen `--confirm-mainnet`. Ta izpiše glasno, nedvoumno ime verige (npr. `ETHEREUM CLASSIC (ETC) mainnet -- this is NOT Ethereum (ETH)`) in zahteva izrecno potrditev.
+For every chain not in `TESTNET_CHAINS` (`sepolia`, `chapel`, `mordor`), `--confirm-mainnet` is mandatory. It prints the loud, unambiguous chain name (e.g. `ETHEREUM CLASSIC (ETC) mainnet -- this is NOT Ethereum (ETH)`) and requires explicit confirmation.
 
 ### 5. Per-plan gas budget
 
-Poraba za gas je za vsak plan omejena na resnično, pred-zagonsko oceno + 10% rezerve (`GAS_BUDGET_MARGIN = 1.10`) — en plan, ena gasfee enota, nikoli neomejeno. Vsak transakcijski gas limit je dodatno clampan na `MAX_GAS_LIMIT = 8_000_000` (realni ETC block limit).
+Gas spending is limited per plan to the real, pre-run estimate + a 10% margin (`GAS_BUDGET_MARGIN = 1.10`) — one plan, one gasfee unit, never unlimited. Every transaction gas limit is additionally clamped to `MAX_GAS_LIMIT = 8_000_000` (the real ETC block limit).
 
-### 6. Poročanje z dokazom (R1)
+### 6. Reporting with proof (R1)
 
-ForkSploit nikoli ne poroča "potrjeno" brez **izmerjenega** premika sredstev. Kar ni izmerjeno, je označeno kot neizmerjeno. To velja za kodo, dokumentacijo in vsak posamezen izhod.
+ForkSploit never reports "confirmed" without a **measured** movement of funds. Anything not measured is labelled unmeasured. This holds for the code, the documentation and every individual output.
 
 ---
 
-## Namestitev
+## Installation
 
-### Predpogoji
+### Prerequisites
 
-ForkSploit linka sistemski **Z3**. Če ga `z3-sys` ne najde, poskusi zgraditi cel Z3 iz vira — to traja zelo dolgo in pogosto pade. Zato pred gradnjo namesti sistemski Z3, `pkg-config` in C/C++ orodja.
+ForkSploit links the system **Z3**. If `z3-sys` cannot find it, it tries to build all of Z3 from source — which takes very long and often fails. So install the system Z3, `pkg-config` and the C/C++ toolchain before building.
 
 **Debian / Ubuntu:**
 
 ```bash
 sudo apt-get install -y libz3-dev pkg-config clang cmake build-essential
-pkg-config --modversion z3        # mora izpisati različico (npr. 4.13.3.0)
+pkg-config --modversion z3        # must print a version (e.g. 4.13.3.0)
 ```
 
 **macOS (Homebrew):**
@@ -313,44 +292,44 @@ pkg-config --modversion z3        # mora izpisati različico (npr. 4.13.3.0)
 brew install z3 pkg-config
 ```
 
-**Opcijsko, priporočeno** (za pre-flight fork simulacijo in W1–W3 dokaz):
+**Optional, recommended** (for pre-flight fork simulation and the W1–W3 proof):
 
-- [Foundry](https://github.com/foundry-rs/foundry) (`anvil`, `cast`) — brez `anvil` pre-flight vrata tiho degradirajo v "poskusi" (manjkajoče opcijsko orodje nikoli ne ustavi teka, le naredi ga manj varčnega).
-- `solc` (0.8.24) — potreben za `.sol` tarče in za redeploy `AttackWallet`; Python ga pokliče sproti.
+- [Foundry](https://github.com/foundry-rs/foundry) (`anvil`, `cast`) — without `anvil` the pre-flight gate silently degrades to "try it" (a missing optional tool never stops a run, it just makes it less frugal).
+- `solc` (0.8.24) — needed for `.sol` targets and to redeploy `AttackWallet`; Python calls it on the fly.
 
-### Kloniranje
+### Cloning
 
 ```bash
 git clone https://github.com/DanijelTech/ForkSploit.git
 cd ForkSploit
 ```
 
-### Gradnja
+### Build
 
-Rust je pripet prek `rust-toolchain.toml` (nightly):
+Rust is pinned via `rust-toolchain.toml` (nightly):
 
 ```bash
-rustup toolchain install          # prebere rust-toolchain.toml
+rustup toolchain install          # reads rust-toolchain.toml
 cargo build --release
 ./target/release/forksploit evm --help
 ```
 
-Binarij vgradi git HEAD (`src/build.rs`), zato lahko preveriš, da je svež:
+The binary embeds the git HEAD (`src/build.rs`), so you can check it is fresh:
 
 ```bash
 git rev-parse HEAD
-./target/release/forksploit --version    # mora izpisati isto revizijo
+./target/release/forksploit --version    # must print the same revision
 ```
 
-### Python odvisnosti
+### Python dependencies
 
 ```bash
 pip install -r onchain_scripts/requirements.txt
 ```
 
-### Docker (alternativa)
+### Docker (alternative)
 
-`Dockerfile` že vsebuje vse predpogoje (`libz3-dev libssl-dev pkg-config cmake`) in zgradi tri različice binarne datoteke:
+The `Dockerfile` already contains all prerequisites (`libz3-dev libssl-dev pkg-config cmake`) and builds three binary variants:
 
 ```bash
 docker build -t forksploit .
@@ -358,32 +337,32 @@ docker build -t forksploit .
 
 ---
 
-## Hitri zagon
+## Quick start
 
-### Interaktivno (priporočeno): `forksploit.sh`
+### Interactive (recommended): `forksploit.sh`
 
-En sam vstopni point: logotip, nato predletna preveritev okolja (doctor), nato **glavni meni** in 7-koračni čarovnik.
+A single entry point: logo, then a pre-flight environment check (doctor), then the **main menu** and a 7-step wizard.
 
 ```bash
-./forksploit.sh              # čarovnik + predletna preveritev okolja
-./forksploit.sh --doctor     # samo preveri okolje in izpiši stanje, brez čarovnika
-./forksploit.sh --dry-run    # vse preveri in sestavi ukaz, a ga NE zažene
-./forksploit.sh --no-install # predletna preveritev samo POROČA, ničesar ne namešča
+./forksploit.sh              # wizard + pre-flight environment check
+./forksploit.sh --doctor     # only check the environment and print status, no wizard
+./forksploit.sh --dry-run    # check everything and build the command, but do NOT run it
+./forksploit.sh --no-install # pre-flight only REPORTS, installs nothing
 ```
 
-Glavni meni:
+Main menu:
 
 ```
-1) Nov tek          -> 7-koračni čarovnik
-2) Nastavitve       -> privzeta key datoteka / RPC override za verigo
-3) Preveri okolje   -> celoten doctor report
-4) Pomoč            -> kaj orodje počne in kaj pomenijo koraki
-izhod / q           -> prekini
+1) New run          -> the 7-step wizard
+2) Settings         -> default key file / per-chain RPC override
+3) Check environment-> the full doctor report
+4) Help             -> what the tool does and what the steps mean
+exit / q            -> quit
 ```
 
-Čarovnik zahteva natanko **tri vloge**, preden karkoli podpiše — *kdo financira* (datoteka s privatnim ključem), *kaj se pregleduje* (naslov ali pot), *kam gredo sredstva* (recovery denarnica) — plus verigo, RPC in zaklep wallet policy. Na koncu izpiše povzetek, ki ga potrdiš, preden se požene `auto_pipeline.py` / `batch_pipeline.py`.
+The wizard requires exactly **three roles** before it signs anything — *who funds* (a private-key file), *what is being reviewed* (address or path), *where the funds go* (the recovery wallet) — plus the chain, RPC and wallet-policy lock. At the end it prints a summary you confirm before `auto_pipeline.py` / `batch_pipeline.py` is launched.
 
-### Neposredno: `auto_pipeline.py` (en cilj)
+### Direct: `auto_pipeline.py` (one target)
 
 ```bash
 python3 onchain_scripts/auto_pipeline.py \
@@ -395,7 +374,7 @@ python3 onchain_scripts/auto_pipeline.py \
     --fuzz-seconds 300
 ```
 
-ali z lokalnim `.sol`/`.bin` (fresh deploy):
+or with a local `.sol`/`.bin` (fresh deploy):
 
 ```bash
 python3 onchain_scripts/auto_pipeline.py \
@@ -408,9 +387,9 @@ python3 onchain_scripts/auto_pipeline.py \
     --fuzz-seconds 300
 ```
 
-### Batch: `batch_pipeline.py` (mnogo ciljev)
+### Batch: `batch_pipeline.py` (many targets)
 
-En funding in en recovery wallet za **celo** serijo (nikoli različen wallet med tarčami):
+One funding and one recovery wallet for a **whole** series (never a different wallet between targets):
 
 ```bash
 python3 onchain_scripts/batch_pipeline.py \
@@ -422,34 +401,34 @@ python3 onchain_scripts/batch_pipeline.py \
     --fuzz-seconds 300
 ```
 
-`targets.txt`: ena tarča na vrstico (pot do `.sol`/`.bin` ali `0x` naslov).
+`targets.txt`: one target per line (a path to `.sol`/`.bin` or a `0x` address).
 
-### Neposredno: Rust binarij
+### Direct: Rust binary
 
 ```bash
-# Lokalna pogodba iz bajtkoda (brez verige)
+# Local contract from bytecode (no chain)
 ./target/release/forksploit evm -t 'tests/evm/erc4626/*' -f -d all
 
-# Živa deployana pogodba (black-box, brez izvorne kode)
+# Live deployed contract (black-box, no source code)
 ./target/release/forksploit evm -t 0xContractAddress -c etc \
     -f -d all --run-forever -w work_dir
 
-# Deklarativne invariante (lastna ekonomska pravila)
+# Declarative invariants (your own economic rules)
 ./target/release/forksploit evm -t 'tests/evm/two_step/*' -f \
     -d invariant --invariants tests/evm/two_step/invariants.json
 
-# Samodejna izpeljava predpogojev + flashloan + concolic
+# Automatic precondition derivation + flashloan + concolic
 ./target/release/forksploit evm -t 'tests/evm/erc4626/*' -f \
     --auto-setup --concolic --concolic-caller --jobs 3
 ```
 
 ---
 
-## Konfiguracija
+## Configuration
 
-### Datoteka s privatnim ključem (`--key`)
+### Private-key file (`--key`)
 
-Ena vrstica — privatni ključ funding denarnice (hex). Ta denarnica plača **ves** gas. **Nikoli ne commitaj te datoteke** (`.gitignore` že izključuje `onchain_scripts/*.key`, `key.txt`, `keys/`).
+One line — the private key of the funding wallet (hex). This wallet pays **all** gas. **Never commit this file** (`.gitignore` already excludes `onchain_scripts/*.key`, `key.txt`, `keys/`).
 
 ```bash
 printf '%s\n' '0xYOUR_PRIVATE_KEY' > onchain_scripts/key.txt
@@ -458,7 +437,7 @@ chmod 600 onchain_scripts/key.txt
 
 ### Wallet policy (`onchain_scripts/wallets.json`)
 
-Zakleni funding in recovery vlogi za verigo **enkrat**, preden karkoli podpišeš:
+Lock the funding and recovery roles for a chain **once**, before you sign anything:
 
 ```bash
 python3 onchain_scripts/wallet_policy.py register \
@@ -474,11 +453,11 @@ python3 onchain_scripts/wallet_policy.py contracts
 
 ### RPC override (`onchain_scripts/rpc_overrides.json`)
 
-Vsaka veriga ima privzeti javni RPC (`chains.DEFAULT_RPC`). Za svoj endpoint (plačljiv, lokalni anvil fork) nastavi override — prek `forksploit.sh` (meni *Nastavitve*) ali programsko (`chains.set_rpc_override`). Gitignored.
+Every chain has a default public RPC (`chains.DEFAULT_RPC`). For your own endpoint (paid, local anvil fork) set an override — via `forksploit.sh` (menu *Settings*) or programmatically (`chains.set_rpc_override`). Gitignored.
 
-### Invariante (`--invariants file.json`)
+### Invariants (`--invariants file.json`)
 
-Lastna ekonomska pravila, ovrednotena po vsaki ne-revertani transakciji. Operandi: `native_balance`, `literal`, `call`, `sum_over_callers`; operatorji `le/lt/ge/gt/eq/ne`:
+Your own economic rules, evaluated after every non-reverted transaction. Operands: `native_balance`, `literal`, `call`, `sum_over_callers`; operators `le/lt/ge/gt/eq/ne`:
 
 ```json
 { "invariants": [
@@ -493,14 +472,14 @@ Lastna ekonomska pravila, ovrednotena po vsaki ne-revertani transakciji. Operand
 ] }
 ```
 
-- `{"native_balance": true}` — resnično nativno stanje tarče.
-- `{"literal": "1000"}` — decimalna ali `0x` konstanta.
-- `{"call": {"sig": "...", "args": ["$caller", "0x…", "123"]}}` — en statični klic; `$caller` je klicatelj transakcije.
-- `{"sum_over_callers": {"sig": "balanceOf(address)"}}` — klic, ovrednoten enkrat na opaženega klicatelja in seštet (klic mora vzeti natanko en `address`).
+- `{"native_balance": true}` — the target's real native balance.
+- `{"literal": "1000"}` — a decimal or `0x` constant.
+- `{"call": {"sig": "...", "args": ["$caller", "0x…", "123"]}}` — a single static call; `$caller` is the transaction caller.
+- `{"sum_over_callers": {"sig": "balanceOf(address)"}}` — a call evaluated once per observed caller and summed (the call must take exactly one `address`).
 
-### Setup / seed transakcije (`setup.json`)
+### Setup / seed transactions (`setup.json`)
 
-Nekateri razredi hroščev so dosegljivi šele, ko so pogodbe že povezane (ERC4626 vault z `asset`, inicializiran par). `setup.json` poleg fixture-a deklarira te predpogoje; izvedejo se **enkrat, pred fuzzingom**:
+Some bug classes are only reachable once contracts are wired together (an ERC4626 vault with `asset`, an initialized pair). `setup.json` declares these preconditions alongside the fixture; they are executed **once, before fuzzing**:
 
 ```json
 { "calls": [
@@ -510,132 +489,132 @@ Nekateri razredi hroščev so dosegljivi šele, ko so pogodbe že povezane (ERC4
 ] }
 ```
 
-Z `--auto-setup` se povezovalni klici (`setX(address)`) izpeljejo samodejno, brez ročnega `setup.json` (vrednostnih seed-ov `mint`/`deposit` ForkSploit namerno **ne** ugiba).
+With `--auto-setup` the wiring calls (`setX(address)`) are derived automatically, with no manual `setup.json` (value-moving seeds `mint`/`deposit` are deliberately **not** guessed by ForkSploit).
 
-### Okoljske spremenljivke
+### Environment variables
 
-| Spremenljivka | Učinek |
+| Variable | Effect |
 |---|---|
-| `ETH_RPC_URL` | RPC, ki ga uporabi **Rust** binarij (nepogojno, za vsako verigo) — `auto_pipeline.py` jo nastavi sam iz `chains.get_rpc_url(chain)` |
-| `SOLC` / `CAST` | Pot do `solc` / `cast` (privzeto z `PATH`) |
-| `OFFCHAIN_POOL_SIZE` | Vzporednost `integration_test.py offchain` |
+| `ETH_RPC_URL` | The RPC used by the **Rust** binary (unconditionally, for every chain) — `auto_pipeline.py` sets it itself from `chains.get_rpc_url(chain)` |
+| `SOLC` / `CAST` | Path to `solc` / `cast` (default from `PATH`) |
+| `OFFCHAIN_POOL_SIZE` | Parallelism of `integration_test.py offchain` |
 
-### Verige
+### Chains
 
-Rust binarij podpira **25 verig** (`Chain::from_str`): `eth`, `goerli`, `sepolia`, `bsc`, `chapel`, `polygon`, `mumbai`, `fantom`, `avalanche`, `optimism`, `arbitrum`, `gnosis`, `base`, `celo`, `zkevm`, `zkevm_testnet`, `blast`, `linea`, `local`, `iotex`, `scroll`, `vana`, `story`, `etc`, `mordor`.
+The Rust binary supports **25 chains** (`Chain::from_str`): `eth`, `goerli`, `sepolia`, `bsc`, `chapel`, `polygon`, `mumbai`, `fantom`, `avalanche`, `optimism`, `arbitrum`, `gnosis`, `base`, `celo`, `zkevm`, `zkevm_testnet`, `blast`, `linea`, `local`, `iotex`, `scroll`, `vana`, `story`, `etc`, `mordor`.
 
-Python orkestracija (`chains.known_chains()`, ki ga uporablja tudi `forksploit.sh` čarovnik) ponuja **21 verig** — vse navedene razen `goerli`, `mumbai`, `zkevm_testnet` in `local`, za katere ni privzetega RPC-ja v `chains.DEFAULT_RPC`. **Prvorazredni** sta dve omrežji, vsako v obeh različicah: **Ethereum (ETH)** mainnet (id 1) / **Sepolia** (11155111) in **Ethereum Classic (ETC)** mainnet (id 61) / **Mordor** (63). Proti njima sta bila živo preverjena tako gradnja planov kot izvedba.
+Python orchestration (`chains.known_chains()`, also used by the `forksploit.sh` wizard) offers **21 chains** — all of the above except `goerli`, `mumbai`, `zkevm_testnet` and `local`, for which there is no default RPC in `chains.DEFAULT_RPC`. **First-class** are two networks, each in both variants: **Ethereum (ETH)** mainnet (id 1) / **Sepolia** (11155111) and **Ethereum Classic (ETC)** mainnet (id 61) / **Mordor** (63). Against them both plan generation and execution have been live-verified.
 
-Testna omrežja (varna za podpisovanje brez resnične vrednosti): `sepolia`, `chapel`, `mordor`. Vse ostalo zahteva `--confirm-mainnet`.
+Test networks (safe to sign on without real value): `sepolia`, `chapel`, `mordor`. Everything else requires `--confirm-mainnet`.
 
 ---
 
-## Referenca CLI
+## CLI reference
 
-### `forksploit evm` (Rust jedro)
+### `forksploit evm` (Rust core)
 
-| Zastavica | Opis |
+| Flag | Description |
 |---|---|
-| `-t, --target <GLOB\|ADDR>` | Glob vzorec ali `0x` naslov tarče (privzeto `none`) |
-| `--target-type <TYPE>` | `glob`, `address`, `anvil_fork`, `config`, `setup` (privzeto izpeljano) |
-| `-c, --chain-type <CHAIN>` | Veriga (glej [Verige](#verige)) |
-| `-u, --onchain-url <URL>` | RPC endpoint (privzeto izpeljan iz `--chain-type`) |
-| `-b, --onchain-block-number <N>` | Blok (privzeto `0` = latest) |
-| `-k, --onchain-etherscan-api-key <K>` | Etherscan API ključ (za ABI/izvorno kodo) |
-| `-d, --detectors <LIST>` | `all` (privzeto), `high_confidence`, ali seznam oraklov |
-| `-f, --flashloan` | Omogoči simulirano flashloan |
-| `--concolic` | Vklopi concolic/Z3 reševanje |
-| `--concolic-caller` | Simbolični klicatelj (eksperimentalno) |
-| `--concolic-timeout <MS>` | Časovna omejitev reševanja (privzeto 1000) |
-| `--concolic-memory-mb <MB>` | Spominska omejitev Z3 (privzeto 2048; 0 = neomejeno) |
-| `--concolic-num-threads <N>` | Število Z3 reševalcev (privzeto 0 = cap `min(2, cores)`) |
-| `--invariants <FILE>` | JSON z uporabniškimi invariantami |
-| `--auto-setup` | Samodejna izpeljava povezovalnih predpogojev |
-| `-r, --replay-file <FILE>` | Ponovi shranjeno sled |
-| `-w, --work-dir <DIR>` | Delovna mapa (privzeto `work_dir`) |
-| `--run-forever` | Ne ustavi se ob prvi najdbi |
-| `--jobs <N>` | Vzporedni fuzzing procesi (procesna izolacija) |
-| `--fuzz-seconds <N>` | Časovni proračun kampanje (0 = neomejeno) |
-| `--seed <N>` | Naključno seme |
-| `--max-call-depth <N>` | Globina taint/concolic analize (privzeto 32) |
-| `--spec-id <SPEC>` | EVM spec (npr. `Shanghai` za ETC/Mordor) |
-| `--state-comp-file <FILE>` | Referenčno stanje za `state_comparison` orakel |
-| `--panic-on-bug` | Panic ob `typed_bug()` |
+| `-t, --target <GLOB\|ADDR>` | Glob pattern or `0x` target address (default `none`) |
+| `--target-type <TYPE>` | `glob`, `address`, `anvil_fork`, `config`, `setup` (default derived) |
+| `-c, --chain-type <CHAIN>` | Chain (see [Chains](#chains)) |
+| `-u, --onchain-url <URL>` | RPC endpoint (default derived from `--chain-type`) |
+| `-b, --onchain-block-number <N>` | Block (default `0` = latest) |
+| `-k, --onchain-etherscan-api-key <K>` | Etherscan API key (for ABI/source) |
+| `-d, --detectors <LIST>` | `all` (default), `high_confidence`, or a list of oracles |
+| `-f, --flashloan` | Enable the simulated flashloan |
+| `--concolic` | Enable concolic/Z3 solving |
+| `--concolic-caller` | Symbolic caller (experimental) |
+| `--concolic-timeout <MS>` | Solve time limit (default 1000) |
+| `--concolic-memory-mb <MB>` | Z3 memory limit (default 2048; 0 = unlimited) |
+| `--concolic-num-threads <N>` | Number of Z3 solvers (default 0 = cap `min(2, cores)`) |
+| `--invariants <FILE>` | JSON with user invariants |
+| `--auto-setup` | Automatic derivation of wiring preconditions |
+| `-r, --replay-file <FILE>` | Replay a stored trace |
+| `-w, --work-dir <DIR>` | Working directory (default `work_dir`) |
+| `--run-forever` | Do not stop at the first finding |
+| `--jobs <N>` | Parallel fuzzing processes (process isolation) |
+| `--fuzz-seconds <N>` | Campaign time budget (0 = unlimited) |
+| `--seed <N>` | Random seed |
+| `--max-call-depth <N>` | Taint/concolic analysis depth (default 32) |
+| `--spec-id <SPEC>` | EVM spec (e.g. `Shanghai` for ETC/Mordor) |
+| `--state-comp-file <FILE>` | Reference state for the `state_comparison` oracle |
+| `--panic-on-bug` | Panic on `typed_bug()` |
 
-Celoten seznam: `./target/release/forksploit evm --help`.
+Full list: `./target/release/forksploit evm --help`.
 
 ### `auto_pipeline.py`
 
-| Zastavica | Opis |
+| Flag | Description |
 |---|---|
-| `--target <PATH\|ADDR>` | **Obvezno.** Pot do `.sol`/`.bin` (fresh deploy) ali `0x` naslov |
-| `--key <FILE>` | **Obvezno.** Datoteka s privatnim ključem funding denarnice |
-| `--recovery-wallet <ADDR>` | **Obvezno.** Kam se poberejo vsa sredstva |
-| `--chain <CHAIN>` | Veriga (privzeto `sepolia`) |
-| `--confirm-mainnet` | Obvezno za vsako verigo, ki ni testnet |
-| `--fund-eth <ETH>` | Financiraj cilj, če ima nič stanja |
-| `--fuzz-seconds <N>` | Čas fuzzinga (privzeto 300) |
-| `--detectors <LIST>` | Orakli (privzeto `all`) |
-| `--no-preflight` | Izklopi pre-flight vrata izplativosti (obe plasti) |
-| `--no-gas-oracle` | Izklopi gas-price oracle (cene iz vozlišča namesto iz raziskovalca) |
+| `--target <PATH\|ADDR>` | **Required.** Path to `.sol`/`.bin` (fresh deploy) or a `0x` address |
+| `--key <FILE>` | **Required.** Private-key file of the funding wallet |
+| `--recovery-wallet <ADDR>` | **Required.** Where all funds are extracted |
+| `--chain <CHAIN>` | Chain (default `sepolia`) |
+| `--confirm-mainnet` | Required for every chain that is not a testnet |
+| `--fund-eth <ETH>` | Fund the target if it has zero balance |
+| `--fuzz-seconds <N>` | Fuzzing time (default 300) |
+| `--detectors <LIST>` | Oracles (default `all`) |
+| `--no-preflight` | Disable the pre-flight profitability gate (both layers) |
+| `--no-gas-oracle` | Disable the gas-price oracle (prices from the node instead of the explorer) |
 
 ### `batch_pipeline.py`
 
-Enako kot `auto_pipeline.py`, le da namesto `--target` sprejme `--targets <FILE>` (ena tarča na vrstico), z **enim** `--key` in **enim** `--recovery-wallet` za celo serijo.
+Same as `auto_pipeline.py`, except it takes `--targets <FILE>` instead of `--target` (one target per line), with **one** `--key` and **one** `--recovery-wallet` for the whole series.
 
 ---
 
-## Pomožna orodja
+## Helper tools
 
-Vsa v `onchain_scripts/`:
+All in `onchain_scripts/`:
 
-| Orodje | Namen |
+| Tool | Purpose |
 |---|---|
-| `monitor.py` | Neprekinjen nadzor po deployu: zazna odliv salda, novo viden selektor, veliko transakcijo; opcijsko periodično re-fuzza in ob alarmu poskusi rešiti preostala sredstva |
-| `strategy_layer.py` | Združi plane v koherenten večkoračni plan (`unlock → neutral → objective → reentrancy zadnji`); argument-level threading, topološko urejanje odvisnosti |
-| `triage_findings.py` | Skrči na tisoče planov na peščico resničnih površin in pove, kaj vsako loči od izvedljivega exploita |
-| `materialize_plan.py` | Za površine, blokirane z control leak, pove, kateri resnični spremembi stanja nadomestita ponarejen klic |
-| `proxy_resolver.py` | Razdre proxy sklad (EIP-1967/UUPS/beacon/EIP-1167/EIP-7702) |
-| `gas_utils.py` | Merjenje gasa (`eth_estimateGas`) + `block.gasLimit`, GasBudget, clamp na `MAX_GAS_LIMIT` |
-| `gas_oracle.py` | Gas-**cena** iz uradnega raziskovalca (Etherscan v2 za ETH, Blockscout v2 za ETC) |
-| `flashbots_bundle.py` | Pravi Flashbots bundle (`eth_sendBundle`/`eth_callBundle`) za atomsko vključitev |
-| `chains.py` | Edini vir resnice za verige/RPC; `verify_rpc_identity`, `require_mainnet_confirmation` |
-| `wallet_policy.py` | Zaklepi funding/recovery vlogi za verigo; register/show/contracts |
-| `aave_flashloan_runner.py` | Validira flashloan-fundable bug proti resničnemu Aave V3 deployment-u |
-| `dex_arbitrage_scanner.py` | Cross-DEX arbitražni skener z isto varnostno logiko (zaklenjen profit, gas budget) |
-| `dashboard_server.py` | Lokalen web dashboard, ki projicira realno stanje in poganja skripte kot podprocese |
-| `deploy_sepolia_demo.py` | Deploy namerno ranljivih demo pogodb na Sepolia (E2E validacija) |
-| `gen_chain_fixture.py` | Deterministično generira N-koračni "chain" fixture (merjenje globine) |
+| `monitor.py` | Continuous post-deploy monitoring: detects a balance outflow, a newly seen selector, a large transaction; optionally re-fuzzes periodically and, on alarm, attempts to rescue the remaining funds |
+| `strategy_layer.py` | Merges plans into a coherent multi-step plan (`unlock → neutral → objective → reentrancy last`); argument-level threading, topological ordering of dependencies |
+| `triage_findings.py` | Shrinks thousands of plans to a handful of real surfaces and says what separates each from an executable exploit |
+| `materialize_plan.py` | For surfaces blocked by control leak, says which real state change would replace the faked call |
+| `proxy_resolver.py` | Unwraps the proxy stack (EIP-1967/UUPS/beacon/EIP-1167/EIP-7702) |
+| `gas_utils.py` | Gas measurement (`eth_estimateGas`) + `block.gasLimit`, GasBudget, clamp to `MAX_GAS_LIMIT` |
+| `gas_oracle.py` | Gas **price** from an official explorer (Etherscan v2 for ETH, Blockscout v2 for ETC) |
+| `flashbots_bundle.py` | A real Flashbots bundle (`eth_sendBundle`/`eth_callBundle`) for atomic inclusion |
+| `chains.py` | The single source of truth for chains/RPC; `verify_rpc_identity`, `require_mainnet_confirmation` |
+| `wallet_policy.py` | Locks the funding/recovery roles per chain; register/show/contracts |
+| `aave_flashloan_runner.py` | Validates a flashloan-fundable bug against a real Aave V3 deployment |
+| `dex_arbitrage_scanner.py` | Cross-DEX arbitrage scanner with the same security logic (locked profit, gas budget) |
+| `dashboard_server.py` | A local web dashboard that projects real state and runs scripts as subprocesses |
+| `deploy_sepolia_demo.py` | Deploys deliberately vulnerable demo contracts on Sepolia (E2E validation) |
+| `gen_chain_fixture.py` | Deterministically generates an N-step "chain" fixture (depth measurement) |
 
 ---
 
-## Razvoj, testi in gradnja
+## Development, tests and build
 
-### Testi
+### Tests
 
 ```bash
-# Rust unit testi
+# Rust unit tests
 cargo test --release
 
-# Python unit testi (brez omrežja)
+# Python unit tests (no network)
 cd onchain_scripts && python -m pytest -q
 
-# W1–W3 dokaz (zahteva anvil + cast + solc)
+# W1–W3 proof (requires anvil + cast + solc)
 bash onchain_scripts/contracts/proof_w1_w2_w3.sh
 
-# Integracijski testi
-python3 integration_test.py offchain     # brez RPC
-python3 integration_test.py onchain      # zahteva RPC + Etherscan ključ
+# Integration tests
+python3 integration_test.py offchain     # no RPC
+python3 integration_test.py onchain      # requires RPC + Etherscan key
 ```
 
-**Pričakovano stanje:** `cargo test --release` ima nekaj testov, ki se opirajo na **živo omrežje** (RPC do prave verige) ali na **pripeto živo stanje** (`test_get_balance` primerja točno določeno stanje naslova, ki se je medtem spremenilo). Izmerjeno: ti testi padejo **tudi z omrežnim dostopom** — torej niso uporabni kot CI-vrata. Gre za 10 testov: `onchain_pair_discovery::*`, `uniswap::tests::test_get_pair`, `uniswap::tests::test_fetch_uniswap_path`, `endpoints::tests::test_get_balance`. Vsak *drug* fail je regresija.
+**Expected state:** `cargo test --release` has a few tests that depend on a **live network** (RPC to a real chain) or on **pinned live state** (`test_get_balance` compares an exact address balance that has since changed). Measured: these tests fail **even with network access** — so they are not usable as CI gates. There are 10 such tests: `onchain_pair_discovery::*`, `uniswap::tests::test_get_pair`, `uniswap::tests::test_fetch_uniswap_path`, `endpoints::tests::test_get_balance`. Any *other* failure is a regression.
 
-### CI (GitHub Actions, 100 % brezplačno)
+### CI (GitHub Actions, 100% free)
 
-`.github/workflows/ci.yml` teče na GitHub-hosted `ubuntu-22.04` (brez macOS/Windows in brez self-hosted/EC2 runnerjev) in preverja **samo zelene, deterministične** stvari — brez živega omrežja in brez `anvil`/`solc`/`forge`:
+`.github/workflows/ci.yml` runs on GitHub-hosted `ubuntu-22.04` (no macOS/Windows and no self-hosted/EC2 runners) and checks **only the green, deterministic** things — no live network and no `anvil`/`solc`/`forge`:
 
 ```bash
-# 1) Rust: build + testi (omrežno/stanjsko odvisni testi preskočeni)
+# 1) Rust: build + tests (network/state-dependent tests skipped)
 cargo build --release --features "cmp dataflow evm print_txn_corpus full_trace force_cache real_balance" --no-default-features --locked
 cargo test --release -- \
   --skip onchain_pair_discovery \
@@ -644,68 +623,68 @@ cargo test --release -- \
   --skip endpoints::tests::test_get_balance
 # -> 139 passed, 0 failed
 
-# 2) Python: doctor + pytest (232 passed brez anvil/solc)
+# 2) Python: doctor + pytest (232 passed without anvil/solc)
 ./forksploit.sh --doctor --no-install
 python -m pytest onchain_scripts -q -p no:cacheprovider
 ```
 
-**Namenoma NISTA vrat** (na trenutnem drevesu bi bila rdeča, in to ni naloga tega workflowa): `cargo fmt --check` (drevo ni rustfmt-čisto) in `cargo clippy` (obstoječa opozorila).
+**Deliberately NOT gates** (they would be red on the current tree, and that is not this workflow's job): `cargo fmt --check` (the tree is not rustfmt-clean) and `cargo clippy` (existing warnings).
 
-### Kakovost
+### Quality
 
 ```bash
 cargo fmt --check
 cargo clippy
 ```
 
-### Feature flagi
+### Feature flags
 
-Privzeto: `cmp`, `dataflow`, `evm`, `print_txn_corpus`, `full_trace`, `force_cache`, `real_balance`. Pomembnejši neprivzeti: `evaluation`, `ondisk_corpus`, `deployer_is_attacker`, `fuzz_static`, `print_logs`, `z3_debug`, `flashloan_debug`, `no_etherscan`.
+Defaults: `cmp`, `dataflow`, `evm`, `print_txn_corpus`, `full_trace`, `force_cache`, `real_balance`. Notable non-default: `evaluation`, `ondisk_corpus`, `deployer_is_attacker`, `fuzz_static`, `print_logs`, `z3_debug`, `flashloan_debug`, `no_etherscan`.
 
 ```bash
-# Produkcijska različica
+# Production build
 cargo build --release --features "cmp dataflow evm print_txn_corpus full_trace force_cache real_balance" --no-default-features
 ```
 
 ---
 
-## Omejitve (pošteno)
+## Limitations (honest)
 
-ForkSploit je močno orodje, a ni čarovnija. Kar **ne** zmore:
+ForkSploit is a powerful tool, but it is not magic. What it **cannot** do:
 
-- **Ni popolnoma simbolični načrtovalec.** W5 pokriva pogoste družine odvisnosti (approve→transferFrom, deposit→withdraw); splošna sinteza zaporedij z analizo podatkovnih tokov med poljubnimi argumenti ostaja odprta.
-- **Simulacijski model nima merjenja gasa.** Zato je avtoritativna številka gasa vozliščev `eth_estimateGas` proti realnemu `block.gasLimit`, ne model.
-- **Ni mempool/front-running modela** (sandwich/backrun/JIT so zunaj modela).
-- **Concolic je delno storage-aware.** Simbolični SLOAD/SSTORE in simbolične povratne vrednosti klica obstajajo, a `keccak256` se ne obrne, zato je mapping vnos iz uvoženega stanja nedosegljiv.
-- **Kontroliran control leak.** Za ne-concolic iskanje control leak ostaja vklopljen po namenu; oznaka + downgrade (FAZA 2.3) zagotavljata, da se taka sled **nikoli** ne predstavi kot `sim-confirmed`.
-- **Negativni rezultat je omejen.** "Ni najdeno" pomeni "ni najdeno v tem proračunu s temi orakli", ne "pogodba je brez ranljivosti". ForkSploit to izpiše eksplicitno.
-- **Aave flashloan je vezan na verige z živim Aave V3** (`eth`, `sepolia`, in drugi iz `AAVE_V3_POOLS`); ETC/Mordor nimata Aave (preverjeno — ne obstaja).
+- **It is not a fully symbolic planner.** W5 covers common dependency families (approve→transferFrom, deposit→withdraw); general sequence synthesis with data-flow analysis between arbitrary arguments remains open.
+- **The simulation model has no gas metering.** So the authoritative gas number is the node's `eth_estimateGas` against the real `block.gasLimit`, not the model.
+- **No mempool/front-running model** (sandwich/backrun/JIT are outside the model).
+- **Concolic is only partly storage-aware.** Symbolic SLOAD/SSTORE and symbolic call return values exist, but `keccak256` is not inverted, so a mapping entry from imported state is unreachable.
+- **Controlled control leak.** For non-concolic search the control leak remains on by design; the label + downgrade (PHASE 2.3) ensure such a trace is **never** presented as `sim-confirmed`.
+- **A negative result is bounded.** "Nothing found" means "nothing found in this budget with these oracles", not "the contract is free of vulnerabilities". ForkSploit prints this explicitly.
+- **Aave flashloan is tied to chains with a live Aave V3** (`eth`, `sepolia`, and others from `AAVE_V3_POOLS`); ETC/Mordor have no Aave (verified — it does not exist).
 
-Podrobnejša, sproti vzdrževana evidenca omejitev in blokatorjev je v `OMEJITVE.md` in `BLOKATORJI.md`.
-
----
-
-## Pravna in etična uporaba
-
-ForkSploit podpisuje in pošilja **resnične transakcije**, ki lahko premaknejo resnično vrednost. Uporabljaj ga izključno:
-
-- na pogodbah, katerih **lastnik si ti** ali za katere imaš **pisno dovoljenje** lastnika (npr. v okviru varnostnega pregleda ali bug-bounty programa), ali
-- na **testnih omrežjih** (Sepolia, Mordor, Chapel).
-
-Recovery denarnica je po delovnem modelu tega projekta vedno lastnikova denarnica — ForkSploit je zgrajen za **obrambno** validacijo in dokazovanje ranljivosti pred naložitvijo sredstev, ne za napad na tuje pogodbe. Neavtorizirana uporaba je nezakonita.
+A more detailed, continuously maintained record of limitations and blockers is in `LIMITATIONS.md` and `BLOCKERS.md`.
 
 ---
 
-## Licenca
+## Legal and ethical use
 
-**Lastniška licenca — vse pravice pridržane (All Rights Reserved).** ForkSploit,
-vključno z izvorno kodo, arhitekturo, algoritmi, hevristikami, logiko odkrivanja
-in generiranja exploitov, imenom "ForkSploit", dokumentacijo in vso pripadajočo
-intelektualno lastnino, je izključna last avtorja. **Brez predhodnega pisnega
-dovoljenja avtorja ni dovoljena nobena uporaba, kopiranje, spreminjanje,
-distribucija ali razširjanje** — v celoti ali delno. Podrobnosti v [`LICENSE`](LICENSE).
+ForkSploit signs and sends **real transactions** that can move real value. Use it exclusively:
 
-## Zgodovina sprememb
+- on contracts **you own** or for which you have the owner's **written permission** (e.g. within a security review or a bug-bounty program), or
+- on **test networks** (Sepolia, Mordor, Chapel).
 
-Celotna zgodovina različic (kaj je dodano, spremenjeno, popravljeno) je v
-[`CHANGELOG.md`](CHANGELOG.md). Trenutna različica: **v1.0.0**.
+Under this project's working model the recovery wallet is always the owner's wallet — ForkSploit is built for **defensive** validation and proving vulnerabilities before funds are loaded, not for attacking third-party contracts. Unauthorized use is illegal.
+
+---
+
+## License
+
+**Proprietary license — all rights reserved.** ForkSploit, including the source
+code, architecture, algorithms, heuristics, discovery and exploit-generation
+logic, the name "ForkSploit", the documentation and all associated intellectual
+property, is the exclusive property of the author. **No use, copying,
+modification, distribution or dissemination is permitted, in whole or in part,
+without the author's prior written permission.** Details in [`LICENSE`](LICENSE).
+
+## Changelog
+
+The full version history (what was added, changed, fixed) is in
+[`CHANGELOG.md`](CHANGELOG.md). Current version: **v1.0.0**.

@@ -234,7 +234,7 @@ increase) is ever presented as a demonstrated attack.
   includes a handful of tests that require live public RPC endpoints and
   therefore fail in a network-isolated sandbox. These are the documented
   baseline, not regressions; any *other* failure is a regression.
-- **Honest limitations** (see `README.md` and `OMEJITVE.md`): no general
+- **Honest limitations** (see `README.md` and `LIMITATIONS.md`): no general
   symbolic planner with arbitrary data-flow between step arguments; no gas
   metering in the revm model; no mempool/front-running model; concolic is
   only partially storage-aware (`keccak256` is not inverted); a negative

@@ -1,37 +1,37 @@
-# KONFIGURACIJA — zastavice, okolje, datoteke
+# CONFIGURATION — flags, environment, files
 
-> Samostojen dokument. Sorodno: [CLI_REFERENCA.md](CLI_REFERENCA.md),
-> [VERIGE_IN_RPC.md](VERIGE_IN_RPC.md), [PLAN_JSON.md](PLAN_JSON.md),
-> [VARNOSTNI_MODEL.md](VARNOSTNI_MODEL.md).
+> Standalone document. Related: [CLI_REFERENCE.md](CLI_REFERENCE.md),
+> [CHAINS_AND_RPC.md](CHAINS_AND_RPC.md), [PLAN_JSON.md](PLAN_JSON.md),
+> [SECURITY_MODEL.md](SECURITY_MODEL.md).
 
-Vsaka vrednost je preverjena v kodi.
+Every value is verified in code.
 
 ---
 
-## 1. Okoljske spremenljivke
+## 1. Environment variables
 
-| Spremenljivka | Kje se bere | Pomen |
+| Variable | Where it is read | Meaning |
 |---------------|-------------|-------|
-| `ETH_RPC_URL` | `src/evm/onchain/endpoints.rs::Chain::get_chain_rpc` | RPC naslov; če nastavljen, se uporabi **za vsako** verigo. Python ga nastavi v `auto_pipeline.py::run_fuzzer` iz `chains.get_rpc_url(chain)`. |
-| `ETHERSCAN_API_KEY` | `src/evm/mod.rs::evm_main` | rezervna vrednost, če `--onchain-etherscan-api-key` ni podan |
-| `SOLC` | `auto_pipeline.py::_find_solc` (posredno) | prek `_solc_support`/`_find_solc`; Python privzeto uporabi `~/.svm/0.8.24/solc-0.8.24`, sicer `solc` |
-| `FORKSPLOIT_JOB` | `src/evm/mod.rs::evm_main` | če nastavljen, vsili `--jobs 1` (varovalka proti fork-bombi) |
-| `CARGO_FEATURE_*` | `src/build.rs` | prebrano ob buildu za `GIT_VERSION_INFO` |
-| `NO_COLOR` | `forksploit.sh` | izklopi barve |
-| `TMPDIR` | `forksploit.sh::run_wizard` | mapa za začasno datoteko ciljev |
+| `ETH_RPC_URL` | `src/evm/onchain/endpoints.rs::Chain::get_chain_rpc` | RPC address; if set, it is used **for every** chain. Python sets it in `auto_pipeline.py::run_fuzzer` from `chains.get_rpc_url(chain)`. |
+| `ETHERSCAN_API_KEY` | `src/evm/mod.rs::evm_main` | a fallback value when `--onchain-etherscan-api-key` is not given |
+| `SOLC` | `auto_pipeline.py::_find_solc` (indirectly) | via `_solc_support`/`_find_solc`; Python defaults to `~/.svm/0.8.24/solc-0.8.24`, otherwise `solc` |
+| `FORKSPLOIT_JOB` | `src/evm/mod.rs::evm_main` | if set, it forces `--jobs 1` (a fork-bomb safeguard) |
+| `CARGO_FEATURE_*` | `src/build.rs` | read at build time for `GIT_VERSION_INFO` |
+| `NO_COLOR` | `forksploit.sh` | disables colours |
+| `TMPDIR` | `forksploit.sh::run_wizard` | directory for the temporary targets file |
 
-`CAST` in `SOLC` kot taki: `auto_pipeline._find_solc` vrne `SOLC`-neodvisno
-pot (`~/.svm/0.8.24/solc-0.8.24` ali `solc`). `CAST` se v kodi
-`auto_pipeline.py` **ne** uporablja; `cast` se pojavi le v
-`onchain_scripts/contracts/proof_w1_w2_w3.sh`. `integration_test.py` uporablja
-`_find_solc` enako.
+`CAST` and `SOLC` as such: `auto_pipeline._find_solc` returns a `SOLC`-independent
+path (`~/.svm/0.8.24/solc-0.8.24` or `solc`). `CAST` is **not** used in the
+`auto_pipeline.py` code; `cast` appears only in
+`onchain_scripts/contracts/proof_w1_w2_w3.sh`. `integration_test.py` uses
+`_find_solc` the same way.
 
 ---
 
-## 2. Konfiguracijske datoteke
+## 2. Configuration files
 
 ### 2.1 `onchain_scripts/wallets.json` (gitignored)
-Shema (`wallet_policy.register_policy`):
+Schema (`wallet_policy.register_policy`):
 
 ```json
 {
@@ -45,7 +45,7 @@ Shema (`wallet_policy.register_policy`):
 ```
 
 ### 2.2 `onchain_scripts/contracts.json` (gitignored)
-Shema (`wallet_policy.register_contract`):
+Schema (`wallet_policy.register_contract`):
 
 ```json
 {
@@ -63,32 +63,32 @@ Shema (`wallet_policy.register_contract`):
 ```
 
 ### 2.3 `onchain_scripts/rpc_overrides.json` (gitignored)
-Shema (`chains.set_rpc_override`):
+Schema (`chains.set_rpc_override`):
 
 ```json
-{ "<chain>": "https://moj-rpc.example" }
+{ "<chain>": "https://my-rpc.example" }
 ```
 
 ### 2.4 `onchain_scripts/forksploit_settings.json` (gitignored)
-Nastavi jo `forksploit.sh::save_settings`; bere `load_settings`. Ključi:
+Written by `forksploit.sh::save_settings`; read by `load_settings`. Keys:
 
-| Ključ | Preslika v zastavico |
+| Key | Maps to flag |
 |-------|----------------------|
-| `DEFAULT_KEY` | privzeti ključ v wizardu |
+| `DEFAULT_KEY` | the default key in the wizard |
 | `FUZZ_SECONDS` | `--fuzz-seconds` |
 | `DETECTORS` | `--detectors` |
 | `FUND_ETH` | `--fund-eth` |
 | `NO_PREFLIGHT` | `--no-preflight` (0/1) |
 | `NO_GAS_ORACLE` | `--no-gas-oracle` (0/1) |
 
-`build_advanced_flags` doda zastavico **samo**, če je vrednost nastavljena;
-prazna vrednost pomeni "brez zastavice".
+`build_advanced_flags` adds a flag **only** if the value is set; an empty value
+means "no flag".
 
 ### 2.5 `onchain_scripts/attack_wallets.json` (gitignored)
-Shema (`get_or_deploy_attack_wallet`): `{ "<chain>": "<attack_wallet_address>" }`.
+Schema (`get_or_deploy_attack_wallet`): `{ "<chain>": "<attack_wallet_address>" }`.
 
-### 2.6 `setup.json` (ob fixture-u)
-Shema (`src/evm/setup.rs::SetupSpec`):
+### 2.6 `setup.json` (beside a fixture)
+Schema (`src/evm/setup.rs::SetupSpec`):
 
 ```json
 { "calls": [
@@ -97,21 +97,21 @@ Shema (`src/evm/setup.rs::SetupSpec`):
 ] }
 ```
 
-`to` in naslovni argumenti sprejmejo ime pogodbe (fixture file stem),
-`$caller` (prvi fuzzer klicatelj) ali `$deployer`.
+`to` and address arguments accept a contract name (the fixture file stem),
+`$caller` (the first fuzzer caller) or `$deployer`.
 
 ### 2.7 `--invariants` JSON
-Shema (`src/evm/oracles/invariant.rs`) je v [ORAKLI.md](ORAKLI.md) §4.
+The schema (`src/evm/oracles/invariant.rs`) is in [ORACLES.md](ORACLES.md) §4.
 
 ### 2.8 `onchain_scripts/target.txt`
-Vhod za `evaluate.py` (seznam ciljev). Ni del glavnega toka.
+Input for `evaluate.py` (a list of targets). Not part of the main flow.
 
 ---
 
-## 3. Ključne konstante (iz kode)
+## 3. Key constants (from the code)
 
 ### Rust (`src/const.rs`, `src/evm/mod.rs`, `src/evm/host.rs`)
-| Konstanta | Vrednost |
+| Constant | Value |
 |-----------|----------|
 | `MAX_CONCOLIC_THREADS` | `2` |
 | `DROP_THRESHOLD` | `4000` |
@@ -123,11 +123,11 @@ Vhod za `evaluate.py` (seznam ciljev). Ni del glavnega toka.
 | `MUTATION_RETRIES` | `20` |
 | `KNOWN_STATE_MAX_SIZE` | `1000` |
 | `CONTROL_LEAK_THRESHOLD` | `200` |
-| `MAX_ANALYSIS_CALL_DEPTH` | privzeto `15` (nastavljeno iz `--max-call-depth`, privzeto `32`) |
+| `MAX_ANALYSIS_CALL_DEPTH` | default `15` (set from `--max-call-depth`, default `32`) |
 | `FIX_DEPLOYER` | `8b21e662154b4bbc1ec0754d0238875fe3d22fa6` |
 
 ### Python
-| Konstanta | Vrednost | Datoteka |
+| Constant | Value | File |
 |-----------|----------|----------|
 | `MAX_GAS_LIMIT` | `8_000_000` | `gas_utils.py` |
 | `DEFAULT_GAS_LIMIT_MARGIN` | `0.10` | `gas_utils.py` |
@@ -152,24 +152,24 @@ Vhod za `evaluate.py` (seznam ciljev). Ni del glavnega toka.
 
 ---
 
-## 4. Zastavice Python pipeline-a
+## 4. Python pipeline flags
 
 ### `auto_pipeline.py`
-| Zastavica | Privzeto | Pomen |
+| Flag | Default | Meaning |
 |-----------|----------|-------|
-| `--target` | (obvezno) | `.sol`/`.bin` ali `0x…` |
-| `--recovery-wallet` | (obvezno) | cilj pobiranja |
-| `--key` | (obvezno) | pot do ključa |
-| `--chain` | `sepolia` | iz `known_chains()` |
-| `--confirm-mainnet` | false | potrditev za non-testnet |
-| `--fund-eth` | `0.0` | financiranje tarče |
-| `--no-gas-oracle` | false | izklop uradnega gas orakla |
-| `--fuzz-seconds` | `300` | proračun |
+| `--target` | (required) | `.sol`/`.bin` or `0x…` |
+| `--recovery-wallet` | (required) | the extraction destination |
+| `--key` | (required) | path to the key |
+| `--chain` | `sepolia` | from `known_chains()` |
+| `--confirm-mainnet` | false | confirmation for non-testnet |
+| `--fund-eth` | `0.0` | funding the target |
+| `--no-gas-oracle` | false | disables the official gas oracle |
+| `--fuzz-seconds` | `300` | budget |
 | `--detectors` | `all` | oracle preset |
-| `--no-preflight` | false | izklop pre-flight vrat |
+| `--no-preflight` | false | disables the pre-flight gate |
 
 ### `batch_pipeline.py`
-`--targets` (obvezno), `--recovery-wallet` (obvezno), `--key`, `--chain`,
+`--targets` (required), `--recovery-wallet` (required), `--key`, `--chain`,
 `--confirm-mainnet`, `--fund-eth`, `--fuzz-seconds`, `--detectors`,
 `--no-preflight`, `--no-gas-oracle`.
 
@@ -180,7 +180,7 @@ Vhod za `evaluate.py` (seznam ciljev). Ni del glavnega toka.
 `--safe-wallet`, `--confirm-mainnet`.
 
 ### `dashboard_server.py`
-`--port` (privzeto `4114`).
+`--port` (default `4114`).
 
 ### `wallet_policy.py`
 `register` (`--chain`, `--confirm-chain`, `--funding-wallet`,
@@ -196,39 +196,39 @@ Vhod za `evaluate.py` (seznam ciljev). Ni del glavnega toka.
 
 ---
 
-## 5. Rust feature zastavice (`Cargo.toml`)
+## 5. Rust feature flags (`Cargo.toml`)
 
-Privzeti set: `cmp`, `dataflow`, `evm`, `print_txn_corpus`, `full_trace`,
+The default set: `cmp`, `dataflow`, `evm`, `print_txn_corpus`, `full_trace`,
 `force_cache`, `real_balance`.
 
-| Feature | Pomen |
+| Feature | Meaning |
 |---------|-------|
-| `evm` | EVM podpora |
-| `cmp` | primerjalna povratna informacija |
-| `dataflow` | podatkovna odvisnost |
-| `print_txn_corpus` | izpis korpusa + dump najdb (`vuln_file_base`) |
-| `full_trace` | polna sled transakcij |
-| `force_cache` | agresivno predpomnjenje |
-| `real_balance` | realno stanje |
-| `print_logs` | izpis dnevnikov |
-| `use_presets` | predloge (`presets/`) |
-| `z3_debug`, `debug`, `flashloan_debug` | razhroščevanje |
-| `ondisk_corpus` | korpus na disku |
-| `no_etherscan` | brez Etherscan |
-| `fuzz_static`, `evaluation`, `deployer_is_attacker`, `print_infant_corpus` | ostalo |
+| `evm` | EVM support |
+| `cmp` | comparison feedback |
+| `dataflow` | data dependency |
+| `print_txn_corpus` | print the corpus + dump findings (`vuln_file_base`) |
+| `full_trace` | the full transaction trace |
+| `force_cache` | aggressive caching |
+| `real_balance` | real balance |
+| `print_logs` | print logs |
+| `use_presets` | presets (`presets/`) |
+| `z3_debug`, `debug`, `flashloan_debug` | debugging |
+| `ondisk_corpus` | corpus on disk |
+| `no_etherscan` | without Etherscan |
+| `fuzz_static`, `evaluation`, `deployer_is_attacker`, `print_infant_corpus` | other |
 
-CI/Docker uporabljata kombinacije:
+CI/Docker use the combinations:
 `cmp dataflow evm print_txn_corpus full_trace force_cache real_balance`,
 `cmp dataflow evm print_txn_corpus full_trace`, `cmp dataflow evm print_logs`.
 
 ---
 
-## 6. Diagram: kje se konfiguracija bere
+## 6. Diagram: where configuration is read
 
 ```mermaid
 flowchart TD
-    ENV[okolje: ETH_RPC_URL, ETHERSCAN_API_KEY, FORKSPLOIT_JOB] --> R[Rust: EvmArgs / endpoints]
-    CLI[CLI zastavice] --> R
+    ENV[environment: ETH_RPC_URL, ETHERSCAN_API_KEY, FORKSPLOIT_JOB] --> R[Rust: EvmArgs / endpoints]
+    CLI[CLI flags] --> R
     CLI --> P[Python: argparse]
     SET[forksploit_settings.json] --> SH[forksploit.sh]
     SH --> CLI
@@ -243,11 +243,11 @@ flowchart TD
 
 ---
 
-## 7. Odprto / neizmerjeno
+## 7. Open / unmeasured
 
-* **Nepreverjeno:** `CAST` kot okoljska spremenljivka — v `auto_pipeline.py`
-  ni branja `CAST`; uporablja se le `cast` v `proof_w1_w2_w3.sh`.
-* **Nepreverjeno:** `SOLC` kot okoljska spremenljivka — `_find_solc` vrne
-  fiksno pot ali `solc` z `PATH`; ne bere `$SOLC` neposredno.
-* **Neizmerjeno:** ta dokument ne navaja, koliko je posamezna konfiguracija
-  uporabljena v praksi.
+* **Unverified:** `CAST` as an environment variable — there is no reading of
+  `CAST` in `auto_pipeline.py`; `cast` is used only in `proof_w1_w2_w3.sh`.
+* **Unverified:** `SOLC` as an environment variable — `_find_solc` returns a
+  fixed path or `solc` from `PATH`; it does not read `$SOLC` directly.
+* **Unmeasured:** this document does not state how often each configuration is
+  used in practice.

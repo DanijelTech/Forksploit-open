@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""test_gas_oversized_gate.py -- FAZA 1.3/1.4 of PROMPT_RESEN_SISTEM.md: a plan
+"""test_gas_oversized_gate.py -- FAZA 1.3/1.4 of TASK_SPEC.md: a plan
 whose OWN measured gas footprint exceeds the block gas limit must be FLAGGED
 (`oversized_gas`) and never executed -- not reported as "confirmed".
 

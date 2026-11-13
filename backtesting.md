@@ -1,12 +1,12 @@
-# Backtesting — zgodovinski seznam (BSC)
+# Backtesting — historical list (BSC)
 
-> **Obseg (pomembno):** ForkSploit je **prvorazredno** zgrajen in živo preverjen
-> za **Ethereum (ETH)** in **Ethereum Classic (ETC)**, vsakega v **testnet**
-> (Sepolia, Mordor) in **mainnet** (id 1 / 61) različici, in pokriva **nativno
-> valuto ter ERC tokene** (ERC-20/721/1155/4626). Ta datoteka je
-> **zgodovinski zapis** iz časa, ko je bilo orodje testirano tudi na **BSC**
-> (BNB Chain); ni opis primarnega obsega podpore. Za trenutni obseg glej
-> `README.md` (§Obseg podpore).
+> **Scope (important):** ForkSploit is **first-class** built and live-verified
+> for **Ethereum (ETH)** and **Ethereum Classic (ETC)**, each in a **testnet**
+> (Sepolia, Mordor) and **mainnet** (id 1 / 61) variant, and covers the
+> **native currency and ERC tokens** (ERC-20/721/1155/4626). This file is a
+> **historical record** from the time when the tool was also tested on **BSC**
+> (BNB Chain); it is not a description of the primary support scope. For the
+> current scope see `README.md` (§Support scope).
 
 Here we document vulnerabilities that can be found by ForkSploit in 30 minute:
 

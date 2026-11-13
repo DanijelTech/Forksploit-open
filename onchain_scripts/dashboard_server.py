@@ -72,8 +72,8 @@ SCRIPTS = {
 
 # Direct Rust fuzzer launch (./target/release/forksploit evm ...) -- not a
 # Python script, so there's no argparse to introspect; this is a hand-held
-# subset of the most commonly used flags (see README's own "Pogosti CLI
-# delotoki" and zmogljivosti.md's CLI reference for the full set). Handled
+# subset of the most commonly used flags (see README's "Common CLI
+# invocations" and capabilities.md's CLI reference for the full set). Handled
 # as a special case in api_run() below rather than going through SCRIPTS,
 # since it launches a different binary entirely, not `sys.executable`.
 RUST_FUZZER_FIELDS = [

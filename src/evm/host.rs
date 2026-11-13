@@ -237,7 +237,7 @@ lazy_static! {
 
     /// `"<checksummed contract>|<checksummed address>"` for every address the
     /// SLOAD-harvest pulled out of THAT contract's own storage. This is the
-    /// semantic owner-gated signal (FAZA 3.2 of PROMPT_RESEN_SISTEM.md):
+    /// semantic owner-gated signal (FAZA 3.2 of TASK_SPEC.md):
     /// `HARVESTED_STORAGE_ADDRESSES` says an address came from SOME target's
     /// storage, but the exploit shape `require(msg.sender == owner)` is only
     /// proven when the address was read from the SAME contract that the trace

@@ -743,7 +743,7 @@ impl SymbolicMemory {
     }
 }
 
-/// FAZA 2.1 (PROMPT_RESEN_SISTEM.md): storage that can be keyed by a
+/// FAZA 2.1 (TASK_SPEC.md): storage that can be keyed by a
 /// SYMBOLIC expression, not only by the concrete value the seed input
 /// happens to evaluate to.
 ///
@@ -768,7 +768,7 @@ impl SymbolicMemory {
 /// mapping entry that was already present in world state before the
 /// transaction (an unmodified `m[k]` for attacker-chosen `k`); that
 /// requires a hash model this project does not have, and is documented in
-/// OMEJITVE.md rather than silently attempted.
+/// LIMITATIONS.md rather than silently attempted.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SymbolicStorage {
     /// Writes whose key OR value was symbolic, in insertion order. A linear

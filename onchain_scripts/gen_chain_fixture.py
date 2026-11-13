@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """gen_chain_fixture.py -- deterministically generate an N-step "chain" bug
 fixture, used to measure how deep a transaction SEQUENCE ForkSploit can reach
-(BLOKATORJI.md B1).
+(BLOCKERS.md B1).
 
 The generated contract `Chain` breaks the declared invariant
 `value() <= 1` ONLY after `depth` sequential transactions:

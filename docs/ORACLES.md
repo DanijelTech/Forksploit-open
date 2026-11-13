@@ -1,21 +1,21 @@
-# ORAKLI — katalog oraklov in bug tipov
+# ORACLES — catalogue of oracles and bug types
 
-> Samostojen dokument. Sorodno: [RUST_JEDRO.md](RUST_JEDRO.md),
-> [PLAN_JSON.md](PLAN_JSON.md), [OZICENJE_RUST_PYTHON.md](OZICENJE_RUST_PYTHON.md).
+> Standalone document. Related: [RUST_CORE.md](RUST_CORE.md),
+> [PLAN_JSON.md](PLAN_JSON.md), [RUST_PYTHON_WIRING.md](RUST_PYTHON_WIRING.md).
 
-Orakel je modul, ki med fuzzingom opazuje izvedbo in ob zadetku vrne
-`bug_idx` ter zapiše `EVMBugResult` v `ORACLE_OUTPUT`. Vsak oracle
-implementira trait `Oracle` (`src/oracle.rs`). Vrednosti `bug_idx` so
-konstante v `src/evm/oracles/mod.rs`.
+An oracle is a module that observes execution during fuzzing and, on a hit,
+returns a `bug_idx` and writes an `EVMBugResult` into `ORACLE_OUTPUT`. Every
+oracle implements the `Oracle` trait (`src/oracle.rs`). The `bug_idx` values are
+constants in `src/evm/oracles/mod.rs`.
 
 ---
 
-## 1. Kako je oracle povezan s fuzzerjem
+## 1. How an oracle is connected to the fuzzer
 
-* Seznam oraklov se sestavi v `src/evm/mod.rs::evm_main` glede na
-  `OracleType::from_strs(args.detectors)` in se shrani v `Config::oracle`.
-* `src/fuzzers/evm_fuzzer.rs::evm_fuzzer` začne z `let mut oracles =
-  config.oracle;` in nato doda še oracle, vezane na posamezne zastavice
+* The list of oracles is built in `src/evm/mod.rs::evm_main` according to
+  `OracleType::from_strs(args.detectors)` and stored in `Config::oracle`.
+* `src/fuzzers/evm_fuzzer.rs::evm_fuzzer` starts with `let mut oracles =
+  config.oracle;` and then adds oracles tied to individual flags
   (`state_comp_oracle`, `math_calculate_oracle` → `IntegerOverflowOracle`,
   `delegatecall_injection_oracle`, `ecrecover_zero_oracle`,
   `arbitrary_storage_write_oracle`, `token_accounting_mismatch_oracle`,
@@ -27,36 +27,37 @@ konstante v `src/evm/oracles/mod.rs`.
   `weak_randomness_oracle`, `precision_loss_oracle`, `revert_in_loop_oracle`,
   `assert_violation_oracle`, `arbitrary_external_call`, `typed_bug`,
   `selfdestruct_oracle`, `reentrancy_oracle`).
-* Orakel se sproži prek `OracleFeedback` (`src/oracle.rs`) po vsaki
-  transakciji.
-* `oracle_should_skip!` makro preveri `BugMetadata::known_bugs`, da se isti
-  zadetek ne ponovi.
+* An oracle fires via `OracleFeedback` (`src/oracle.rs`) after every
+  transaction.
+* The `oracle_should_skip!` macro checks `BugMetadata::known_bugs`, so the same
+  hit is not repeated.
 
 ---
 
-## 2. Preseta `--detectors`
+## 2. The `--detectors` presets
 
-`OracleType::from_strs` (`src/evm/mod.rs`) podpira:
+`OracleType::from_strs` (`src/evm/mod.rs`) supports:
 
-* `all` — vseh 47 tipov (vključno `Invariant`).
-* `high_confidence` — ožji seznam. Vsebuje: ERC20, Pair, Reentrancy,
+* `all` — all 47 types (including `Invariant`).
+* `high_confidence` — a narrower list. It contains: ERC20, Pair, Reentrancy,
   ArbitraryCall, TypedBug, SelfDestruct, Erc4626, AccessControl,
   SignatureReplay, SignatureMalleability, NftTransfer, ProxyIntegrity,
   ProxyUpgradeHijack, ArbTransfer, DelegatecallInjection, EcrecoverZero,
   ArbitraryStorageWrite, StorageCollision, DelegatecallTarget, TxOrigin,
   InitializerFrontRun, PreviewRounding, EthBacking, SelfReferral.
-* Vejica-ločen seznam imen iz `OracleType::as_str` (npr.
+* A comma-separated list of names from `OracleType::as_str` (e.g.
   `--detectors reentrancy,access_control`).
-* Neznano ime → `panic!("Invalid detector type: {}", s)`.
+* An unknown name → `panic!("Invalid detector type: {}", s)`.
 
 ---
 
-## 3. Katalog oraklov
+## 3. Catalogue of oracles
 
-Stolpec "bug_type" navaja niz(e), ki jih oracle zapiše v `EVMBugResult`.
-Stolpec "nivo" je rezultat `oracle.rs::classify_confidence` za ta bug_type.
+The "bug_type" column lists the string(s) the oracle writes into
+`EVMBugResult`. The "level" column is the result of
+`oracle.rs::classify_confidence` for that bug_type.
 
-| # | bug_idx konstanta | Modul | `OracleType` | bug_type | nivo |
+| # | bug_idx constant | Module | `OracleType` | bug_type | level |
 |---|-------------------|-------|--------------|----------|------|
 | 0 | `ERC20_BUG_IDX` | `erc20.rs` | `erc20` | `Fund Loss` | Confirmed |
 | 2 | `V2_PAIR_BUG_IDX` | `v2_pair.rs` | `pair` | `Imbalanced Uniswap Pair` | Confirmed |
@@ -75,16 +76,16 @@ Stolpec "nivo" je rezultat `oracle.rs::classify_confidence` za ta bug_type.
 | 18 | `DELEGATECALL_INJECTION_BUG_IDX` | `delegatecall.rs` | `delegatecall_injection` | `Delegatecall Injection` | Confirmed |
 | 19 | `ECRECOVER_ZERO_BUG_IDX` | `ecrecover.rs` | `ecrecover_zero` | `Unchecked ecrecover(0)` | Confirmed |
 | 20 | `STORAGE_COLLISION_BUG_IDX` | `storage_collision.rs` | `storage_collision` | `Storage Collision` | Confirmed |
-| 21 | `DELEGATECALL_TARGET_BUG_IDX` | `delegatecall_target.rs` | `delegatecall_target` | `Delegatecall Target From Calldata`, `Delegatecall Target From Calldata (Unconfirmed)` | prvi Confirmed, drugi Review |
+| 21 | `DELEGATECALL_TARGET_BUG_IDX` | `delegatecall_target.rs` | `delegatecall_target` | `Delegatecall Target From Calldata`, `Delegatecall Target From Calldata (Unconfirmed)` | first Confirmed, second Review |
 | 22 | `UNINITIALIZED_MEMORY_BUG_IDX` | `uninitialized_memory.rs` | `uninitialized_memory` | `Uninitialized Memory Read` | Review |
 | 23 | `UNCHECKED_CALL_BUG_IDX` | `unchecked_call.rs` | `unchecked_call` | `Unchecked Low-Level Call` | Review |
 | 24 | `TX_ORIGIN_BUG_IDX` | `tx_origin.rs` | `tx_origin` | `Tx.Origin Phishing Bypass` | Confirmed |
 | 25 | `INITIALIZER_FRONT_RUN_BUG_IDX` | `initializer_front_run.rs` | `initializer_front_run` | `Initializer Front-Running` | Confirmed |
 | 26 | `CENTRALIZATION_RISK_BUG_IDX` | `centralization_risk.rs` | `centralization_risk` | `Centralization Risk: Owner-Only Function` | Review |
 | 27 | `SIGNATURE_MALLEABILITY_BUG_IDX` | `signature_malleability.rs` | `signature_malleability` | `Signature Malleability` | Confirmed |
-| 28 | `CURVE_VIRTUAL_PRICE_BUG_IDX` | `curve_virtual_price.rs` | `curve_virtual_price` | `Curve Virtual Price Decrease (Profit Confirmed)` / `Curve Virtual Price Decrease` | prvi Confirmed, drugi Review |
+| 28 | `CURVE_VIRTUAL_PRICE_BUG_IDX` | `curve_virtual_price.rs` | `curve_virtual_price` | `Curve Virtual Price Decrease (Profit Confirmed)` / `Curve Virtual Price Decrease` | first Confirmed, second Review |
 | 29 | `PRICE_FEED_STALENESS_BUG_IDX` | `price_feed_staleness.rs` | `price_feed_staleness` | `Price Feed Staleness` | Review |
-| 30 | `TWAP_MANIPULATION_BUG_IDX` | `twap_manipulation.rs` | `twap_manipulation` | `TWAP Manipulation (Profit Confirmed)` / `TWAP Manipulation Precondition` | prvi Confirmed, drugi Review |
+| 30 | `TWAP_MANIPULATION_BUG_IDX` | `twap_manipulation.rs` | `twap_manipulation` | `TWAP Manipulation (Profit Confirmed)` / `TWAP Manipulation Precondition` | first Confirmed, second Review |
 | 31 | `PREVIEW_ROUNDING_BUG_IDX` | `preview_rounding.rs` | `preview_rounding` | `ERC4626 Rounding Favors User` | Confirmed |
 | 32 | `ETH_BACKING_BUG_IDX` | `eth_backing.rs` | `eth_backing` | `Insolvent: Promised Native Value Exceeds Real Balance` | Confirmed |
 | 33 | `UNBOUNDED_LOOP_BUG_IDX` | `unbounded_loop.rs` | `unbounded_loop` | `Unbounded Loop` | Review |
@@ -106,36 +107,36 @@ Stolpec "nivo" je rezultat `oracle.rs::classify_confidence` za ta bug_type.
 | 49 | `TRANSIENT_GUARD_BUG_IDX` | `transient_guard.rs` | `transient_guard` | `Transient Guard Released Before External Call` | Review |
 | 50 | `INVARIANT_BUG_IDX` | `invariant.rs` | `invariant` | `Invariant Violation` | Confirmed |
 
-Opombe:
+Notes:
 
-* Nivo je določen s `oracle.rs::classify_confidence`, ki ga ta tabela
-  povzema. Za nekatere tipe nivo **ni** 1:1 na `OracleType`: `twap_manipulation`
-  in `curve_virtual_price` imata po dva bug tipa (osnovni Review, "(Profit
-  Confirmed)" Confirmed).
-* `high_confidence` preset vsebuje natanko te `OracleType`: ERC20, Pair,
-  Reentrancy, ArbitraryCall, TypedBug, SelfDestruct, Erc4626, AccessControl,
-  SignatureReplay, SignatureMalleability, NftTransfer, ProxyIntegrity,
-  ProxyUpgradeHijack, ArbTransfer, DelegatecallInjection, EcrecoverZero,
-  ArbitraryStorageWrite, StorageCollision, DelegatecallTarget, TxOrigin,
-  InitializerFrontRun, PreviewRounding, EthBacking, SelfReferral.
-  Vsi ostali orakli (`unbacked_mint`, `forged_proof`, `transient_guard`,
+* The level is determined by `oracle.rs::classify_confidence`, which this table
+  summarizes. For some types the level is **not** 1:1 with `OracleType`:
+  `twap_manipulation` and `curve_virtual_price` each have two bug types (the
+  base Review, and "(Profit Confirmed)" Confirmed).
+* The `high_confidence` preset contains exactly these `OracleType`s: ERC20,
+  Pair, Reentrancy, ArbitraryCall, TypedBug, SelfDestruct, Erc4626,
+  AccessControl, SignatureReplay, SignatureMalleability, NftTransfer,
+  ProxyIntegrity, ProxyUpgradeHijack, ArbTransfer, DelegatecallInjection,
+  EcrecoverZero, ArbitraryStorageWrite, StorageCollision, DelegatecallTarget,
+  TxOrigin, InitializerFrontRun, PreviewRounding, EthBacking, SelfReferral.
+  All the other oracles (`unbacked_mint`, `forged_proof`, `transient_guard`,
   `readonly_reentrancy`, `token_accounting_mismatch`,
   `forced_eth_accounting`, `zero_address_setter`, `gas_stipend`,
   `weak_randomness`, `precision_loss`, `revert_in_loop`, `assert_violation`,
   `unbounded_loop`, `stale_guard`, `centralization_risk`,
   `price_feed_staleness`, `twap_manipulation`, `curve_virtual_price`,
-  `uninitialized_memory`, `unchecked_call`, `math_calculate`) so v `all`, ne
-  pa v `high_confidence`.
-* Nivo `Confirmed` tu pomeni **simulacijsko** potrjeno (`sim-confirmed`), ne
-  potrjeno na verigi. To je ločnica, ki jo dokumentira
-  [OZICENJE_RUST_PYTHON.md](OZICENJE_RUST_PYTHON.md).
+  `uninitialized_memory`, `unchecked_call`, `math_calculate`) are in `all`, but
+  not in `high_confidence`.
+* The `Confirmed` level here means **simulation**-confirmed (`sim-confirmed`),
+  not confirmed on-chain. That is the dividing line documented in
+  [RUST_PYTHON_WIRING.md](RUST_PYTHON_WIRING.md).
 
 ---
 
-## 4. Deklarativni invariantni oracle (`--invariants`)
+## 4. Declarative invariant oracle (`--invariants`)
 
-`src/evm/oracles/invariant.rs` omogoča uporabniku, da izrazi lastno
-ekonomsko invarianto v JSON datoteki.
+`src/evm/oracles/invariant.rs` lets the user express their own economic
+invariant in a JSON file.
 
 Format:
 
@@ -148,48 +149,48 @@ Format:
 ] }
 ```
 
-Operandi:
-* `{"native_balance": true}` — realno stanje tarče;
-* `{"literal": "1000"}` — decimalna ali `0x` konstanta;
-* `{"call": {"sig": "...", "args": ["$caller", "0x..", "123"]}}` — statični
-  klic; `$caller` je klicatelj transakcije;
-* `{"sum_over_callers": {"sig": "balanceOf(address)"}}` — klic enkrat na
-  opaženega klicatelja, sešteto.
+Operands:
+* `{"native_balance": true}` — the target's real balance;
+* `{"literal": "1000"}` — a decimal or `0x` constant;
+* `{"call": {"sig": "...", "args": ["$caller", "0x..", "123"]}}` — a static
+  call; `$caller` is the transaction caller;
+* `{"sum_over_callers": {"sig": "balanceOf(address)"}}` — a call once per
+  observed caller, summed.
 
-Operacije: `le`, `lt`, `ge`, `gt`, `eq`, `ne`.
+Operations: `le`, `lt`, `ge`, `gt`, `eq`, `ne`.
 
-Kršitev se poroča kot `Invariant Violation` (Confirmed-tier). Če datoteka ne
-uspe razčleniti, `evm_main` izpiše `error!` in **nobenih** uporabniških
-invariant se ne preveri (ne tiho).
+A violation is reported as `Invariant Violation` (Confirmed-tier). If the file
+cannot be parsed, `evm_main` prints an `error!` and **no** user invariants are
+checked (not silently).
 
 ---
 
-## 5. Diagram: pot orakla do plan.json
+## 5. Diagram: an oracle's path to plan.json
 
 ```mermaid
 flowchart LR
     A[evm_main: OracleType::from_strs] --> B[Config::oracle]
     B --> C[evm_fuzzer: oracles]
-    C --> D[OracleFeedback po vsaki tx]
-    D --> E{oracle vrne bug_idx?}
-    E -->|ne| D
-    E -->|da| F[EVMBugResult::push_to_output]
+    C --> D[OracleFeedback after every tx]
+    D --> E{oracle returns a bug_idx?}
+    E -->|no| D
+    E -->|yes| F[EVMBugResult::push_to_output]
     F --> G[ORACLE_OUTPUT]
     G --> H[evaluate_input_events → Solution]
     H --> I[generate_test_with_full_trace]
     I --> J[*.plan.json + *.t.sol]
-    I --> K[*.s.sol, če Confirmed + replayable + 1 klicatelj]
+    I --> K[*.s.sol, if Confirmed + replayable + 1 caller]
 ```
 
 ---
 
-## 6. Odprto / neizmerjeno
+## 6. Open / unmeasured
 
-* **Nepreverjeno:** ali je seznam Review-tier tipov popoln glede na vse
-  možne nize, ki jih orakli zapišejo. Tabela je izpeljana iz
-  `classify_confidence` in `oracles/*.rs`; za tip, ki ni v `classify_confidence`,
-  `classify_confidence` privzeto vrne `Review`.
-* **Neizmerjeno:** ta dokument ne navaja, kako pogosto posamezen oracle
-  zadene; to so meritve, ne del tega dokumenta.
-* `state_comp` bug tip je dobesedno niz `"state_comp"`, ne opisno ime
-  (`src/evm/oracles/state_comp.rs`).
+* **Unverified:** whether the list of Review-tier types is complete with respect
+  to all possible strings the oracles write. The table is derived from
+  `classify_confidence` and `oracles/*.rs`; for a type not in
+  `classify_confidence`, `classify_confidence` defaults to `Review`.
+* **Unmeasured:** this document does not state how often an individual oracle
+  hits; those are measurements, not part of this document.
+* The `state_comp` bug type is literally the string `"state_comp"`, not a
+  descriptive name (`src/evm/oracles/state_comp.rs`).

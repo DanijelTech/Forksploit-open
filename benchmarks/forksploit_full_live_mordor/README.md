@@ -1,16 +1,16 @@
-# ForkSploit — polni tek neposredno na živi Mordor (brez anvil forka)
+# ForkSploit — a full run directly against live Mordor (no anvil fork)
 
-Cilj: **celoten** ForkSploit (vse zmogljivosti) na **točno tej pogodbi** in
-**točno tem omrežju**, kot je zahtevano — brez anvil forka, neposredno na javni
+Goal: the **full** ForkSploit (all capabilities) on **exactly this contract** and
+**exactly this network**, as required — no anvil fork, directly against the public
 Mordor RPC.
 
-- Pogodba: `CyberScratchLottery`
+- Contract: `CyberScratchLottery`
   `0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee`
-- Omrežje: ETC Mordor, `https://rpc.mordor.etccooperative.org` (chainId 63)
-- Blok: `17353046` (`0x108c9dd`)
-- Bajtkod tarče: 4427 B (`eth_getCode`)
+- Network: ETC Mordor, `https://rpc.mordor.etccooperative.org` (chainId 63)
+- Block: `17353046` (`0x108c9dd`)
+- Target bytecode: 4427 B (`eth_getCode`)
 
-## Ukaz (polni tek)
+## Command (the full run)
 
 ```bash
 ./target/release/forksploit evm \
@@ -25,65 +25,66 @@ Mordor RPC.
   -w <workdir>
 ```
 
-Vklopljeno: concolic + concolic-caller, flashloan (`-f`), 3 vzporedna delavca
-(concolic strop deljen: `--concolic-num-threads 1` na delavca), invariants,
-auto-setup, `--run-forever`, Shanghai spec (ETC Mordor).
+Enabled: concolic + concolic-caller, flashloan (`-f`), 3 parallel workers (the
+concolic cap shared: `--concolic-num-threads 1` per worker), invariants,
+auto-setup, `--run-forever`, the Shanghai spec (ETC Mordor).
 
-## Ponovljivost (R1)
+## Reproducibility (R1)
 
-Dva **neodvisna** teka z različnima seedoma (`1667840158231589000` in
-`987654321`), vsak 300 s, 3 delavci:
+Two **independent** runs with different seeds (`1667840158231589000` and
+`987654321`), 300 s each, 3 workers:
 
-| Tek | Izvršitev | Najdene datoteke | Množica tipov najdb |
+| Run | Executions | Files found | Set of finding types |
 |-----|-----------|------------------|---------------------|
-| 1 | 385.865.153 | 91 | 9 tipov |
-| 2 | 430.108.236 | 103 | **isti 9 tipov** |
+| 1 | 385,865,153 | 91 | 9 types |
+| 2 | 430,108,236 | 103 | **the same 9 types** |
 
-Množica tipov najdb je **100 % ponovljiva** med tekoma.
+The set of finding types is **100% reproducible** across the two runs.
 
-## Resnica vs. šum — preverjeno proti verificirani izvorni kodi
+## Truth vs. noise — checked against the verified source
 
-Nameščeni bajtkod **se ujema** z verificirano izvorno kodo
-(`deployed_bytecode` iz Blockscout == `eth_getCode`, 4427 B, solc
-0.8.20+commit.a1b79de6, optimizacija **izklopljena**). Zato lahko vsako
-najdbo preverimo neposredno.
+The installed bytecode **matches** the verified source (`deployed_bytecode` from
+Blockscout == `eth_getCode`, 4427 B, solc 0.8.20+commit.a1b79de6, optimization
+**off**). So every finding can be checked directly.
 
-Izvor: `CyberScratchLottery.sol` (shranjen v tem imeniku). Ključno: vir
-**nima** `ecrecover`, `unchecked` ali `assembly`.
+Source: `CyberScratchLottery.sol` (stored in this directory). Key point: the
+source has **no** `ecrecover`, `unchecked` or `assembly`.
 
-| # | Najdba (tier) | Verdikt | Dokaz |
+| # | Finding (tier) | Verdict | Evidence |
 |---|---------------|---------|-------|
-| 1 | **Weak Randomness** (sim-review) | **RESNIČNA** | vir: `keccak256(abi.encodePacked(block.timestamp, block.difficulty, msg.sender)) % 100` (SWC-120); pc 2084 |
-| 2 | Centralization Risk (sim-review) | resnična, po namenu | `onlyOwner` na `withdrawFunds`/`setTicketPrice` |
-| 3 | **Invariant Violation** (sim-confirmed) | **LAŽNI POZITIV** | operand `native_balance` v Address načinu bere `post_state.balance[target]` = 0 (`contract_utils.rs:820`); živa bilanca je 1.06e19. `rhs=0` → invariant trivialno pade. Na verigi `totalPayouts(1.3e18) <= balance(1.06e19)` DRŽI |
-| 4 | **Fund Loss** (sim-confirmed) | **zavajajoče / FP** | sled: `withdrawFunds()` kliče **lastnik** (slot 1 = `0xfF0f5263…`), torej privilegiran dvig po namenu, ne "anyone can earn" |
-| 5 | **Arbitrary Storage Write** (sim-confirmed) | **LAŽNI POZITIV** | pc 962 = `PUSH1 0x02; … SSTORE` → slot je **konstanta 2** (`ticketPrice`), ne attacker-chosen. Sproži se, ker argument `setTicketPrice(2)` sovpade s konstantnim indeksom slota |
-| 6 | **Unchecked ecrecover(0)** (sim-confirmed) | **LAŽNI POZITIV** | vir nima `ecrecover`. Sled: `[Sender] 0x…01` → `buyTicket` → `payable(msg.sender).call{value:…}` cilja `0x…01` (naslov ecrecover precompila), ker fuzzer uporabi `0x01` kot klicatelja |
-| 7 | **Integer Overflow** (sim-review) | **LAŽNI POZITIV** | pc 2616 = ReentrancyGuard `_status == ENTERED` primerjava (selector `0x3ee5aeb5`); pc 3666 = compiler checked-math helper. Solidity 0.8.20 ima preverjeno aritmetiko, v viru ni `unchecked` |
-| 8 | **Zero Address Setter** (sim-review) | **LAŽNI POZITIV** | pc 962, slot 2 = `ticketPrice` (številka, ne naslov). `setTicketPrice(0)` vpiše 0 v numerični slot, ki je zaradi majhne vrednosti "address-shaped" |
-| 9 | **Stale Guard Counter** (sim-review) | benigno | stražarji berejo `_status` (slot 0), `winProbability` (slot 5 = 65) — po namenu konstantni |
-| 10 | **Unbounded Loop** (sim-review) | benigno | `getWinners(count)`: zanka je omejena s klicateljevim `count`, ne z `winners.length` |
+| 1 | **Weak Randomness** (sim-review) | **REAL** | source: `keccak256(abi.encodePacked(block.timestamp, block.difficulty, msg.sender)) % 100` (SWC-120); pc 2084 |
+| 2 | Centralization Risk (sim-review) | real, by design | `onlyOwner` on `withdrawFunds`/`setTicketPrice` |
+| 3 | **Invariant Violation** (sim-confirmed) | **FALSE POSITIVE** | the operand `native_balance` in Address mode reads `post_state.balance[target]` = 0 (`contract_utils.rs:820`); the live balance is 1.06e19. `rhs=0` → the invariant trivially fails. On-chain `totalPayouts(1.3e18) <= balance(1.06e19)` HOLDS |
+| 4 | **Fund Loss** (sim-confirmed) | **misleading / FP** | trace: `withdrawFunds()` calls **the owner** (slot 1 = `0xfF0f5263…`), so a privileged withdrawal by design, not "anyone can earn" |
+| 5 | **Arbitrary Storage Write** (sim-confirmed) | **FALSE POSITIVE** | pc 962 = `PUSH1 0x02; … SSTORE` → the slot is a **constant 2** (`ticketPrice`), not attacker-chosen. It fires because the argument `setTicketPrice(2)` coincides with the constant slot index |
+| 6 | **Unchecked ecrecover(0)** (sim-confirmed) | **FALSE POSITIVE** | the source has no `ecrecover`. Trace: `[Sender] 0x…01` → `buyTicket` → `payable(msg.sender).call{value:…}` targets `0x…01` (the ecrecover precompile address), because the fuzzer uses `0x01` as a caller |
+| 7 | **Integer Overflow** (sim-review) | **FALSE POSITIVE** | pc 2616 = the ReentrancyGuard `_status == ENTERED` comparison (selector `0x3ee5aeb5`); pc 3666 = a compiler checked-math helper. Solidity 0.8.20 has checked arithmetic, and the source has no `unchecked` |
+| 8 | **Zero Address Setter** (sim-review) | **FALSE POSITIVE** | pc 962, slot 2 = `ticketPrice` (a number, not an address). `setTicketPrice(0)` writes 0 into a numeric slot that, because of its small value, is "address-shaped" |
+| 9 | **Stale Guard Counter** (sim-review) | benign | the guards read `_status` (slot 0), `winProbability` (slot 5 = 65) — constant by design |
+| 10 | **Unbounded Loop** (sim-review) | benign | `getWinners(count)`: the loop is bounded by the caller's `count`, not by `winners.length` |
 
-## Sklep
+## Conclusion
 
-- **En resničen bug**: Weak Randomness (SWC-120) — potrjen z izvorno kodo in
-  neodvisno z Echidno.
-- **Dodatnih 8 "najdb"** na `sim-confirmed`/`sim-review` ravni je v tem teku
-  **lažnih pozitivov ali zavajajočih oznak** (6 FP + 2 benigna heuristika),
-  preverjeno proti verificirani kodi.
+- **One real bug**: Weak Randomness (SWC-120) — confirmed by the source and
+  independently by Echidna.
+- **8 additional "findings"** at the `sim-confirmed`/`sim-review` level are, in
+  this run, **false positives or misleading labels** (6 FP + 2 benign
+  heuristics), checked against the verified code.
 
-To je pošten, izmerjen rezultat **polnega** cevovoda na živi verigi. Prejšnja
-"minimalna" primerjava je poročala le podmnožico (Weak Randomness + Fund Loss)
-in je zato **podcenila** šum; polni tek pokaže, da oraklji na `sim-confirmed`
-ravni proizvedejo več lažnih pozitivov, ki jih je treba ročno preveriti.
+This is an honest, measured result of the **full** pipeline on a live chain. An
+earlier "minimal" comparison reported only a subset (Weak Randomness + Fund Loss)
+and therefore **underestimated** the noise; the full run shows that the oracles
+at the `sim-confirmed` level produce several false positives that must be checked
+by hand.
 
-Omejitev tega okolja: `--invariants` operand `native_balance` v Address načinu
-ni napolnjen z živo bilanco (točka 3) — to je napaka orodja, ne tarče.
+Limitation of this environment: the `--invariants` operand `native_balance` in
+Address mode is not populated with the live balance (item 3) — that is a tool bug,
+not a target bug.
 
-## Artefakti
+## Artifacts
 
-- `run1_*.log`, `run2_*.log` — surovi dnevnik delavcev (oba teka)
-- `run{1,2}_supervisor.log` — nadzornik (združevanje najdb)
-- `CyberScratchLottery.sol` — verificirana izvorna koda
-- `invariants.json` — uporabljeni invarianti
-- `runtime_disasm.txt` — disassembler nameščenega bajtkoda
+- `run1_*.log`, `run2_*.log` — raw worker logs (both runs)
+- `run{1,2}_supervisor.log` — the supervisor (finding merging)
+- `CyberScratchLottery.sol` — the verified source
+- `invariants.json` — the invariants used
+- `runtime_disasm.txt` — a disassembly of the installed bytecode

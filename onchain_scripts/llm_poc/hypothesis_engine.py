@@ -159,7 +159,7 @@ def refine_hypothesis(messages, previous_hypothesis, confirm_result):
     and ask it to revise. This is in-context refinement for THIS run only --
     nothing is written back into model weights or any persistent store. Any
     "growing library of confirmed techniques" lives in
-    skills/forksploit-contract-audit/references/potrjene_tehnike.md as a
+    skills/forksploit-contract-audit/references/confirmed-techniques.md as a
     plain readable log, never as implicit model learning."""
     feedback = f"""Your previous hypothesis was executed for real on a local blockchain \
 fork. The simulation engine's verdict was: {confirm_result['verdict']}.

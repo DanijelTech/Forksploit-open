@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""test_gas_fit.py -- FAZA 1.2/1.3 of PROMPT_RESEN_SISTEM.md: the plan must
+"""test_gas_fit.py -- FAZA 1.2/1.3 of TASK_SPEC.md: the plan must
 carry an honest gas reality (gas_estimate, fits_block_gas_limit,
 gas_headroom_pct), measured with the node's own eth_estimateGas because the
 revm fork has no gas metering.

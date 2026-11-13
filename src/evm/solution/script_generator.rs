@@ -194,7 +194,7 @@ fn write_plan(output_dir: &str, contract_name: &str, plan: &ExploitPlan) {
 fn build_plan_meta<'a>(args: &'a TemplateArgs, trace: &[Tx]) -> PlanMeta<'a> {
     let bug_types = super::parse_bug_report(&args.solution);
     let requires_control_leak = super::trace_depends_on_control_leak(trace);
-    // FAZA 2.3 (PROMPT_RESEN_SISTEM.md): the acceptance criterion is that a
+    // FAZA 2.3 (TASK_SPEC.md): the acceptance criterion is that a
     // `sim-confirmed` plan NEVER rests on control leak. Injecting a faked
     // return value is only ever allowed as `sim-review` research -- so a
     // trace whose discovery needed one is downgraded here, regardless of
@@ -516,7 +516,7 @@ mod plan_meta_confidence_tests {
         }
     }
 
-    /// FAZA 2.3 acceptance criterion (PROMPT_RESEN_SISTEM.md): a
+    /// FAZA 2.3 acceptance criterion (TASK_SPEC.md): a
     /// `sim-confirmed` plan must NEVER rest on control leak. A trace whose
     /// discovery used an intercepted, fuzzer-injected fake return value has
     /// to be downgraded to `sim-review`, even when its bug_type is

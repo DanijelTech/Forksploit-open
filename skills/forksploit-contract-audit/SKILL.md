@@ -11,628 +11,619 @@ metadata:
     related_skills: []
 ---
 
-# ForkSploit: nadzorovan varnostni pregled pogodb
+# ForkSploit: a controlled contract security review
 
-Ta skill vodi CELOTEN cikel preverjanja pametne pogodbe z ForkSploitom: od izbire
-pravega vozlišča, preko varnega preverjanja na lokalnem forku, do končne, s strani
-človeka potrjene resnične transakcije in **dokaza, da je kovanec dejansko prispel**
-na recovery wallet. Ne naredi NIČESAR samodejno onkraj tega, kar je tukaj
-eksplicitno opisano — vsak korak, ki lahko premakne resnična sredstva ali pošlje
-resnično transakcijo, zahteva EKSPLICITNO, ločeno potrditev človeka.
+This skill guides the COMPLETE cycle of verifying a smart contract with ForkSploit:
+from choosing the right node, through safe verification on a local fork, to a final,
+human-confirmed real transaction and **proof that the coin actually arrived** in the
+recovery wallet. It does NOTHING automatically beyond what is explicitly described
+here — every step that can move real funds or send a real transaction requires the
+EXPLICIT, separate confirmation of a human.
 
-**Ne poskušaj "razumeti" ForkSploit kode sam in izpeljati lastnega postopka.** Ta
-skill je bil napisan s strani osebe, ki je ForkSploit dejansko zgradila in vsak
-korak preverila na pravih, deployanih pogodbah. Sledi mu dobesedno.
+**Do not try to "understand" the ForkSploit code yourself and derive your own
+procedure.** This skill was written by the person who actually built ForkSploit and
+verified every step on real, deployed contracts. Follow it literally.
 
-**Za katerokoli vprašanje o konkretnem CLI flagu, orakljenju, onchain_scripts
-orodju, ali omejitvi** — NAJPREJ preveri `references/zmogljivosti.md` (popoln
-leksikon vseh ukazov/zmogljivosti/omejitev). Ne ugibaj, ne izpeljuj iz imena
-funkcije/datoteke. Če odgovora ni niti tam, povej uporabniku, da ne veš, namesto da
-sklepaš.
+**For any question about a specific CLI flag, oracle, onchain_scripts tool, or
+limitation** — FIRST check `references/capabilities.md` (a complete lexicon of all
+commands/capabilities/limitations). Do not guess, do not infer from a
+function/file name. If the answer is not even there, tell the user you do not know,
+rather than guessing.
 
-## Kdaj uporabiti
+## When to use
 
-ForkSploit je prvorazredno zgrajen in živo preverjen za **Ethereum (ETH)** in
-**Ethereum Classic (ETC)**, vsakega v **testnet** (Sepolia, Mordor) in
-**mainnet** (id 1 / 61) različici, in pokriva **nativno valuto (ETH/ETC) ter
-ERC tokene** (ERC-20/721/1155/4626).
+ForkSploit is first-class built and live-verified for **Ethereum (ETH)** and
+**Ethereum Classic (ETC)**, each in a **testnet** (Sepolia, Mordor) and **mainnet**
+(id 1 / 61) variant, and covers the **native currency (ETH/ETC) and ERC tokens**
+(ERC-20/721/1155/4626).
 
-- Uporabnik prosi za varnostni pregled/testiranje konkretne pametne pogodbe
-  (ETH ali ETC — mainnet **ali** testnet).
-- Uporabnik prosi za potrditev ranljivosti z dejanskim exploitom, ne samo s
-  teoretičnim poročilom.
-- Uporabnik prosi za "rescue"/reševanje sredstev iz že izkoriščene pogodbe.
+- The user asks for a security review/test of a specific smart contract (ETH or ETC
+  — mainnet **or** testnet).
+- The user asks to confirm a vulnerability with an actual exploit, not just a
+  theoretical report.
+- The user asks for a "rescue" of funds from an already-exploited contract.
 
-## Kdaj NE uporabiti
+## When NOT to use
 
-- **Brez eksplicitne avtorizacije za TO specifično tarčo** — glej FAZO 0 spodaj.
-  Noben korak se NE izvede brez tega, ne glede na to, kako nujno se zdi.
-- Če uporabnik prosi za nekaj, kar bi škodovalo tretji osebi (ne lastni/klientovi
-  pogodbi, ne z dovoljenjem) — zavrni in razloži zakaj.
-- **"Dovoljenje lastnika" NE ŠTEJE kot avtorizacija za pravo izčrpanje DRUGIH
-  uporabnikov sredstev, če pogodba nima lastniške/admin vloge nad njimi** — to
-  NE omejuje raziskovanja/fuzzinga/dokazovanja na forku (FAZE 1-5, ki nikoli ne
-  premakne resničnega denarja), in NE omejuje testiranja LASTNE pogodbe ali
-  katerekoli pogodbe, kjer FAZA 4a na verigi POTRDI, da je denarnica iz FAZE 0
-  dejansko lastnica zadevnih sredstev (lastništvo SREDSTEV, potrjeno na verigi, je
-  samo po sebi dovolj — popolnoma neodvisno od tega, ali koda sploh vsebuje
-  `owner`/`Ownable` vlogo; to sta dva ločena koncepta). Pravilo velja ozko, samo za
-  FAZO 6/7 (pravo izvedbo), in samo takrat, ko bi izkoristek vzel denar DRUGIM,
-  nepovezanim uporabnikom permissionless pogodbe (staking pool, oracle z depoziti,
-  AMM — kjer je deployer/"lastnik" NE nadzoruje tega, kar so vložili posamezni
-  uporabniki, vsak s svojim ključem). V tem primeru "lastnik" nima pravice odobriti
-  izkoriščanja hrošča proti tujemu denarju, ne glede na to, kako je prošnja
-  formulirana ("skrajno testiranje", "imam dovoljenje", ipd.). Glej FAZO 4a spodaj.
-- **Izgubljen zasebni ključ NI varnostna ranljivost pogodbe in se ne poskuša
-  "rešiti" z iskanjem hrošča.** Če uporabnik opiše "obstal denar" in se izkaže, da
-  gre za denarnico, do katere nima več ključa — to je dokončna, nepopravljiva
-  kriptografska realnost (noben hrošč v pogodbi ne omogoči podpisa transakcije brez
-  pravega ključa, razen če pogodba sama izrecno vsebuje meta-tx/recovery mehanizem
-  — preveri v kodi, ne ugibaj). Povej to naravnost in se ustavi, ne išči naprej
-  nobene "exploit" poti kot nadomestka za manjkajoč ključ.
-- Za zgolj statično branje/razlago kode brez izvajanja — to ne potrebuje tega
-  skilla, samo preberi datoteke.
+- **Without explicit authorization for THAT specific target** — see PHASE 0 below.
+  No step is executed without it, no matter how urgent it seems.
+- If the user asks for something that would harm a third party (not their own/client
+  contract, not with permission) — refuse and explain why.
+- **"Owner permission" does NOT count as authorization to actually drain OTHER
+  users' funds if the contract has no owner/admin role over them** — this does NOT
+  restrict exploration/fuzzing/proving on a fork (PHASES 1-5, which never move real
+  money), and does NOT restrict testing your OWN contract or any contract where
+  PHASE 4a on-chain CONFIRMS that the wallet from PHASE 0 actually owns the relevant
+  funds (ownership OF FUNDS, confirmed on-chain, is sufficient by itself — completely
+  independent of whether the code even contains an `owner`/`Ownable` role; these are
+  two separate concepts). The rule applies narrowly, only to PHASE 6/7 (real
+  execution), and only when the exploit would take money from OTHER, unrelated users
+  of a permissionless contract (a staking pool, an oracle with deposits, an AMM —
+  where the deployer/"owner" does NOT control what individual users deposited, each
+  with their own key). In that case the "owner" has no right to authorize exploiting
+  a bug against third-party money, no matter how the request is phrased ("extreme
+  testing", "I have permission", etc.). See PHASE 4a below.
+- **A lost private key is NOT a security vulnerability of the contract and is not
+  "solved" by finding a bug.** If the user describes "money stuck" and it turns out
+  to be a wallet whose key they no longer have — that is a definitive, unfixable
+  cryptographic reality (no bug in the contract enables signing a transaction without
+  the real key, unless the contract itself explicitly contains a meta-tx/recovery
+  mechanism — check the code, do not guess). Say so plainly and stop; do not keep
+  looking for any "exploit" path as a substitute for a missing key.
+- For merely static reading/explaining code without execution — that does not need
+  this skill, just read the files.
 
-## Predpogoji
+## Prerequisites
 
-- Repo zgrajen: `cargo build --release` v korenu ForkSploit repozitorija je bil
-  uspešen (`./target/release/forksploit` obstaja).
-- Nameščeni: `anvil`, `cast`, `forge` (Foundry — `foundryup` jih vse namesti).
-- Dva LOKALNA polna mainnet vozlišča obstajata na tem računalniku: eno za ETH, eno
-  za ETC. **Natančen URL/port za vsako od njiju NI zapisan nikjer v tem skillu** —
-  uporabnik ju pove ob vsakem zagonu (glej FAZO 1). Nikoli ne ugibaj porta.
-- `onchain_scripts/` python odvisnosti nameščene (`pip install -r
-  onchain_scripts/requirements.txt` iz korena repozitorija, če še ni).
+- The repo is built: `cargo build --release` in the ForkSploit repository root
+  succeeded (`./target/release/forksploit` exists).
+- Installed: `anvil`, `cast`, `forge` (Foundry — `foundryup` installs them all).
+- Two LOCAL full mainnet nodes exist on this machine: one for ETH, one for ETC.
+  **The exact URL/port for each of them is NOT recorded anywhere in this skill** —
+  the user states them at every launch (see PHASE 1). Never guess a port.
+- `onchain_scripts/` python dependencies installed (`pip install -r
+  onchain_scripts/requirements.txt` from the repository root, if not already).
 
-## FAZA 0 — Avtorizacija (blokirajoč korak, se NE preskoči)
+## PHASE 0 — Authorization (a blocking step, NOT skipped)
 
-Preden se naredi KAJTERKOLI drug korak, uporabnik mora eksplicitno, pisno (v
-pogovoru) potrditi VSE tri stvari:
+Before ANY other step is taken, the user must explicitly, in writing (in the
+conversation) confirm ALL three things:
 
-1. **Naslov tarčne pogodbe** (0x...) in **veriga** (eth/etc/druga).
-2. Da ima **dovoljenje** testirati to specifično pogodbo (lastna pogodba, pogodba
-   klienta z pisnim dovoljenjem, ali javni bug-bounty program).
-3. **Recovery wallet naslov** (0x...), kamor naj gre vse, kar se med pregledom
-   "izkoristi" kot dokaz.
+1. The **target contract address** (0x...) and the **chain** (eth/etc/other).
+2. That they have **permission** to test that specific contract (their own contract,
+   a client's contract with written permission, or a public bug-bounty program).
+3. The **recovery wallet address** (0x...), where everything "exploited" during the
+   review goes, as proof.
 
-Če kateri od teh treh manjka ali je nejasen — **USTAVI se in vprašaj**. Ne
-nadaljuj na podlagi domneve.
+If any of these three is missing or unclear — **STOP and ask**. Do not proceed on an
+assumption.
 
-## FAZA 1 — Izbira in preverjanje PRAVEGA vozlišča
+## PHASE 1 — Choosing and verifying the REAL node
 
-ETH in ETC mainnet sta en znak narazen v imenu in OBA sta resnična omrežja z
-resnično vrednostjo — zamenjava ju je najpogostejša in najnevarnejša napaka, ki jo
-lahko naredi avtomatiziran agent.
+ETH and ETC mainnet are one character apart in the name and BOTH are real networks
+with real value — swapping them is the most common and most dangerous mistake an
+automated agent can make.
 
-1. Vprašaj uporabnika za **natančen RPC URL** lokalnega vozlišča za verigo iz FAZE
-   0 (npr. `http://127.0.0.1:XXXX`) — ne predpostavljaj porta.
-   - Če uporabnik ni prepričan ali vozlišče teče v Dockerju: `docker ps` pokaže
-     dejanski port, mapiran na gostitelja (`PORTS` stolpec, npr.
-     `0.0.0.0:8546->8546/tcp` — port, ki je samo `8545/tcp` BREZ `0.0.0.0:...->`
-     predpone, NI dosegljiv iz gostitelja, tudi če je "privzeti" port za to
-     orodje). Preverjeno v praksi: core-geth ETC vozlišče je imelo notranji port
-     8545, a dosegljiv samo preko mapiranega 8546.
-2. **Preveri ga neposredno**, preden mu zaupaš:
+1. Ask the user for the **exact RPC URL** of the local node for the chain from PHASE
+   0 (e.g. `http://127.0.0.1:XXXX`) — do not assume a port.
+   - If the user is unsure or the node runs in Docker: `docker ps` shows the actual
+     host-mapped port (the `PORTS` column, e.g. `0.0.0.0:8546->8546/tcp` — a port that
+     is only `8545/tcp` WITHOUT the `0.0.0.0:...->` prefix is NOT reachable from the
+     host, even if it is the "default" port for that tool). Verified in practice: a
+     core-geth ETC node had an internal port 8545, but it was reachable only through
+     the mapped 8546.
+2. **Verify it directly**, before trusting it:
    ```
    terminal(command="curl -s -X POST -H 'Content-Type: application/json' --data '{\"jsonrpc\":\"2.0\",\"method\":\"eth_chainId\",\"params\":[],\"id\":1}' <URL>")
    ```
-   Pričakovan odziv: `"result":"0x1"` za ETH mainnet, `"result":"0x3d"` za ETC
-   mainnet. **Če se ne ujema s verigo iz FAZE 0 — USTAVI se**, povej uporabniku
-   natančno, kaj se je zgodilo, in ne nadaljuj.
-3. Preveri, da vozlišče dejansko napreduje (ni obstalo):
+   Expected response: `"result":"0x1"` for ETH mainnet, `"result":"0x3d"` for ETC
+   mainnet. **If it does not match the chain from PHASE 0 — STOP**, tell the user
+   exactly what happened, and do not proceed.
+3. Check that the node is actually progressing (not stuck):
    ```
    terminal(command="curl -s -X POST -H 'Content-Type: application/json' --data '{\"jsonrpc\":\"2.0\",\"method\":\"eth_blockNumber\",\"params\":[],\"id\":1}' <URL>")
    ```
-   Počakaj nekaj sekund, ponovi, številka bloka se mora premakniti (ali vsaj biti
-   svež/razumen blok, ne `0x0`).
+   Wait a few seconds, repeat, the block number must move (or at least be fresh/a
+   reasonable block, not `0x0`).
 
-**Zaključek FAZE 1**: imaš preverjen, pravi RPC URL za pravo verigo. Shrani si ga
-samo za to sejo — ne zapisuj ga v noben trajen datotečni sistem.
+**End of PHASE 1**: you have a verified, correct RPC URL for the correct chain. Keep
+it for this session only — do not write it to any persistent filesystem.
 
-## FAZA 2 — Vzpostavitev VARNEGA forka (vedno privzeto, nikoli direktno na pravo vozlišče za raziskovanje)
+## PHASE 2 — Setting up a SAFE fork (always the default, never directly on the real node for exploration)
 
-Vsako raziskovanje, fuzzing in PRVO preverjanje exploita se zgodi na LOKALNEM
-forku pravega vozlišča — NIKOLI direktno proti pravemu vozlišču iz FAZE 1 v tej
-fazi. Fork je brezplačen, popolnoma reverzibilen posnetek resničnega stanja.
-
-```
-terminal(command="anvil --fork-url <PREVERJEN_URL_IZ_FAZE_1> --port 8555 --hardfork shanghai &", timeout=10)
-```
-
-**Pomembno za ETC (in verjetno druge ne-ETH verige)**: `anvil` privzeto (`--hardfork
-latest`) predpostavi post-Cancun blok-glavo (EIP-4844 "blob gas"). Pravo ETC vozlišče
-(pred-Cancun) te glave nikoli ne vrne, zato VSAK `eth_call`/`eth_estimateGas` na forku
-spodleti z `{"code":-32602,"message":"Excess blob gas not set."}` — videti je kot
-pokvarjen fork, čeprav `eth_chainId`/`eth_blockNumber` delujeta normalno. Popravek:
-EKSPLICITNO podaj `--hardfork shanghai` (najbližji pravi nivo za ETC, glej razdelek 8 v
-`references/zmogljivosti.md`) ob zagonu anvil forka. Če po tem popravku `eth_call`
-vrne normalen EVM revert namesto te RPC napake, je fork pravilno konfiguriran.
-
-Preveri, da fork dejansko posnema pravo stanje (tarčna pogodba mora imeti kodo):
+Every exploration, fuzzing and FIRST exploit verification happens on a LOCAL fork of
+the real node — NEVER directly against the real node from PHASE 1 in this phase. A
+fork is a free, fully reversible snapshot of the real state.
 
 ```
-terminal(command="cast code <NASLOV_TARCE> --rpc-url http://127.0.0.1:8555")
+terminal(command="anvil --fork-url <VERIFIED_URL_FROM_PHASE_1> --port 8555 --hardfork shanghai &", timeout=10)
 ```
 
-Prazen odziv (`0x`) pomeni, da fork ni pravilno povezan ali da naslov ne obstaja na
-tej verigi — **USTAVI se**, preveri FAZO 0/1 ponovno.
+**Important for ETC (and probably other non-ETH chains)**: `anvil` by default
+(`--hardfork latest`) assumes a post-Cancun block header (EIP-4844 "blob gas"). A
+real ETC node (pre-Cancun) never returns that header, so EVERY
+`eth_call`/`eth_estimateGas` on the fork fails with `{"code":-32602,"message":"Excess
+blob gas not set."}` — it looks like a broken fork, although
+`eth_chainId`/`eth_blockNumber` work normally. Fix: EXPLICITLY pass `--hardfork
+shanghai` (the closest correct level for ETC, see section 8 in
+`references/capabilities.md`) when starting the anvil fork. If after this fix
+`eth_call` returns a normal EVM revert instead of that RPC error, the fork is
+correctly configured.
 
-**Zaključek FAZE 2**: `http://127.0.0.1:8555` je potrjen, delujoč fork z
-identičnim stanjem kot pravo vozlišče.
+Verify that the fork actually mirrors the real state (the target contract must have
+code):
 
-## FAZA 3 — Zagon ForkSploit na forku
+```
+terminal(command="cast code <TARGET_ADDRESS> --rpc-url http://127.0.0.1:8555")
+```
 
-Nastavi RPC override na FORK (ne na pravo vozlišče) za čas celotnega preverjanja:
+An empty response (`0x`) means the fork is not connected correctly or the address
+does not exist on this chain — **STOP**, re-check PHASE 0/1.
+
+**End of PHASE 2**: `http://127.0.0.1:8555` is a verified, working fork with state
+identical to the real node.
+
+## PHASE 3 — Launching ForkSploit on the fork
+
+Set the RPC override to the FORK (not the real node) for the whole verification:
 
 ```
 terminal(command="cd onchain_scripts && python3 -c \"from chains import set_rpc_override; set_rpc_override('<eth|etc>', 'http://127.0.0.1:8555')\"")
 ```
 
-Zaženi `auto_pipeline.py` — to je ŽE obstoječ, celoten cikel (register → fund →
-fuzz → zaznaj → exploit preko ponovno-uporabljenega AttackWallet → sweep na
-recovery wallet), ne piši svojega:
+Run `auto_pipeline.py` — this is the ALREADY existing, complete cycle (register →
+fund → fuzz → detect → exploit through a reused AttackWallet → sweep to the recovery
+wallet); do not write your own:
 
 ```
-terminal(command="cd onchain_scripts && python3 auto_pipeline.py --target <NASLOV_TARCE> --recovery-wallet <RECOVERY_WALLET_IZ_FAZE_0> --key <POT_DO_KLJUCA_TESTNEGA_RACUNA> --chain <eth|etc> --confirm-mainnet --fund-eth 0.01 --fuzz-seconds 300 --detectors all", timeout=400)
+terminal(command="cd onchain_scripts && python3 auto_pipeline.py --target <TARGET_ADDRESS> --recovery-wallet <RECOVERY_WALLET_FROM_PHASE_0> --key <PATH_TO_TEST_ACCOUNT_KEY> --chain <eth|etc> --confirm-mainnet --fund-eth 0.01 --fuzz-seconds 300 --detectors all", timeout=400)
 ```
 
-Opomba: `--confirm-mainnet` je tukaj potreben, ker `auto_pipeline.py` ETH/ETC vedno
-šteje za "mainnet" (`chains.require_mainnet_confirmation`) — TUDI ko dejansko
-cilja na FORK preko RPC override-a zgoraj. To je namerno in varno: fork JE na
-`eth`/`etc` chain-id, zato orodje ne razlikuje "fork" od "pravega" po chain-id-u,
-samo po RPC URL-u, ki smo ga sami preverili v FAZI 1-2. Ključ (`--key`), ki ga tu
-uporabiš, naj bo **testni/throwaway ključ** (npr. en izmed anvil-ovih znanih
-privzetih dev ključev), NIKOLI pravi ključ uporabnika — na forku ni pomembno, kdo
-plača gas.
+Note: `--confirm-mainnet` is needed here because `auto_pipeline.py` always treats
+ETH/ETC as "mainnet" (`chains.require_mainnet_confirmation`) — EVEN when it actually
+targets a FORK through the RPC override above. This is deliberate and safe: the fork
+IS on the `eth`/`etc` chain-id, so the tool does not distinguish "fork" from "real" by
+chain-id, only by the RPC URL we verified ourselves in PHASE 1-2. The key (`--key`)
+you use here should be a **test/throwaway key** (e.g. one of anvil's known default dev
+keys), NEVER the user's real key — on a fork it does not matter who pays the gas.
 
-**Zaključek FAZE 3**: dnevnik v `onchain_scripts/logs/` kaže, ali je bila najdena
-ranljivost, in če je bil generiran `.plan.json`/`.s.sol` exploit.
+**End of PHASE 3**: the log in `onchain_scripts/logs/` shows whether a vulnerability
+was found, and whether a `.plan.json`/`.s.sol` exploit was generated.
 
-## FAZA 4 — Pregled najdb: ČLOVEK izbere cilj
+## PHASE 4 — Reviewing the findings: a HUMAN chooses the target
 
-Preberi dnevnik in vsako najdbo predstavi uporabniku z:
-- `bug_type` in oznako **`(sim-confirmed)`** ali **`(sim-review)`** — ta predpona
-  `sim-` je namerna in NI okrajšava, ki se jo lahko ignorira: to je ZGOLJ
-  simulacijska (revm, brez merjenja gasa — glej `CLAUDE.md`) ocena vzorca, nikoli
-  dokaz o resnični on-chain izvedbi. Pred 2026-11-02 je Rust stran tu izpisovala
-  golo `(confirmed)`/`(review)`, kar je bilo nevarno dvoumno: `auto_pipeline.py`'s
-  `run_fuzzer()` to vrstico (s predpono `[fuzzer] `) zapiše v ISTO log datoteko kot
-  svoj lastni, resnično on-chain preverjen `CONFIRMED`/`NOT CONFIRMED` status
-  (glej FAZA 7/8 spodaj) — zlahka bi ju kdo zamenjal. Preimenovano po resnični
-  najdbi na ETC mainnet-u (plan `C9f53_2`): Rust stran je rekla "Confirmed", prava
-  veriga pa je rekla "ne" (presežen `block.gasLimit`, ker revm gasa ne meri).
-- Ali JE bil generiran exploit skript (`*.Exploit.s.sol`) — to je res samo za
-  `(sim-confirmed)` najdbe (glej `src/evm/solution/mod.rs`'s `is_confirmed_exploitable_bug`
-  v ForkSploit repoju za natančen trenutni seznam).
-- `(sim-review)` najdbe NIKOLI ne predstavi kot "dokazan napad" — to so samo sumi, ki
-  potrebujejo človeško presojo.
-- **Nikoli ne reči stranki/uporabniku samo "CONFIRMED" na podlagi tega koraka.**
-  `(sim-confirmed)` pomeni "vzorec je resničen v simulaciji", NE "denar je
-  dejansko premaknjen". Edina beseda "CONFIRMED" (brez `sim-` predpone), ki jo je
-  dovoljeno uporabiti v poročilu stranki, je tista, ki jo vrne `execute_plan()` v
-  FAZI 7/8 (`auto_pipeline.PLAN_CONFIRMED`) — zahteva resnično spremembo salda
-  recovery denarnice na pravi verigi.
+Read the log and present every finding to the user with:
+- `bug_type` and the **`(sim-confirmed)`** or **`(sim-review)`** label — the `sim-`
+  prefix is deliberate and is NOT an abbreviation that can be ignored: it is ONLY a
+  simulation (revm, without gas metering — see `CLAUDE.md`) assessment of a pattern,
+  never proof of real on-chain execution. Before 2026-11-02 the Rust side printed a
+  bare `(confirmed)`/`(review)` here, which was dangerously ambiguous:
+  `auto_pipeline.py`'s `run_fuzzer()` writes that line (with the `[fuzzer] ` prefix)
+  into the SAME log file as its own, genuinely on-chain-verified
+  `CONFIRMED`/`NOT CONFIRMED` status (see PHASE 7/8 below) — the two could easily be
+  confused. Renamed after a real finding on ETC mainnet (plan `C9f53_2`): the Rust
+  side said "Confirmed", but the real chain said "no" (exceeded `block.gasLimit`,
+  because revm does not meter gas).
+- Whether an exploit script (`*.Exploit.s.sol`) WAS generated — this is genuinely
+  only for `(sim-confirmed)` findings (see `src/evm/solution/mod.rs`'s
+  `is_confirmed_exploitable_bug` in the ForkSploit repo for the exact current list).
+- `(sim-review)` findings are NEVER presented as a "proven attack" — they are only
+  suspicions that need human judgement.
+- **Never tell the client/user just "CONFIRMED" based on this step.** `(sim-confirmed)`
+  means "the pattern is real in simulation", NOT "money has actually moved". The only
+  "CONFIRMED" (without the `sim-` prefix) allowed in a client report is the one
+  returned by `execute_plan()` in PHASE 7/8 (`auto_pipeline.PLAN_CONFIRMED`) — it
+  requires a real change of the recovery wallet balance on the real chain.
 
-**Vprašaj uporabnika**, katero najdbo (če je več) naj se dejansko preveri/izkoristi
-naprej. Ne nadaljuj samodejno na prvo najdbo.
+**Ask the user** which finding (if there are several) should actually be
+verified/exploited next. Do not automatically proceed to the first finding.
 
-## FAZA 4a — Preveri DEJANSKO lastništvo sredstev (blokirajoč korak pri "pooled"/staking pogodbah)
+## PHASE 4a — Verify the ACTUAL ownership of funds (a blocking step for "pooled"/staking contracts)
 
-**Pred vsakim nadaljevanjem proti najdbi, ki bi "izvlekla denar" iz pogodbe s skupnim
-skladom (staking, lending, pooled vault, oracle z depoziti, AMM) — preveri na forku,
-ali denarnica iz FAZE 0 DEJANSKO ima pozicijo v tej pogodbi**, preden karkoli
-predpostaviš o tem, čigav je denar v njej. Konkreten primer (2026-11-02, resnična
-ETC pogodba): uporabnik je trdil "10 ETC v pogodbi je moj denar" — direkten
-`cast call` na pogodbin `stakes(address)`/`mana(address)` (ali ekvivalentno glede na
-specifično pogodbo: `balanceOf`, `deposits`, lastna mapping funkcija) za OBE
-denarnici iz FAZE 0 je vrnil `0` — denar je pripadal DRUGIM, nepovezanim
-uporabnikom pogodbe. Brez tega koraka bi se nadaljevalo naravnost proti izkoriščanju
-tujih sredstev.
+**Before proceeding against any finding that would "drain money" from a contract with
+a shared pool (staking, lending, pooled vault, an oracle with deposits, an AMM) —
+verify on the fork whether the wallet from PHASE 0 ACTUALLY has a position in that
+contract**, before assuming anything about whose money is in it. A concrete example
+(2026-11-02, a real ETC contract): the user claimed "the 10 ETC in the contract is my
+money" — a direct `cast call` on the contract's `stakes(address)`/`mana(address)` (or
+the equivalent for the specific contract: `balanceOf`, `deposits`, its own mapping
+function) for BOTH wallets from PHASE 0 returned `0` — the money belonged to OTHER,
+unrelated users of the contract. Without this step one would have proceeded straight
+toward exploiting third-party funds.
 
 ```
-terminal(command="cast call <NASLOV_TARCE> \"<ustrezna_getter_funkcija>(address)(uint256)\" <NASLOV_DENARNICE_IZ_FAZE_0> --rpc-url http://127.0.0.1:8555")
+terminal(command="cast call <TARGET_ADDRESS> \"<relevant_getter_function>(address)(uint256)\" <WALLET_ADDRESS_FROM_PHASE_0> --rpc-url http://127.0.0.1:8555")
 ```
 
-Če rezultat je `0` (ali kako drugače kaže, da denarnica iz FAZE 0 nima pozicije) —
-**USTAVI se in vprašaj uporabnika neposredno**, ali ima DRUGO denarnico s to pozicijo
-(in če da, preveri NJO enako, preden nadaljuješ), ali je prišlo do nesporazuma. Ne
-predpostavljaj "saldo pogodbe = uporabnikov denar" samo zato, ker ima uporabnik
-dovoljenje za TESTIRANJE pogodbe — dovoljenje za testiranje ni isto kot lastništvo
-sredstev v njej.
+If the result is `0` (or otherwise shows that the wallet from PHASE 0 has no position)
+— **STOP and ask the user directly** whether they have ANOTHER wallet with that
+position (and if so, verify THAT one the same way before continuing), or whether
+there was a misunderstanding. Do not assume "contract balance = user's money" just
+because the user has permission to TEST the contract — permission to test is not the
+same as ownership of the funds in it.
 
-**Če rezultat NI `0`, torej denarnica iz FAZE 0 dejansko ima pozicijo** — ta korak je
-USPEŠNO opravljen, nadaljuj normalno proti FAZI 5-9. Ta faza NI splošna blokada
-testiranja permissionless/staking pogodb, niti pogodb brez `owner` vloge v kodi —
-lastništvo sredstev, potrjeno tukaj na verigi, je samo po sebi popolnoma zadostna
-avtorizacija za pravo izvedbo, ne glede na to, ali koda sploh ima admin vlogo. Prav
-tako ta faza NIKOLI ne omejuje FAZ 1-3 (raziskovanje/fuzzing na forku) — tiste se
-lahko vedno izvedejo na kateremkoli naslovu, ker nikoli ne premaknejo resničnega
-denarja; ta preverba je relevantna šele, ko se najdba obravnava kot "denar za
-vrnitev" nekomu.
+**If the result is NOT `0`, i.e. the wallet from PHASE 0 actually has a position** —
+this step is SUCCESSFULLY done, continue normally toward PHASES 5-9. This phase is
+NOT a general block on testing permissionless/staking contracts, nor contracts
+without an `owner` role in the code — ownership of funds, confirmed here on-chain, is
+by itself completely sufficient authorization for real execution, regardless of
+whether the code even has an admin role. Likewise, this phase NEVER restricts PHASES
+1-3 (exploration/fuzzing on the fork) — those can always be performed on any address,
+because they never move real money; this check becomes relevant only when a finding
+is treated as "money to return" to someone.
 
-**Če se izkaže, da je prava denarnica tista, do katere je uporabnik izgubil zasebni
-ključ** — glej opozorilo v "Kdaj NE uporabiti" zgoraj. To je dokončno, ne glede na
-morebitne hrošče v pogodbi; ustavi se tukaj, ne iskati "exploit" nadomestka.
+**If it turns out the real wallet is one whose private key the user lost** — see the
+warning in "When NOT to use" above. That is final, regardless of any bugs in the
+contract; stop here, do not look for an "exploit" substitute.
 
-## FAZA 5 — Preverjanje DOKAZA na forku ("je kovanec prispel" — prvič, varno)
+## PHASE 5 — Verifying the PROOF on the fork ("did the coin arrive" — first time, safely)
 
-`auto_pipeline.py` je že izvedel sweep na recovery wallet NA FORKU v FAZI 3. Zdaj
-to DOKAŽI, ne samo predpostavljaj:
+`auto_pipeline.py` has already swept to the recovery wallet ON THE FORK in PHASE 3.
+Now PROVE it, do not just assume:
 
 ```
 terminal(command="cast balance <RECOVERY_WALLET> --rpc-url http://127.0.0.1:8555")
 ```
 
-Primerjaj s stanjem PRED tekom (če ni bilo zapisano, zaženi ponovno na svežem
-forku in zapiši stanje pred in po). **Samo če se saldo dejansko dvigne za
-pričakovan znesek**, šteje FAZA 5 kot uspešna. Če se ne dvigne — to NI dokazana
-ranljivost, ne glede na to, kaj pravi terminalski izpis "Found vulnerabilities" —
-povej uporabniku natančno to in se ustavi tukaj.
+Compare with the state BEFORE the run (if it was not recorded, run again on a fresh
+fork and record the state before and after). **Only if the balance actually rises by
+the expected amount** does PHASE 5 count as successful. If it does not rise — this is
+NOT a proven vulnerability, no matter what the terminal output "Found vulnerabilities"
+says — tell the user exactly that and stop here.
 
-## FAZA 6 — KONČNA potrditev pred PRAVO izvedbo (ločen, eksplicitni korak)
+## PHASE 6 — FINAL confirmation before REAL execution (a separate, explicit step)
 
-To je najpomembnejša varovalka v celotnem skillu. Preden se karkoli iz FAZE 7
-zažene, uporabniku jasno, eksplicitno povej VSE naslednje in počakaj na
-EKSPLICITNO pritrditev (ne tiho nadaljevanje):
+This is the most important safeguard in the whole skill. Before anything from PHASE 7
+is launched, clearly, explicitly tell the user ALL of the following and wait for
+EXPLICIT assent (not a silent continuation):
 
-1. "Zdaj bom izvedel PRAVO transakcijo na [ETH/ETC] MAINNET, z resničnimi sredstvi."
-2. "Tarča: [naslov]. Recovery wallet: [naslov]. Pričakovan znesek: [znesek]."
-3. "To je NEPOVRATNO. Ali eksplicitno potrjuješ, da naj nadaljujem?"
+1. "I am now going to execute a REAL transaction on [ETH/ETC] MAINNET, with real funds."
+2. "Target: [address]. Recovery wallet: [address]. Expected amount: [amount]."
+3. "This is IRREVERSIBLE. Do you explicitly confirm that I should proceed?"
 
-Če uporabnik ne odgovori z nedvoumnim DA — **USTAVI se**. Nikoli ne razlagaj
-molka ali prejšnjega splošnega dovoljenja (FAZA 0) kot zadostno za TO specifično
-pravo izvedbo — FAZA 0 je avtorizacija za TESTIRANJE, FAZA 6 je ločena potrditev
-za PRAVO TRANSAKCIJO.
+If the user does not answer with an unambiguous YES — **STOP**. Never interpret
+silence or a previous general permission (PHASE 0) as sufficient for THAT specific
+real execution — PHASE 0 is authorization for TESTING, PHASE 6 is a separate
+confirmation for a REAL TRANSACTION.
 
-## FAZA 7 — Resnična izvedba (šele po FAZI 6)
+## PHASE 7 — Real execution (only after PHASE 6)
 
-Preklopi RPC override na PRAVO vozlišče iz FAZE 1 (ne na fork):
-
-```
-terminal(command="cd onchain_scripts && python3 -c \"from chains import set_rpc_override; set_rpc_override('<eth|etc>', '<PRAVI_URL_IZ_FAZE_1>')\"")
-```
-
-Zaženi **identičen** `auto_pipeline.py` ukaz kot v FAZI 3, le s **pravim** ključem
-uporabnika (uporabnik ga poda sveže, zdaj — glej "Varnost ključev" spodaj), ne s
-testnim:
+Switch the RPC override to the REAL node from PHASE 1 (not the fork):
 
 ```
-terminal(command="cd onchain_scripts && python3 auto_pipeline.py --target <NASLOV_TARCE> --recovery-wallet <RECOVERY_WALLET> --key <POT_DO_PRAVEGA_KLJUCA> --chain <eth|etc> --confirm-mainnet --fund-eth <ZNESEK> --fuzz-seconds 300 --detectors all", timeout=400)
+terminal(command="cd onchain_scripts && python3 -c \"from chains import set_rpc_override; set_rpc_override('<eth|etc>', '<REAL_URL_FROM_PHASE_1>')\"")
 ```
 
-## FAZA 8 — KONČNO preverjanje: je kovanec DEJANSKO prispel (pravo vozlišče)
-
-**To je dokaz, ne "se je skript izvedel brez napake".**
+Run the **identical** `auto_pipeline.py` command as in PHASE 3, only with the user's
+**real** key (the user supplies it freshly, now — see "Key security" below), not the
+test one:
 
 ```
-terminal(command="cast balance <RECOVERY_WALLET> --rpc-url <PRAVI_URL_IZ_FAZE_1>")
+terminal(command="cd onchain_scripts && python3 auto_pipeline.py --target <TARGET_ADDRESS> --recovery-wallet <RECOVERY_WALLET> --key <PATH_TO_REAL_KEY> --chain <eth|etc> --confirm-mainnet --fund-eth <AMOUNT> --fuzz-seconds 300 --detectors all", timeout=400)
 ```
 
-Primerjaj s stanjem PRED FAZO 7 (zapiši ga PRED zagonom FAZE 7, ne šele zdaj).
-Povej uporabniku natančno razliko v ETH/token. Samo TA primerjava šteje kot dokaz
-uspeha — ne izpis "ONCHAIN EXECUTION COMPLETE & SUCCESSFUL" iz `forge script`, ki
-pomeni samo "transakcija ni revertirala", ne "denar je prispel tja, kamor naj bi".
+## PHASE 8 — FINAL verification: did the coin ACTUALLY arrive (real node)
 
-## FAZA 8a — Če ni bila najdena NOBENA ranljivost: formalna "negativna" trditev
+**This is proof, not "the script ran without error".**
 
-**To je enako pomembno kot FAZA 8 in se NIKOLI ne sme izpustiti.** En sam fuzzer
-tek, ki ne najde ničesar, sam po sebi NI dovolj za trditev "pogodba je varna" —
-ne za ForkSploit, ne za katerokoli drugo fuzz/varnostno orodje na svetu (odsotnost
-dokaza ni dokaz odsotnosti). Zato `auto_pipeline.py`/`batch_pipeline.py` zdaj
-avtomatsko izračunata formalno **omejeno** trditev namesto golega molka, vsakič
-ko `work_dir/vulnerabilities/*.plan.json` ostane prazen IN `vuln_info.jsonl` nima
-niti ene (tudi ne `sim-review`) najdbe (`determine_negative_result_verdict()` v
-`auto_pipeline.py`, dodano 2026-11-02 kot direkten odgovor na zahtevo po
-"dokazljivem orodju z garancijo", ne demonstracijski kodi):
+```
+terminal(command="cast balance <RECOVERY_WALLET> --rpc-url <REAL_URL_FROM_PHASE_1>")
+```
 
-- **`VERDICT: NO VULNERABILITY FOUND (bounded)`** — izda se SAMO, če so
-  izpolnjeni VSI trije pogoji: ≥80% instruction coverage (najmanjša vrednost med
-  VSEMI pogodbami v `coverage.txt`, ne povprečje), ≥300s dejanskega fuzz časa
-  (resnično pretečen, ne zahtevan), in `--detectors all` (ne ožji nabor). Poročilo
-  stranki mora vedno navesti natančen % pokritosti, čas in verigo — NIKOLI samo
-  "varno".
-- **`VERDICT: INSUFFICIENT COVERAGE`** — izda se, če KATERIKOLI od treh pogojev
-  ni izpolnjen. To pomeni "ne vemo", NE "varno". Poročilo stranki mora to jasno
-  povedati in priporočiti daljši tek/`--detectors all`, preden se sme izdati
-  karkoli o odsotnosti ranljivosti.
-- Če je bila najdena VSAJ ENA `(sim-review)` najdba (tudi brez `.plan.json`), se
-  ta formalna trditev NE izda — `report_unexecuted_findings()` že pokrije ta
-  primer ("najdeno nekaj resničnega, a ni avtomatsko izkoristljivo"), in izdati
-  ob tem ŠE "NO VULNERABILITY FOUND" bi bilo neposredno v nasprotju s tem.
-- **Pravilo za poročanje stranki**: "ni ranljivosti" se SME reči SAMO skupaj s
-  točnim obsegom (% pokritosti, čas, verzija detektorjev) — nikoli kot golo,
-  nekvalificirano "varno". Enako velja v obratni smeri kot `(sim-confirmed)`
-  preimenovanje (FAZA 4 zgoraj): beseda "CONFIRMED"/"varno" brez natančnega
-  obsega je prav tisto, kar to podjetje ne sme nikoli izreči.
+Compare with the state BEFORE PHASE 7 (record it BEFORE launching PHASE 7, not only
+now). Tell the user the exact difference in ETH/tokens. Only THAT comparison counts as
+proof of success — not the "ONCHAIN EXECUTION COMPLETE & SUCCESSFUL" output from
+`forge script`, which only means "the transaction did not revert", not "the money
+arrived where it should".
 
-## FAZA 9 — Čiščenje in zapis v rastočo knjižnico
+## PHASE 8a — If NO vulnerability was found: a formal "negative" claim
 
-1. **Vedno, ne glede na uspeh**: počisti RPC override, da naslednja seja privzeto
-   ne kaže na pravo vozlišče po nesreči:
+**This is as important as PHASE 8 and must NEVER be omitted.** A single fuzzer run
+that finds nothing is NOT by itself enough for the claim "the contract is safe" — not
+for ForkSploit, not for any other fuzz/security tool in the world (absence of evidence
+is not evidence of absence). That is why `auto_pipeline.py`/`batch_pipeline.py` now
+automatically compute a formal **bounded** claim instead of a bare silence, every time
+`work_dir/vulnerabilities/*.plan.json` stays empty AND `vuln_info.jsonl` has not even
+one (not even `sim-review`) finding (`determine_negative_result_verdict()` in
+`auto_pipeline.py`, added 2026-11-02 as a direct response to the demand for a
+"provable tool with a guarantee", not demonstration code):
+
+- **`VERDICT: NO VULNERABILITY FOUND (bounded)`** — issued ONLY if ALL three
+  conditions are met: ≥80% instruction coverage (the minimum across ALL contracts in
+  `coverage.txt`, not the average), ≥300s of actual fuzz time (really elapsed, not
+  requested), and `--detectors all` (not a narrower set). The client report must
+  always state the exact coverage %, time and chain — NEVER just "safe".
+- **`VERDICT: INSUFFICIENT COVERAGE`** — issued if ANY of the three conditions is not
+  met. This means "we do not know", NOT "safe". The client report must say this
+  clearly and recommend a longer run/`--detectors all` before anything about the
+  absence of vulnerabilities may be issued.
+- If AT LEAST ONE `(sim-review)` finding was found (even without a `.plan.json`), this
+  formal claim is NOT issued — `report_unexecuted_findings()` already covers that case
+  ("found something real, but not automatically exploitable"), and issuing "NO
+  VULNERABILITY FOUND" as well would directly contradict it.
+- **Rule for reporting to the client**: "no vulnerability" may be said ONLY together
+  with the exact scope (% coverage, time, detector version) — never as a bare,
+  unqualified "safe". The same holds in the opposite direction as the `(sim-confirmed)`
+  renaming (PHASE 4 above): the word "CONFIRMED"/"safe" without an exact scope is
+  exactly what this company must never utter.
+
+## PHASE 9 — Cleanup and writing to the growing library
+
+1. **Always, regardless of success**: clear the RPC override, so the next session does
+   not accidentally point at the real node by default:
    ```
    terminal(command="cd onchain_scripts && python3 -c \"from chains import clear_rpc_override; clear_rpc_override('<eth|etc>')\"")
    ```
-   Ustavi anvil fork (`kill %1` ali po PID-u).
-2. **Samo če je FAZA 8 potrdila uspeh**: dodaj vnos v
-   `references/potrjene_tehnike.md` (glej ta skill-ov `references/` imenik) — datum,
-   veriga, naslov pogodbe, `bug_type`, kratek povzetek, kaj je dejansko delovalo.
-   To je "rastoča knjižnica", NE "model se je naučil" — gre za dejanski, berljiv
-   zapisnik, ki ga lahko naslednja seja prebere kot referenco, ne za spremembo
-   samega modela.
+   Stop the anvil fork (`kill %1` or by PID).
+2. **Only if PHASE 8 confirmed success**: add an entry to
+   `references/confirmed-techniques.md` (see this skill's `references/` directory) —
+   date, chain, contract address, `bug_type`, a brief summary, what actually worked.
+   This is a "growing library", NOT "the model learned" — it is a real, readable
+   record that the next session can read as a reference, not a change to the model
+   itself.
 
-## Varnost ključev (nespremenljivo pravilo)
+## Key security (an immutable rule)
 
-- Zasebni ključi NIKOLI ne gredo v ta skill, v kodo, v trajno shrambo, ali v
-  katerikoli zapis, ki preživi to sejo. Uporabnik jih poda sveže, ob vsakem
-  dejanskem potrebnem koraku (FAZA 3: testni ključ, FAZA 7: pravi ključ).
-- Testni ključ (FAZA 3, fork) in pravi ključ (FAZA 7, pravo vozlišče) sta VEDNO
-  različna. Nikoli ne uporabi pravega ključa na forku "ker je vseeno" — navada
-  ubija disciplino.
+- Private keys NEVER go into this skill, into code, into persistent storage, or into
+  any record that outlives this session. The user supplies them freshly, at every
+  actual needed step (PHASE 3: a test key, PHASE 7: the real key).
+- The test key (PHASE 3, fork) and the real key (PHASE 7, real node) are ALWAYS
+  different. Never use the real key on a fork "because it does not matter" — habit
+  kills discipline.
 
-## Napake (Pitfalls)
+## Pitfalls
 
-- **ETH in ETC mainnet sta en znak narazen.** `require_mainnet_confirmation` v
-  `onchain_scripts/chains.py` ju obe obravnava enako (obe zahtevata
-  `--confirm-mainnet`) — NE razlikuje tipkarske napake med njima. Edina zaščita je
-  FAZA 1 (preveri `eth_chainId` neposredno, ne zaupaj samo imenu).
-- `--confirm-mainnet` zastavica se uporablja TUDI na forku (glej opombo v FAZI 3)
-  — to ni napaka, je posledica tega, da `chains.py` ne loči forka od resnične
-  verige po chain-id-u.
-- Če `auto_pipeline.py` poroča "Found vulnerabilities" to NE pomeni avtomatsko, da
-  je bil denar dejansko prenešen — vedno preveri FAZO 5/8 neposredno.
-- Review-tier najdbe (`(sim-review)` oznaka) NIMAJO generiranega exploit skripta po
-  dizajnu — to ni napaka ForkSploita, glej `src/evm/oracle.rs`'s `classify_confidence`
-  v repoju za natančen razlog za vsak primer.
-- `anvil --fork-url` na ETC (ali drugi pred-Cancun verigi) BREZ `--hardfork shanghai`
-  vrže `"Excess blob gas not set."` na VSAK `eth_call` — glej FAZO 2.
-- **Popravljeno 2026-11-02** (prej veljavna past, zdaj zaprta za ETH): `execute_plan()`
-  v `auto_pipeline.py` je prej vrnil `CONFIRMED`, če noben korak ni revertiral, TUDI
-  če je `AttackWallet balance after plan: 0 ETH` — torej hrošč, ki uspe brez
-  reverta, a ne iztrži nič denarja (fuzzer je našel SAMO primitiv, ne najbolj
-  profitabilno varianto). Zdaj `execute_plan()` zajame pravo ETH stanje recovery
-  denarnice tik pred in tik po tem konkretnem planu, in vrne `CONFIRMED` SAMO, če je
-  saldo dejansko narasel — sicer nov status `EXECUTED_NO_PROFIT`, ki se NIKOLI ne
-  poroča kot dokazan napad. To ne nadomešča FAZE 5/8 (tisti dve še vedno preverjata
-  CELOTEN tek na pravem vozlišču, ne samo en plan, in sta edini neodvisni, s strani
-  človeka izvedeni preverbi), a zdaj pomeni, da niz `CONFIRMED` v samem izpisu
-  pipeline-a dejansko pomeni "denar je pristal na recovery denarnici za TA plan",
-  ne le "koraki niso revertirali". **Posodobljeno 2026-11-02 (isti dan, drugi
-  korak): zdaj pokriva tudi ERC20** — `plan.json` nosi `stolen_asset` za raw
-  ERC20 korake (glej `erc20_token_touched` v `src/evm/solution/mod.rs`),
-  `execute_plan()` po planu preveri/pobere vsak tak token preko `sweepToken()`
-  z istim pred/po preverjanjem na recovery denarnici. Primer, ki je to
-  past prvič razkril (2026-11-02): ForkSploit je potrdil reentrancy v
-  `withdraw()`-stilu klicu z 38% pokritostjo v 300s, a resnična profitabilna pot (v
-  `claim()`, druga funkcija z enako ranljivostjo) je zahtevala ROČNO branje
-  verificirane izvorne kode (Blockscout), ne samo zaupanje avtomatskemu teku.
-- **Verificirana izvorna koda na Blockscout je brezplačna in brez API ključa**:
-  `https://etc.blockscout.com/api/v2/smart-contracts/<naslov>` (ETC) oz. ustrezen
-  `<veriga>.blockscout.com` za druge podprte verige — vrne `is_verified`,
-  `source_code`, `abi`, `constructor_args` v JSON-u, če je pogodba verificirana. Za
-  pravo, že deployano mainnet tarčo je to VEDNO prvi korak pred branjem raw
-  bytecode-a ali zanašanjem izključno na ForkSploitove heuristike — prava izvorna
-  koda razloči resnično ranljivo funkcijo od lažno-pozitivnih najdb v knjižnicah
-  (npr. gas-optimizirane assembly-based matematične knjižnice sprožijo "Integer
-  Overflow (sim-review)" na raw SUB opcode-ih, ki NISO resnični hrošči).
-- **WETH9's `withdraw()` ima trdo-kodiran 2300 gas limit na povratni pošiljki —
-  ujeto šele z živim testom na Anvil forku, ne s statičnim branjem kode**
-  (2026-11-02): ko je `AttackWallet` znotraj `executeOperation()` poklical
-  `WETH.withdraw(amount)` za odvitje izposojenega WETH v raw ETH (flashloan
-  financiranjska pot), je WETH9 interno uporabil `msg.sender.transfer(wad)` —
-  Solidity-jev klasičen vzorec s trdo-kodiranim 2300 gas stipend-om za klic v
-  `receive()`. `AttackWallet.receive()` samo prebere `pendingCallbackTarget`
-  (cold SLOAD, ~2100 gas po EIP-2929) preden se odloči, ali naj kaj naredi —
-  to SAMO po sebi skoraj izčrpa celoten 2300 gas budget, in transakcija je
-  zanesljivo (ne občasno) padla z `OutOfGas` znotraj `receive()`. Preverjeno z
-  `cast run <tx_hash> -vvvv` na pravem Anvil forku ETH mainnet-a — brez tega
-  orodja bi bil root cause skoraj nemogoče najti samo iz "AttackWallet:
-  flashLoanSimple failed" sporočila na vrhu sledi, ki pravi vzrok prekrije.
-  Popravek: `executeOperation()` zdaj na svojem začetku segreje (warm) to
-  shrambeno mesto prek `emit SlotWarmed(pendingCallbackTarget)` (NE bare
-  branje — to bi `--via-ir` optimizator lahko odstranil kot "brez učinka").
-  Živo ponovno preverjeno po popravku: cel cikel (izposoja→odvitje→korak→
-  zavitje→vračilo) je uspel, stanja se ujemajo do zadnjega wei-ja. Lekcija: ta
-  past je NEVIDNA za `cargo build`/`solc` (oba uspeta brez opozorila) in za
-  statični code review — samo dejanska izvedba na forku jo pokaže.
-- **MEV zaščita za flashloan pot + resnična napaka v `sign_step()`, ujeta šele
-  z dejanskim klicem** (2026-11-02): `armFlashloanActions` sama po sebi
-  razkrije CEL seznam korakov (tarčo, calldata, vrednost) kot ločeno, javno
-  vidno transakcijo PRED `startFlashLoan` — brez zaščite bi to dalo
-  mempool-botu dovolj časa, da isti hrošč izkoristi prej (hujše kot pri
-  ostalih plan-vrstah, ker sta arm in start LOČENI transakciji, ne ena). Zdaj
-  obe skupaj, atomsko, prek Flashbots bundle (enaka odločitev `use_bundle` kot
-  za ostale plane). Med prvim dejanskim klicem `sign_step()` za ta dve
-  transakciji se je pokazala NAPAKA, ki je obstajala že prej za VSAK bundle
-  (nihče je očitno še ni dejansko pogonil): `tx = {..., **fee_fields}` pusti
-  `is_legacy` ključ v slovarju, kar `eth_account.sign_transaction` zavrne
-  (`"Transaction had invalid fields: {'is_legacy': False}"`). Popravljeno z
-  istim dispatch-om kot `gas_utils.build_precise_tx` (legacy → `gasPrice`,
-  sicer `maxFeePerGas`/`maxPriorityFeePerGas`/`type=2`, NIKOLI `is_legacy`
-  samega). Po popravku: obe transakciji se pravilno pred-podpišeta.
-- **DRUGA, resnejša napaka, ujeta in POPRAVLJENA istega dne — prejšnja
-  domneva "datacenter-IP blokada" je bila NAPAČNA**: dejanska oddaja na
-  `relay.flashbots.net` je vračala `403` + `{"code":-32025,"message":"invalid
-  flashbots signature"}` — ne network blokada, pravi podpis je bil
-  NEVELJAVEN. `sign_request()` v `flashbots_bundle.py` je manjkal `0x`
-  prefiks na SAMEM PODPISU v `X-Flashbots-Signature` glavi (hash digest je
-  bil pravilen). Uradni Python primer na docs.flashbots.net ima ISTO napako
-  (`signature.hex()` brez `0x`, ker `hexbytes>=2` ne doda prefiksa
-  samodejno) — Go primer v isti dokumentaciji ga vedno doda prek
-  `hexutil.Encode`. Sistematično testirano vseh 4 kombinacij `0x` na
-  (hash, podpis) neposredno proti PRAVEMU produkcijskem relay-ju: samo
-  (hash=0x+hex, podpis=0x+hex) je dalo čist premik iz "invalid flashbots
-  signature" v normalno `{"code":-32003,"message":"insufficient funds..."}`
-  — dokaz, da relay podpis sprejme in dejansko simulira transakcijo.
-  Popravljeno v `sign_request()`. **Lekcija**: ne verjemi uradni dokumentaciji
-  dobesedno v vseh jezikih hkrati — Python in Go primera na isti strani sta
-  si nasprotovala, in samo živi test proti pravemu relay-ju (ne samo "ujema
-  se z referenčno implementacijo") je razkril, kateri je dejansko pravilen.
-- **Spremenjen podpis skupne funkcije pokvaril DRUG, ločen skript — ujeto
-  šele, ko je uporabnik vprašal o `dex_arbitrage_scanner.py`** (2026-11-02):
-  ko je `AttackWallet.sol`'s `armFlashloanActions` dobil tretji parameter
-  (`values`) za flashloan-financiranjsko pot v `auto_pipeline.py`, je
-  `dex_arbitrage_scanner.py` — ki NEODVISNO kliče isto funkcijo za cross-DEX
-  arbitražo, zgrajeno PRED tem popravkom — ostal pri stari 2-argumentni
-  obliki (`selector("armFlashloanActions(address[],bytes[])")`). Ta
-  selector po spremembi pogodbe ne obstaja več, torej bi vsak `--execute`
-  tek zanesljivo padel. **Lekcija**: sprememba podpisa skupne/deljene
-  funkcije (`AttackWallet.sol`, poklicane iz VEČ neodvisnih
-  `onchain_scripts/*.py` datotek) zahteva `grep -rn "<ime_funkcije>"
-  onchain_scripts/` PRED, ne po, spremembi — enostaven `cargo build`/`solc`
-  test ne pokrije Python klicateljev sploh. Ob tej priložnosti je
-  `dex_arbitrage_scanner.py`'s `--execute` pot tudi prvič dobila Flashbots
-  bundle MEV zaščito (prej je pošiljala `armFlashloanActions`/
-  `startFlashLoan` kot dve ločeni javni transakciji — hujše tveganje kot pri
-  exploit-planih, ker gre arbitraža v zanki, VEDNO tekmuje z drugimi boti,
-  ne glede na prag vrednosti). Živo preverjeno: profitabilnostni račun proti
-  pravim Uniswap V2/SushiSwap V2 WETH/USDC pool-om na forku (pravilno
-  poroča "ni profitabilno" — realen trg je učinkovito arbitražiran), in
-  `execute_arbitrage()`'s bundle pot proti PRAVEMU `relay.flashbots.net`
-  (doseže normalno "insufficient funds", ne napako podpisa).
-- **Razmerje med `dex_arbitrage_scanner.py` in Rust TWAP/cenovnimi oraklji
-  (`src/evm/oracles/twap_manipulation.rs`, `v2_pair.rs`) — pomembno, a
-  NAMERNO brez tehnične varovalke** (2026-11-02, na uporabnikovo izrecno
-  zahtevo): ta Python skript NIKOLI ne kliče Rust orakljev — to sta povsem
-  ločena sistema (Rust oraklji tečejo samo znotraj `forksploit evm`
-  fuzzing teka, prek `src/feedback.rs`'s `OracleFeedback`). A FIZIČNI
-  primitiv je IDENTIČEN: `TwapManipulationOracle` zazna premik razmerja
-  rezerv >2x znotraj ENE transakcije; `build_arbitrage_steps()`'s
-  transfer+swap na poimenovan pool, s poljubno izbranim `x`, atomsko ovit
-  v flashloan, je NATANKO ta primitiv. Edina razlika med "legitimno
-  arbitražo" in "napad na oracle" je NAMEN izbire `x` — optimizator ga
-  izbere za zapiranje realne vrzeli (samo-omejujoče, majhen `x` na
-  učinkovitem trgu), napadalec bi ga izbral namerno velikega. `max_x =
-  min(ra_a, ra_b) // 2` je edina velikostna omejitev — NI "ostani pod X%
-  vpliva na ceno" varovalka. **Uporabnik je eksplicitno zahteval, da to
-  ostane izključno na človeški presoji, BREZ avtomatske tehnične blokade**
-  — ne dodajaj je sam v prihodnji seji, razen če uporabnik to izrecno
-  spremeni.
-- **Dopolnjeno isti dan**: "človeška presoja" brez dejanskega prikaza
-  številke ni presoja, samo upanje. Dodano: `price_impact_pct()` (ista
-  metrika kot zgoraj) se zdaj izpiše v dnevniku pri VSAKEM pregledu
-  (tudi samo-opozorilnem) za OBA pool-a, in `--execute` VEDNO ustavi ter
-  vpraša človeka za natančno besedo "DA" (glej `ask_human_confirmation()`
-  v `dex_arbitrage_scanner.py`) preden karkoli pošlje — brez zastavice za
-  izklop. Vsak drug odgovor (napaka, prazen vnos, EOF) je zavrnitev;
-  nikjer ni privzete poti za odobritev. Preverjeno z vsemi 4 primeri
-  (DA/narobe/prazno/EOF) in s formulo na namerno velikem (-75%) in
-  majhnem (-0.02%) primeru, da je metrika dejansko smiselna, ne samo
-  prisotna.
-- **Dve resnični napaki v `onchain_scripts/dashboard_server.py` (novo,
-  lokalni web dashboard), ujeti šele z dejanskim e2e testom** (2026-11-02):
-  (1) Python-ovo `input("poziv")` NIKOLI ne zapiše zaključnega `\n`
-  (čaka na človeka v isti vrstici) — vrstično-bazirano branje subprocess
-  stdout-a (`for line in stdout`) ta poziv nikoli ne vidi kot vrstico,
-  dokler se kasneje ne pojavi nek DRUG `\n`, ki oba spoji — popravljeno s
-  branjem znak-za-znakom in sprostitvijo takoj, ko se znan niz pojavi v
-  medpomnilniku. (2) Ko je subprocess-ov `stdout` cevovod (vedno, ko ga
-  Python zažene kot podproces, nikoli terminal), Python privzeto preklopi
-  `print()`/`tee.log()` na BLOČNO (ne vrstično) shranjevanje izhoda —
-  vrstice tiho obtičijo v notranjem predpomnilniku poljubno dolgo.
-  Popravljeno z `-u` zastavico pri `subprocess.Popen([sys.executable,
-  "-u", ...])`. Obe napaki bi bili NEVIDNI brez dejanskega pogona celotne
-  verige (subprocess → zaznava poziva → zapis v stdin → pravi odgovor) —
-  statično branje kode ali `py_compile` ju ne bi ujel.
+- **ETH and ETC mainnet are one character apart.** `require_mainnet_confirmation` in
+  `onchain_scripts/chains.py` treats both the same (both require `--confirm-mainnet`)
+  — it does NOT distinguish a typo between them. The only protection is PHASE 1
+  (check `eth_chainId` directly, do not trust the name alone).
+- The `--confirm-mainnet` flag is used EVEN on a fork (see the note in PHASE 3) — this
+  is not a bug, it is a consequence of `chains.py` not distinguishing a fork from a
+  real chain by chain-id.
+- If `auto_pipeline.py` reports "Found vulnerabilities" that does NOT automatically
+  mean the money was actually transferred — always verify PHASE 5/8 directly.
+- Review-tier findings (the `(sim-review)` label) have NO generated exploit script by
+  design — this is not a ForkSploit bug, see `src/evm/oracle.rs`'s
+  `classify_confidence` in the repo for the exact reason for each case.
+- `anvil --fork-url` on ETC (or another pre-Cancun chain) WITHOUT `--hardfork
+  shanghai` throws `"Excess blob gas not set."` on EVERY `eth_call` — see PHASE 2.
+- **Fixed 2026-11-02** (a previously valid trap, now closed for ETH): `execute_plan()`
+  in `auto_pipeline.py` used to return `CONFIRMED` if no step reverted, EVEN if
+  `AttackWallet balance after plan: 0 ETH` — i.e. a bug that succeeds without
+  reverting but extracts no money (the fuzzer found only the primitive, not the most
+  profitable variant). Now `execute_plan()` captures the real ETH state of the
+  recovery wallet just before and just after that specific plan, and returns
+  `CONFIRMED` ONLY if the balance actually rose — otherwise the new status
+  `EXECUTED_NO_PROFIT`, which is NEVER reported as a proven attack. This does not
+  replace PHASE 5/8 (those two still verify the WHOLE run on the real node, not just
+  one plan, and are the only independent, human-performed checks), but it now means
+  that the string `CONFIRMED` in the pipeline's own output actually means "money
+  landed in the recovery wallet for THIS plan", not just "the steps did not revert".
+  **Updated 2026-11-02 (same day, second step): it now covers ERC20 as well** —
+  `plan.json` carries `stolen_asset` for raw ERC20 steps (see `erc20_token_touched` in
+  `src/evm/solution/mod.rs`), and `execute_plan()` checks/sweeps each such token via
+  `sweepToken()` after the plan, with the same before/after check on the recovery
+  wallet. The example that first exposed this trap (2026-11-02): ForkSploit confirmed
+  reentrancy in a `withdraw()`-style call at 38% coverage in 300s, but the real
+  profitable path (in `claim()`, another function with the same vulnerability)
+  required MANUAL reading of the verified source (Blockscout), not just trusting the
+  automated run.
+- **Verified source code on Blockscout is free and without an API key**:
+  `https://etc.blockscout.com/api/v2/smart-contracts/<address>` (ETC) or the
+  appropriate `<chain>.blockscout.com` for other supported chains — it returns
+  `is_verified`, `source_code`, `abi`, `constructor_args` in JSON, if the contract is
+  verified. For a real, already-deployed mainnet target this is ALWAYS the first step
+  before reading raw bytecode or relying exclusively on ForkSploit's heuristics — the
+  real source distinguishes the actually vulnerable function from false-positive
+  findings in libraries (e.g. gas-optimized assembly-based math libraries trigger
+  "Integer Overflow (sim-review)" on raw SUB opcodes that are NOT real bugs).
+- **WETH9's `withdraw()` has a hard-coded 2300 gas limit on the return send — caught
+  only by a live test on an Anvil fork, not by static code reading** (2026-11-02):
+  when `AttackWallet` inside `executeOperation()` called `WETH.withdraw(amount)` to
+  unwrap borrowed WETH into raw ETH (the flashloan funding path), WETH9 internally
+  used `msg.sender.transfer(wad)` — Solidity's classic pattern with a hard-coded 2300
+  gas stipend for the call into `receive()`. `AttackWallet.receive()` reads
+  `pendingCallbackTarget` (a cold SLOAD, ~2100 gas under EIP-2929) before deciding
+  whether to do anything — that ALONE almost exhausts the entire 2300 gas budget, and
+  the transaction reliably (not occasionally) failed with `OutOfGas` inside
+  `receive()`. Verified with `cast run <tx_hash> -vvvv` on a real Anvil fork of ETH
+  mainnet — without that tool the root cause would be almost impossible to find from
+  the "AttackWallet: flashLoanSimple failed" message at the top of the trace, which
+  masks the true cause. Fix: `executeOperation()` now warms that storage slot at its
+  start via `emit SlotWarmed(pendingCallbackTarget)` (NOT a bare read — the `--via-ir`
+  optimizer could remove that as "without effect"). Live re-verified after the fix:
+  the whole cycle (borrow→unwrap→step→wrap→repay) succeeded, the states match to the
+  last wei. Lesson: this trap is INVISIBLE to `cargo build`/`solc` (both succeed
+  without a warning) and to static code review — only actual execution on a fork
+  reveals it.
+- **MEV protection for the flashloan path + a real bug in `sign_step()`, caught only
+  by an actual call** (2026-11-02): `armFlashloanActions` by itself reveals the WHOLE
+  list of steps (target, calldata, value) as a separate, publicly visible transaction
+  BEFORE `startFlashLoan` — without protection that would give a mempool bot enough
+  time to exploit the same bug first (worse than for other plan types, because arm and
+  start are SEPARATE transactions, not one). Now both together, atomically, via a
+  Flashbots bundle (the same `use_bundle` decision as for other plans). During the
+  first actual `sign_step()` call for these two transactions, a bug appeared that had
+  already existed for EVERY bundle (apparently no one had actually driven it yet):
+  `tx = {..., **fee_fields}` leaves an `is_legacy` key in the dictionary, which
+  `eth_account.sign_transaction` rejects (`"Transaction had invalid fields:
+  {'is_legacy': False}"`). Fixed with the same dispatch as
+  `gas_utils.build_precise_tx` (legacy → `gasPrice`, otherwise
+  `maxFeePerGas`/`maxPriorityFeePerGas`/`type=2`, NEVER `is_legacy` itself). After the
+  fix: both transactions are correctly pre-signed.
+- **A SECOND, more serious bug, caught and FIXED the same day — the earlier assumption
+  "datacenter-IP block" was WRONG**: the actual submission to `relay.flashbots.net`
+  returned `403` + `{"code":-32025,"message":"invalid flashbots signature"}` — not a
+  network block, the actual signature was INVALID. `sign_request()` in
+  `flashbots_bundle.py` was missing the `0x` prefix on the SIGNATURE itself in the
+  `X-Flashbots-Signature` header (the hash digest was correct). The official Python
+  example on docs.flashbots.net has the SAME bug (`signature.hex()` without `0x`,
+  because `hexbytes>=2` does not add the prefix automatically) — the Go example in the
+  same documentation always adds it via `hexutil.Encode`. Systematically tested all 4
+  `0x` combinations on (hash, signature) directly against the REAL production relay:
+  only (hash=0x+hex, signature=0x+hex) produced a clean shift from "invalid flashbots
+  signature" to the normal `{"code":-32003,"message":"insufficient funds..."}` — proof
+  that the relay accepts the signature and actually simulates the transaction. Fixed in
+  `sign_request()`. **Lesson**: do not trust official documentation literally in all
+  languages at once — the Python and Go examples on the same page contradicted each
+  other, and only a live test against the real relay (not just "matches the reference
+  implementation") revealed which is actually correct.
+- **Changing a shared function's signature broke ANOTHER, separate script — caught
+  only when the user asked about `dex_arbitrage_scanner.py`** (2026-11-02): when
+  `AttackWallet.sol`'s `armFlashloanActions` gained a third parameter (`values`) for
+  the flashloan funding path in `auto_pipeline.py`, `dex_arbitrage_scanner.py` — which
+  INDEPENDENTLY calls the same function for cross-DEX arbitrage, built BEFORE this
+  fix — was left at the old 2-argument form
+  (`selector("armFlashloanActions(address[],bytes[])")`). That selector no longer
+  exists after the contract change, so every `--execute` run would reliably fail.
+  **Lesson**: changing the signature of a shared/common function (`AttackWallet.sol`,
+  called from SEVERAL independent `onchain_scripts/*.py` files) requires `grep -rn
+  "<function_name>" onchain_scripts/` BEFORE, not after, the change — a simple
+  `cargo build`/`solc` test does not cover Python callers at all. On this occasion
+  `dex_arbitrage_scanner.py`'s `--execute` path also got Flashbots bundle MEV
+  protection for the first time (previously it sent `armFlashloanActions`/
+  `startFlashLoan` as two separate public transactions — a worse risk than for exploit
+  plans, because arbitrage runs in a loop, ALWAYS competing with other bots, regardless
+  of the value threshold). Live-verified: the profitability calculation against the
+  real Uniswap V2/SushiSwap V2 WETH/USDC pools on a fork (it correctly reports "not
+  profitable" — the real market is efficiently arbitraged), and
+  `execute_arbitrage()`'s bundle path against the REAL `relay.flashbots.net` (it
+  reaches the normal "insufficient funds", not a signature error).
+- **The relationship between `dex_arbitrage_scanner.py` and the Rust TWAP/price
+  oracles (`src/evm/oracles/twap_manipulation.rs`, `v2_pair.rs`) — important, but
+  DELIBERATELY without a technical safeguard** (2026-11-02, at the user's explicit
+  request): this Python script NEVER calls the Rust oracles — they are two entirely
+  separate systems (the Rust oracles run only inside a `forksploit evm` fuzzing run,
+  through `src/feedback.rs`'s `OracleFeedback`). But the PHYSICAL primitive is
+  IDENTICAL: `TwapManipulationOracle` detects a reserve-ratio shift >2x within ONE
+  transaction; `build_arbitrage_steps()`'s transfer+swap on the named pool, with an
+  arbitrarily chosen `x`, atomically wrapped in a flashloan, is EXACTLY that
+  primitive. The only difference between "legitimate arbitrage" and "an oracle attack"
+  is the INTENT of choosing `x` — the optimizer chooses it to close a real gap
+  (self-limiting, a small `x` on an efficient market), an attacker would choose it
+  deliberately large. `max_x = min(ra_a, ra_b) // 2` is the only size constraint — it
+  is NOT a "stay below X% price impact" safeguard. **The user explicitly requested that
 
-## Preverbeni seznam (Verification)
+  this remain purely a human judgement, WITHOUT an automatic technical block** — do
+  not add one yourself in a future session, unless the user explicitly changes this.
+- **Added the same day**: "human judgement" without actually showing the number is not
+  judgement, only hope. Added: `price_impact_pct()` (the same metric as above) is now
+  printed in the log on EVERY review (even a self-warning one) for BOTH pools, and
+  `--execute` ALWAYS stops and asks the human for the exact word "YES" (see
+  `ask_human_confirmation()` in `dex_arbitrage_scanner.py`) before sending anything —
+  with no flag to disable it. Any other answer (an error, an empty input, EOF) is a
+  refusal; there is no default-approve path anywhere. Verified with all 4 cases
+  (YES/wrong/empty/EOF) and with the formula on a deliberately large (-75%) and small
+  (-0.02%) case, so that the metric is actually meaningful, not just present.
+- **Two real bugs in `onchain_scripts/dashboard_server.py` (new, local web
+  dashboard), caught only by an actual e2e test** (2026-11-02): (1) Python's
+  `input("prompt")` NEVER writes a trailing `\n` (it waits for a human on the same
+  line) — a line-based read of subprocess stdout (`for line in stdout`) never sees
+  that prompt as a line, until some OTHER `\n` appears later that joins both — fixed
+  by reading character by character and releasing as soon as a known string appears in
+  the buffer. (2) When the subprocess's `stdout` is a pipe (always, when Python runs it
+  as a subprocess, never a terminal), Python by default switches `print()`/`tee.log()`
+  to BLOCK (not line) buffering of the output — lines silently sit in an internal
+  buffer for an arbitrary time. Fixed with the `-u` flag on `subprocess.Popen([sys.executable,
+  "-u", ...])`. Both bugs would be INVISIBLE without actually driving the whole chain
+  (subprocess → prompt detection → write to stdin → real answer) — static code reading
+  or `py_compile` would not catch them.
 
-- [ ] FAZA 0: naslov, avtorizacija, recovery wallet vsi eksplicitno potrjeni
-- [ ] FAZA 1: `eth_chainId` ujema s pričakovano verigo, blok napreduje
-- [ ] FAZA 2: fork vrača pravo kodo tarče
-- [ ] FAZA 3-5: najdba + saldo na forku DEJANSKO preverjen, ne samo predpostavljen
-- [ ] FAZA 4a: za "pooled"/staking pogodbe, lastništvo sredstev DEJANSKO preverjeno
-      na verigi (ne predpostavljeno iz uporabnikove izjave)
-- [ ] FAZA 6: eksplicitna, nedvoumna potrditev uporabnika za PRAVO izvedbo obstaja
-- [ ] FAZA 7-8: saldo recovery wallet-a na PRAVEM vozlišču primerjan pred/po
-- [ ] FAZA 9: RPC override počiščen, anvil ustavljen, (če uspeh) vnos zapisan
+## Verification checklist
 
-## Referenčne datoteke v tem skillu
+- [ ] PHASE 0: address, authorization, recovery wallet all explicitly confirmed
+- [ ] PHASE 1: `eth_chainId` matches the expected chain, the block is progressing
+- [ ] PHASE 2: the fork returns the target's real code
+- [ ] PHASE 3-5: finding + balance on the fork ACTUALLY verified, not just assumed
+- [ ] PHASE 4a: for "pooled"/staking contracts, ownership of funds ACTUALLY verified
+      on-chain (not assumed from the user's statement)
+- [ ] PHASE 6: an explicit, unambiguous user confirmation for REAL execution exists
+- [ ] PHASE 7-8: the recovery wallet balance on the REAL node compared before/after
+- [ ] PHASE 9: RPC override cleared, anvil stopped, (if success) an entry written
 
-- `references/zmogljivosti.md` — **POPOLN leksikon** vseh CLI flagov, vseh ~37
-  orakljev (s confidence tier), vseh `onchain_scripts/` orodij, varnostnih
-  mehanizmov in znanih omejitev. Preveri TUKAJ najprej za katerokoli faktično
-  vprašanje o sistemu.
-- `references/ukazi.md` — zbirka natančnih ukazov za hitro iskanje med delom.
-- `references/potrjene_tehnike.md` — rastoč dnevnik dejansko potrjenih uspehov
-  (glej FAZO 9).
-- `references/nove-oracle-roadmap.md` — **ODPRT NAČRT (2026-11-02), nadaljevanje
-  naslednjo sejo**: ~15 konkretnih, dobro utemeljenih kandidatov za nove oracle
-  vrste (read-only reentrancy, ERC721/1155 hook reentrancy, šibka naključnost,
-  DoS prek revert-a v zanki, arbitrary storage write, hardcoded gas stipend, in
-  več), prioritizirano. Uporabnik je rekel, da bo sam dodatno raziskal kandidate
-  — uskladi PRED kodiranjem, ne predvidevaj da je ta seznam dokončen.
+## Reference files in this skill
 
-## Dashboard: živo preverjena omrežna identiteta (2026-11-02)
+- `references/capabilities.md` — a **COMPLETE lexicon** of all CLI flags, all ~37
+  oracles (with confidence tier), all `onchain_scripts/` tools, security mechanisms
+  and known limitations. Check HERE first for any factual question about the system.
+- `references/commands.md` — a collection of exact commands for quick lookup during
+  work.
+- `references/confirmed-techniques.md` — a growing log of actually confirmed successes
+  (see PHASE 9).
+- `references/new-oracle-roadmap.md` — an **OPEN PLAN (2026-11-02), to continue next
+  session**: ~15 concrete, well-founded candidates for new oracle types (read-only
+  reentrancy, ERC721/1155 hook reentrancy, weak randomness, DoS via revert in a loop,
+  arbitrary storage write, hardcoded gas stipend, and more), prioritised. The user
+  said they would research the candidates further themselves — coordinate BEFORE
+  coding, do not assume this list is final.
 
-`dashboard_server.py`'s `GET /api/verify-chain` NIKOLI ne zaupa imenu iz
-`--chain` spustnega seznama — pokliče pravi, trenutno konfigurirani RPC
-(`chains.make_w3`, upošteva aktiven `rpc_overrides.json`) in primerja
-dejanski `eth_chainId` proti `chains.CHAIN_IDS` (preneseno iz
-`src/evm/onchain/endpoints.rs`'s avtoritativne tabele, ne uganjeno).
-Watermark (vijoličen ETH diamant / zelen ETC diamant) in barvna oznaka v
-GUI-ju se preklopita izključno na podlagi TEGA živega rezultata, nikoli na
-podlagi besedila v spustnem seznamu. Živo preverjeno med gradnjo proti
-uporabnikovim resničnim lokalnim vozliščem: `rpc_overrides.json`'s `eth`
-je kazal na mrtev RPC (port 8545, povezava zavrnjena) — dashboard je to
-pravilno pokazal kot rdeče opozorilo "RPC nedosegljiv", NE kot tiho
-napačno ETH oznako. `etc` override (port 8555, Anvil fork od uporabnikovega
-pravega lokalnega ETC mainnet vozlišča na portu 8546 — potrjeno s strani
-uporabnika) je pravilno vrnil chain ID 61 in zeleno ETC oznako. To je
-dejanski dokaz koncepta "eth in etc sta eno črko narazen, nikoli ne
-zaupaj imenu" — isto vodilo kot `chain_banner()`/FAZA 1 zgoraj, zdaj tudi
-v GUI-ju, ne samo v CLI-ju.
+## Dashboard: live-verified network identity (2026-11-02)
 
-## Dashboard Faza 2 dokončana (2026-11-02)
+`dashboard_server.py`'s `GET /api/verify-chain` NEVER trusts the name from the
+`--chain` dropdown — it calls the real, currently configured RPC (`chains.make_w3`,
+honouring an active `rpc_overrides.json`) and compares the actual `eth_chainId`
+against `chains.CHAIN_IDS` (carried over from `src/evm/onchain/endpoints.rs`'s
+authoritative table, not guessed). The watermark (a purple ETH diamond / green ETC
+diamond) and the colour badge in the GUI switch exclusively based on THAT live result,
+never on the text in the dropdown. Live-verified during the build against the user's
+real local nodes: `rpc_overrides.json`'s `eth` pointed at a dead RPC (port 8545,
+connection refused) — the dashboard correctly showed this as a red "RPC unreachable"
+warning, NOT as a silent wrong ETH label. The `etc` override (port 8555, an Anvil fork
+of the user's real local ETC mainnet node on port 8546 — confirmed by the user)
+correctly returned chain ID 61 and a green ETC label. This is actual proof of the
+concept "eth and etc are one character apart, never trust the name" — the same guiding
+principle as `chain_banner()`/PHASE 1 above, now also in the GUI, not just the CLI.
 
-Vseh 5 Python `onchain_scripts/*.py` skript z `build_parser()` (dodano
-tudi `monitor.py`, `batch_pipeline.py`, `aave_flashloan_runner.py`, enak
-vzorec kot `auto_pipeline.py`/`dex_arbitrage_scanner.py` prej), PLUS
-direkten Rust fuzzer zagon (`RUST_FUZZER_FIELDS` — ROČNO vzdrževana shema,
-ker Rust clap parser ni introspektibilen iz Pythona tako kot `argparse`;
-to je EDINO mesto v dashboard-u, kjer obrazec ni samodejno sinhroniziran s
-pravim CLI-jem — če se Rust `evm` zastavice spremenijo, je treba to
-ročno posodobiti), PLUS `POST /api/rpc-override`/`DELETE
-/api/rpc-override/{chain}` (tanek ovitek okoli `chains.set_rpc_override`/
-`clear_rpc_override`) in `POST /api/wallet-policy` (tanek ovitek okoli
-`wallet_policy.register_policy`, ista anti-tipkarska `--confirm-chain`
-dvojna potrditev — preverjeno, da napačna potrditev NIČESAR ne zapiše).
-Pomembno za naslednjo sejo: **spremembe na `dashboard_server.py` (Python)
-zahtevajo ponoven zagon procesa**, ne samo osvežitev brskalnika — za
-razliko od `dashboard_static/*` (CSS/JS/HTML), ki se berejo sveže iz
-diska ob vsaki zahtevi.
+## Dashboard Phase 2 done (2026-11-02)
 
-## Poslovni model: recovery_wallet = lastnik testirane pogodbe (2026-11-02)
+All 5 Python `onchain_scripts/*.py` scripts with `build_parser()` (also added
+`monitor.py`, `batch_pipeline.py`, `aave_flashloan_runner.py`, the same pattern as
+`auto_pipeline.py`/`dex_arbitrage_scanner.py` earlier), PLUS a direct Rust fuzzer
+launch (`RUST_FUZZER_FIELDS` — a MANUALLY maintained schema, because the Rust clap
+parser is not introspectable from Python like `argparse`; this is the ONLY place in
+the dashboard where the form is not automatically synchronized with the real CLI — if
+the Rust `evm` flags change, this must be updated by hand), PLUS
+`POST /api/rpc-override`/`DELETE /api/rpc-override/{chain}` (a thin wrapper around
+`chains.set_rpc_override`/`clear_rpc_override`) and `POST /api/wallet-policy` (a thin
+wrapper around `wallet_policy.register_policy`, the same anti-typo `--confirm-chain`
+double confirmation — verified that a wrong confirmation writes NOTHING). Important
+for the next session: **changes to `dashboard_server.py` (Python) require a process
+restart**, not just a browser refresh — unlike `dashboard_static/*` (CSS/JS/HTML),
+which are read fresh from disk on every request.
 
-Pomembna razjasnitev uporabnika: `recovery_wallet` NI fiksna
-ForkSploit-ova denarnica — je **vedno denarnica lastnika/stranke, čigavo
-pogodbo ravno testiraš**. Uspešno izkoriščena ranljivost izčrpa sredstva
-NEPOSREDNO na naslov stranke — to JE determinističen dokaz ranljivosti
-(glej zgodnejši del te seje o "edina zanesljiva pot"). Ker se recovery
-denarnica spreminja PO STRANKI/ANGAŽMAJU, `wallet_policy.register_policy()`
-zdaj sprejme opcijski `client_note` (CLI: `--client-note`, dashboard: polje
-"Stranka / opomba" v wallet-policy panelu) — čisto informativno, NIKOLI
-brano s strani `enforce_wallet_policy()` ali katere koli poti podpisovanja,
-samo da je na prvi pogled jasno, ZA KOGA je trenutna recovery denarnica na
-posamezni verigi zaklenjena, ne samo gol hex naslov. Obstoječi vnosi (npr.
-`etc` v `wallets.json`) nimajo še nazaj-vpisane opombe — to prepusti
-uporabniku, ki pozna pravi kontekst, ne ugibaj je sam.
+## Business model: recovery_wallet = the owner of the tested contract (2026-11-02)
 
-**Ločeno, pomembno odkritje isti dan**: AttackWallet naslov, zapisan za
-`etc` v `attack_wallets.json` (`0x5FbDB2315678afecb367f032d93F642f64180aa3`)
-je **dobro znan Anvil/Hardhat privzeti naslov** ("prva pogodba, deployana
-iz privzetega dev računa na nonce 0") — kar pomeni, da gre za ostanek
-LOKALNEGA fork-testiranja, NE prave pogodbe na resničnem ETC mainnet-u.
-Zato kaže saldo 0 in zato je poizvedba prej vrgla "missing trie node".
-Lekcija za naslednjo sejo: `attack_wallets.json` vnosi niso avtomatsko
-"pravi" samo zato, ker obstajajo — preveri naslovni vzorec/izvor, preden
-mu zaupaš, enaka disciplina kot za vse drugo v tem projektu.
+An important clarification from the user: `recovery_wallet` is NOT a fixed ForkSploit
+wallet — it is **always the wallet of the owner/client whose contract you are
+currently testing**. A successfully exploited vulnerability drains funds DIRECTLY to
+the client's address — that IS a deterministic proof of vulnerability (see the earlier
+part of this session on "the only reliable path"). Because the recovery wallet changes
+PER CLIENT/ENGAGEMENT, `wallet_policy.register_policy()` now accepts an optional
+`client_note` (CLI: `--client-note`, dashboard: a "Client / note" field in the
+wallet-policy panel) — purely informational, NEVER read by `enforce_wallet_policy()`
+or any signing path, just so it is clear at a glance FOR WHOM the current recovery
+wallet on a given chain is locked, not just a bare hex address. Existing entries
+(e.g. `etc` in `wallets.json`) do not yet have a back-filled note — leave that to the
+user, who knows the real context; do not guess it yourself.
 
-## Splošna najdba: control-leak lahko izloči VSE najdbe v transakciji, ne glede kje se zgodijo (2026-11-03)
+**Separately, an important discovery the same day**: the AttackWallet address recorded
+for `etc` in `attack_wallets.json` (`0x5FbDB2315678afecb367f032d93F642f64180aa3`) is a
+**well-known Anvil/Hardhat default address** ("the first contract deployed from the
+default dev account at nonce 0") — which means it is a leftover from LOCAL fork
+testing, NOT a real contract on the real ETC mainnet. That is why it shows a balance of
+0 and why the query earlier threw "missing trie node". Lesson for the next session:
+`attack_wallets.json` entries are not automatically "real" just because they exist —
+check the address pattern/origin before trusting it, the same discipline as for
+everything else in this project.
 
-Pri testiranju `forced_eth_accounting.rs` se najdba NI nikoli poročala,
-čeprav je detekcijska logika v `host.rs` nedvoumno pravilno delovala
-(preverjeno s začasnim debug izpisom: tisoče pravilnih zadetkov). Vzrok
-ni bil v oraklju — je v `feedback.rs`'s `is_interesting()`:
+
+
+## General finding: the control leak can exclude ALL findings in a transaction, wherever they occur (2026-11-03)
+
+While testing `forced_eth_accounting.rs`, the finding was NEVER reported, even though
+the detection logic in `host.rs` unambiguously worked correctly (verified with a
+temporary debug print: thousands of correct hits). The cause was not in the oracle —
+it is in `feedback.rs`'s `is_interesting()`:
 
 ```rust
 if metadata.known_bugs.contains(&bug_idx) || has_post_exec {
@@ -640,713 +631,667 @@ if metadata.known_bugs.contains(&bug_idx) || has_post_exec {
 }
 ```
 
-`has_post_exec` pove, ali je ta CELOTNA transakcija (kot celota, ne samo
-del, kjer je hrošč zaznan) končala z NEREŠENO "control leak" kontinuacijo
-(glej `host.rs`'s `call_allow_control_leak`/`CALL_UNTIL`). Če DA, se
-VSI bug_idx-i iz te transakcije izločijo iz poročanja — tudi če je bil
-hrošč zaznan PREJ, popolnoma neodvisno od klica, ki je povzročil leak.
+`has_post_exec` says whether this WHOLE transaction (as a whole, not just the part
+where the bug was detected) ended with an UNRESOLVED "control leak" continuation (see
+`host.rs`'s `call_allow_control_leak`/`CALL_UNTIL`). If yes, ALL bug_idxs from that
+transaction are excluded from reporting — even if the bug was detected EARLIER,
+completely independently of the call that caused the leak.
 
-Testni fixture je imel `require(EQ preverjanje); ... payable(x).transfer(
-amount);` — EQ (hrošč) se zgodi PRVI, `.transfer()` (ki povzroči leak)
-PRIDE ŠELE KASNEJE, a je VSEENO izločil poročilo za EQ. **Vsak izhodni
-klic, ki prenaša vrednost, je natanko tista oblika, ki jo fuzzer-jev
-lastni raziskovalni mehanizem najbolj agresivno poskuša prestreči** (za
-raziskovanje reentrancy scenarijev) — zato lahko POLJUBEN oracle, čigar
-zaznava se zgodi v FUNKCIJI, ki tudi pošlje ETH/vrednost KASNEJE v isti
-transakciji, redko ali nikoli poroča, ČEPRAV je detekcija sama pravilna.
+The test fixture had `require(EQ check); ... payable(x).transfer(amount);` — the EQ
+(the bug) happens FIRST, the `.transfer()` (which causes the leak) comes LATER, but it
+STILL excluded the report for the EQ. **Every outgoing value-transferring call is
+exactly the shape that the fuzzer's own exploration mechanism tries most aggressively
+to intercept** (to explore reentrancy scenarios) — so ANY oracle whose detection
+happens in a FUNCTION that also sends ETH/value LATER in the same transaction rarely
+or never reports, EVEN THOUGH the detection itself is correct.
 
-**To ni hrošč v posameznem oraklju — je arhitekturna lastnost, vredna
-zavedanja pri VSAKEM novem oraklju in pri interpretaciji "0 najdb" na
-pravih pogodbah, ki imajo funkcije z izhodnimi ETH prenosi.** Testni
-fixture-ji za take vzorce morajo biti brez izhodnega klica, ki prenaša
-vrednost (glej `forced_eth_accounting.rs`'s test opombo), da dokažejo
-vzorec brez tega nepovezanega šuma.
+**This is not a bug in an individual oracle — it is an architectural property worth
+being aware of for EVERY new oracle and when interpreting "0 findings" on real
+contracts that have functions with outgoing ETH transfers.** Test fixtures for such
+patterns must be without an outgoing value-transferring call (see the test note in
+`forced_eth_accounting.rs`) to prove the pattern without that unrelated noise.
 
-## Resen Rust-side bug: 5 oraklejev je napačno pripisovalo hrošče nepovezanim klicom (2026-11-02)
+## A serious Rust-side bug: 5 oracles misattributed bugs to unrelated calls (2026-11-02)
 
-Na pravi ETC mainnet pogodbi (`0x9f5304DA62A5408416Ea58A17a92611019bD5ce3`, plan
-`C9f53_5`) je bila `[Unchecked ecrecover(0)] (sim-confirmed)` najdba pripisana
-klicu `0x64dab283()` — a neodvisno preverjeno z `cast disassemble` IN z
-`debug_traceCall` na lokalnem anvil forku: ta klic je navaden `address`
-getter (0 CALL-tipa opcode-ov, pc doseže največ 1314), ki NIKOLI ne pokliče
-`ecrecover`. Opisani `pc=1927` je bil v CELO DRUGI funkciji (`0xe3ce9714`,
-pravi "claim s podpisom" klic s 5 argumenti) — preverjeno z istim
-`debug_traceCall`: ta DEJANSKO pokliče `ecrecover` precompile (`CALL` na
-`0x1`) natanko na pc=1927.
+On a real ETC mainnet contract (`0x9f5304DA62A5408416Ea58A17a92611019bD5ce3`, plan
+`C9f53_5`) an `[Unchecked ecrecover(0)] (sim-confirmed)` finding was attributed to the
+call `0x64dab283()` — but independently verified with `cast disassemble` AND with
+`debug_traceCall` on a local anvil fork: that call is a plain `address` getter (0
+CALL-type opcodes, pc reaches at most 1314), which NEVER calls `ecrecover`. The
+described `pc=1927` was in a WHOLE OTHER function (`0xe3ce9714`, the real
+"claim with signature" call with 5 arguments) — verified with the same
+`debug_traceCall`: that one DOES call the `ecrecover` precompile (a `CALL` to `0x1`)
+at exactly pc=1927.
 
-**Korenski vzrok** (preverjen v Rust kodi, `src/evm/vm.rs`): detektorji kot
-`ecrecover_zero`, `integer_overflow`, `delegatecall_injections`,
-`storage_collisions`, `arbitrary_calls` se UNIJAJO (`old.chain(current)`)
-naprej skozi CELOTNO genealogijo corpus-a, NIKOLI se ne počistijo. Oracle
-(`ctx.post_state.X.iter()`) je iteriral ta CELOTEN akumuliran set, ne samo
-NOVE vnose iz TE transakcije — zato je enkrat najden hrošč na enem naslovu/pc
-"ostal priklopljen" na VSAKO poznejšo, nepovezano transakcijo, zgrajeno na
-istem corpus veji, tudi če ta transakcija sploh ni dosegla te kode. Minimizer
-(`src/evm/minimizer.rs`) je zato lahko "minimiziral" sled na eno samo,
-popolnoma nepovezano transakcijo, in `objective.reproduces()` je še vedno
-vrnil `true`, ker je začetno stanje minimizacije že podedovalo stari zastavek.
+**Root cause** (verified in the Rust code, `src/evm/vm.rs`): detectors like
+`ecrecover_zero`, `integer_overflow`, `delegatecall_injections`, `storage_collisions`,
+`arbitrary_calls` are UNIONED (`old.chain(current)`) forward through the WHOLE corpus
+genealogy, NEVER cleared. The oracle (`ctx.post_state.X.iter()`) iterated that WHOLE
+accumulated set, not only the NEW entries from THAT transaction — so a bug once found
+on one address/pc "stayed attached" to EVERY later, unrelated transaction built on the
+same corpus branch, even if that transaction never reached that code. The minimizer
+(`src/evm/minimizer.rs`) could therefore "minimize" the trace to a single, completely
+unrelated transaction, and `objective.reproduces()` still returned `true`, because the
+minimization's initial state already inherited the old flag.
 
-**Prizadeti oraklji** (vsi imajo IDENTIČEN vzorec, preverjeno z grep čez
-celoten `src/evm/oracles/`): `ecrecover.rs`, `overflow.rs`,
-`delegatecall.rs`, `storage_collision.rs`, `arb_call.rs` — od tega SO
-Confirmed-tier (torej avtomatsko generirajo `*Exploit.s.sol`): Unchecked
-ecrecover(0), Delegatecall Injection, Storage Collision, Arbitrary Call.
+**Affected oracles** (all have an IDENTICAL pattern, verified with a grep over the
+whole `src/evm/oracles/`): `ecrecover.rs`, `overflow.rs`, `delegatecall.rs`,
+`storage_collision.rs`, `arb_call.rs` — of these the Confirmed-tier ones (which
+therefore automatically generate `*Exploit.s.sol`) are: Unchecked ecrecover(0),
+Delegatecall Injection, Storage Collision, Arbitrary Call.
 
-**Popravek**: vsak od teh petih `oracle()` zdaj filtrira na
-`ctx.post_state.X.difference(ctx.pre_state.X)` — `OracleCtx` že ima ločen
-`pre_state`/`post_state` (dokumentirano v `src/oracle.rs` kot "state
-pred/po IZVEDBI TE transakcije"), zato je to natančno pravo mesto za
-popravek, brez vpliva na pravo multi-tx logiko (korak, ki DEJANSKO prvič
-sproži hrošč, se še vedno pravilno ujame na SVOJEM lastnem `oracle()`
-klicu, ker je takrat `pre_state` še brez njega).
+**Fix**: each of these five `oracle()`s now filters on
+`ctx.post_state.X.difference(ctx.pre_state.X)` — `OracleCtx` already has a separate
+`pre_state`/`post_state` (documented in `src/oracle.rs` as "state before/after the
+execution of THIS transaction"), so this is exactly the right place for the fix,
+without affecting real multi-tx logic (the step that ACTUALLY first triggers the bug is
+still correctly caught at ITS OWN `oracle()` call, because then `pre_state` does not
+yet contain it).
 
-**Živo preverjeno** (lokalen anvil fork, brez tveganja, 2x `debug_traceCall`
-kot neodvisen dokaz pred in po popravku): pred popravkom je bil hrošč
-napačno pripisan `0x64dab283()`; po popravku (rebuild + ponovni fuzz tek na
-istem cilju) je bil pravilno pripisan `0xe3ce9714(...)`, kar je neodvisno
-potrjeno z `debug_traceCall` (CALL na `0x1` precompile na natanko tistem pc).
+**Live-verified** (a local anvil fork, no risk, 2x `debug_traceCall` as independent
+proof before and after the fix): before the fix the bug was misattributed to
+`0x64dab283()`; after the fix (rebuild + a re-run on the same target) it was correctly
+attributed to `0xe3ce9714(...)`, independently confirmed with `debug_traceCall` (a CALL
+to the `0x1` precompile at exactly that pc).
 
-**Zakaj je to pomembno za poslovni model**: to ni "najden primitiv, ni
-profita" (kot pri `C9f53_5` prej mislili) — to je bil primer, kjer je
-ForkSploit TRDIL, da se določen klic obnaša na določen način, kar
-NI BILO RESNICA niti v simulaciji. Brez tega popravka bi `auto_pipeline.py`
-lahko generiral in (če bi gas/profit pogoji ustrezali) celo PODPISAL
-transakcijo za exploit, ki sploh ne obstaja na opisanem naslovu/pc.
+**Why this matters for the business model**: this is not "found a primitive, no
+profit" (as was thought for `C9f53_5` earlier) — this was a case where ForkSploit
+CLAIMED that a certain call behaves in a certain way, which was NOT TRUE even in the
+simulation. Without this fix, `auto_pipeline.py` could generate and (if gas/profit
+conditions matched) even SIGN a transaction for an exploit that does not exist at the
+described address/pc.
 
-## Dve nadaljnji plasti istega problema, najdeni isti dan (2026-11-02)
+## Two further layers of the same problem, found the same day (2026-11-02)
 
-Po zgornjem popravku se je na PRAVEM mainnet teku (isti cilj, 7 planov,
-vseh 7 dejansko podpisanih in poslanih) pokazalo, da zgornji popravek
-NI zadosten -- `Unchecked ecrecover(0)` je bil še naprej pripisan
-nepovezanim selektorjem (`02ef6c86`, `f3fef3a3`), neodvisno zavrnjeno z
-`debug_traceCall` (max doseženi pc 2050, trdjen pc 2214 nikoli dosežen).
-Dve ločeni, globlji plasti:
+After the fix above, a REAL mainnet run (same target, 7 plans, all 7 actually signed
+and sent) showed that the fix above was NOT sufficient — `Unchecked ecrecover(0)` was
+still attributed to unrelated selectors (`02ef6c86`, `f3fef3a3`), independently
+refuted with `debug_traceCall` (max reached pc 2050, the claimed pc 2214 never
+reached). Two separate, deeper layers:
 
-**Plast 2 -- `host.current_*` se nikoli ni resetiral med transakcijami**
-(`src/evm/vm.rs`): `current_arbitrary_calls` se je pravilno resetiral na
-treh mestih pred vsako transakcijo, `current_ecrecover_zero`/
-`current_integer_overflow`/`current_delegatecall_injections`/
-`current_storage_collisions` pa NIKOLI -- rastli so čez CELOTNO življenjsko
-dobo fuzz procesa (ne samo znotraj ene transakcije). Zato je plast-1
-popravek (primerjava `pre_state`/`post_state` v oraklju) pomagal le delno:
-`current_X` je bil že od prej "umazan" iz NEPOVEZANE veje raziskovanja, še
-preden je `pre_state` za NOVO vejo sploh bil zgrajen. Popravljeno: dodano
-resetiranje vseh štirih manjkajočih `current_*` HashSet-ov na vseh treh
-mestih (`init_host!` makro + 2 ročna bloka), kjer se `current_arbitrary_calls`
-že resetira.
+**Layer 2 — `host.current_*` was never reset between transactions** (`src/evm/vm.rs`):
+`current_arbitrary_calls` was correctly reset at three places before every transaction,
+but `current_ecrecover_zero`/`current_integer_overflow`/`current_delegatecall_injections`/
+`current_storage_collisions` NEVER were — they grew over the ENTIRE lifetime of the
+fuzz process (not just within one transaction). So the layer-1 fix (comparing
+`pre_state`/`post_state` in the oracle) only helped partially: `current_X` was already
+"dirty" from an UNRELATED exploration branch, before `pre_state` for the NEW branch was
+even built. Fixed: added a reset of all four missing `current_*` HashSets at all three
+places (`init_host!` macro + 2 manual blocks) where `current_arbitrary_calls` is already
+reset.
 
-**Plast 3 -- "control leak" simulacija brez preverjanja proti pravi verigi**
-(`src/evm/host.rs`'s `call_allow_control_leak`, `src/evm/solution/mod.rs`):
-fuzzer lahko med raziskovanjem PRESTREŽE klic (po `call_leak` številu
-klicev) in namesto pravega izvajanja INJICIRA lastno, izmišljeno vrnjeno
-vrednost, nato nadaljuje z ločeno, NIKJER SERIALIZIRANO kontinuacijo. Sled,
-najdena na ta način, lahko "dokaže" oracle v simulaciji z vrednostjo, ki je
-PRAVA veriga NIKOLI ne bo vrnila. AttackWallet nima načina, da bi
-replikiral "lažno vrni X za ta klic" -- samo Reentrancy-jev `armCallback`
-(PRAVI ponovljen klic, ne lažna vrnjena vrednost) je zanesljiv atomski
-primitiv. Popravljeno: `Tx` (in `SolutionTx` trait, `ConciseEVMInput`) zdaj
-nosi `call_leak: u32` naprej do generatorja; `trace_depends_on_control_leak()`
-v `solution/mod.rs` OPUSTI generiranje atomičnega `.plan.json`/`.s.sol` za
-tak primer (ostane samo `.t.sol`, z jasnim debug sporočilom zakaj) -- enak
-vzorec kot že obstoječi `has_multiple_distinct_callers` preskok. NE velja
-za pot Reentrancy (ta ostaja zanesljiva, ker `armCallback` ne injicira
-ničesar lažnega).
+**Layer 3 — a "control leak" simulation without verification against the real chain**
+(`src/evm/host.rs`'s `call_allow_control_leak`, `src/evm/solution/mod.rs`): during
+exploration the fuzzer can INTERCEPT a call (after a `call_leak` call count) and,
+instead of the real execution, INJECT its own, invented return value, then continue
+with a separate continuation that is NOWHERE SERIALIZED. A trace found this way can
+"prove" an oracle in simulation with a value the REAL chain will NEVER return.
+AttackWallet has no way to replicate "falsely return X for this call" — only
+Reentrancy's `armCallback` (a REAL repeated call, not a faked return value) is a
+reliable atomic primitive. Fixed: `Tx` (and the `SolutionTx` trait, `ConciseEVMInput`)
+now carries `call_leak: u32` through to the generator; `trace_depends_on_control_leak()`
+in `solution/mod.rs` ABANDONS generation of an atomic `.plan.json`/`.s.sol` for such a
+case (only `.t.sol` remains, with a clear debug message why) — the same pattern as the
+existing `has_multiple_distinct_callers` skip. It does NOT apply to the Reentrancy path
+(that remains reliable, because `armCallback` injects nothing false).
 
-**Pomembna, poštena omejitev, ugotovljena pri tem**: ForkSploit-ovi oraklji
-prepoznajo samo ~37 vnaprej kodiranih bytecode vzorcev. "0 Confirmed
-hroščev" na dani pogodbi NE pomeni "pogodba je varna" -- pomeni samo, da se
-noben od TEH SPECIFIČNIH vzorcev ni ujel znotraj danega fuzz okna/pokritosti.
-Poslovna logika, ekonomski/cenovni exploiti, admin-key tveganja in sistemske
-napake med več pogodbami niso in ne morejo biti pokrite s čisto bytecode-level
-vzorčnim prepoznavanjem -- to je meja te kategorije orodja, ne hrošč v
-ForkSploit-u. Glej FAZA 8a zgoraj za formalno "omejeno" trditev, ki to
-razmejuje.
+**An important, honest limitation found here**: ForkSploit's oracles recognize only
+~37 pre-coded bytecode patterns. "0 Confirmed bugs" on a given contract does NOT mean
+"the contract is safe" — it means only that none of THESE SPECIFIC patterns matched
+within the given fuzz window/coverage. Business logic, economic/price exploits,
+admin-key risks and systemic errors between multiple contracts are not and cannot be
+covered by purely bytecode-level pattern recognition — that is the limit of this
+category of tool, not a bug in ForkSploit. See PHASE 8a above for the formal "bounded"
+claim that delimits this.
 
-## Plast 4 -- še 4 spregledane instance istega bug-a, najdene sistematično (2026-11-03)
+## Layer 4 — 4 more overlooked instances of the same bug, found systematically (2026-11-03)
 
-Pred začetkom dela na novih oraklejih je bil narejen sistematičen pregled
-VSEH `.chain(self.host.current_X...)` klicev v `src/evm/vm.rs` (11 skupaj),
-ne samo tistih 4-5, ki jih je prejšnji dan konkretna najdba na ETC mainnet-u
-pokazala. Rezultat: samo 3 od 11 (`self_destructs`, `arbitrary_calls`,
-`typed_bug`) so bila pravilno resetirana; 4 so bila popravljena prejšnji dan
-(`integer_overflow`, `delegatecall_injections`, `ecrecover_zero`,
-`storage_collisions`); **4 so bila spregledana, ker prejšnji dnevni grep ni
-zajel teh imen polj**: `current_uninitialized_memory_reads`,
-`current_unchecked_call`, `current_tx_origin_checks`,
-`current_delegatecall_targets_seen`. Popravljeno enako kot prejšnji dan:
-resetiranje na vseh treh mestih v `vm.rs` + primerjava `pre_state`/`post_state`
-v `uninitialized_memory.rs`, `unchecked_call.rs`, `tx_origin.rs`,
-`delegatecall_target.rs`. Opomba: `calldata_addresses`/`returndata_addresses`/
-`paid_calldata_addresses` (ki jih `delegatecall_target.rs` in
-`self_referral.rs` tudi berejo) NISO prizadeta -- ta dva se vsako transakcijo
-PRESTAVITA (`=`), ne UNIJATA (`.chain()`), torej sta bila od začetka pravilna.
+Before starting work on new oracles, a systematic review was made of ALL
+`.chain(self.host.current_X...)` calls in `src/evm/vm.rs` (11 in total), not only the
+4-5 that the previous day's concrete finding on ETC mainnet had shown. Result: only 3
+of 11 (`self_destructs`, `arbitrary_calls`, `typed_bug`) were correctly reset; 4 were
+fixed the previous day (`integer_overflow`, `delegatecall_injections`, `ecrecover_zero`,
+`storage_collisions`); **4 were overlooked, because the previous day's grep did not
+catch those field names**: `current_uninitialized_memory_reads`, `current_unchecked_call`,
+`current_tx_origin_checks`, `current_delegatecall_targets_seen`. Fixed the same way as
+the previous day: a reset at all three places in `vm.rs` + a `pre_state`/`post_state`
+comparison in `uninitialized_memory.rs`, `unchecked_call.rs`, `tx_origin.rs`,
+`delegatecall_target.rs`. Note: `calldata_addresses`/`returndata_addresses`/
+`paid_calldata_addresses` (which `delegatecall_target.rs` and `self_referral.rs` also
+read) are NOT affected — those two are SET (`=`) every transaction, not UNIONED
+(`.chain()`), so they were correct from the start.
 
-**Lekcija za naprej**: pred dodajanjem NOVEGA oraklja s "current_X"
-akumuliranim poljem, VEDNO preveri z `grep -n "\.chain(self\.host\.current_"
-src/evm/vm.rs`, ali je število ujemanj enako številu resetiranih polj na VSEH
-treh mestih (`init_host!` makro + 2 ročna bloka) -- ne zanašaj se na to, da je
-bil prejšnji popravek izčrpen.
+**Lesson for the future**: before adding a NEW oracle with a "current_X" accumulated
+field, ALWAYS check with `grep -n "\.chain(self\.host\.current_" src/evm/vm.rs` whether
+the number of matches equals the number of reset fields at ALL three places (the
+`init_host!` macro + 2 manual blocks) — do not rely on the previous fix having been
+exhaustive.
 
-## Najdba na pravem ETC mainnet-u: simulacija brez merjenja gasa lahko potrdi neizvedljivo sled (2026-11-02)
+## Finding on real ETC mainnet: a simulation without gas metering can confirm an infeasible trace (2026-11-02)
 
-Med izvajanjem resničnega, še ne preizkušenega plana `C9f53_2` proti pravi
-ETC mainnet pogodbi `0x9f5304DA62A5408416Ea58A17a92611019bD5ce3` je
-`execute_plan()` padel z `Web3RPCError: {'code': -32000, 'message':
-'exceeds block gas limit'}`. Neposredno preverjeno z `eth_estimateGas`/
-`eth_getBlock('latest')`: ocenjeni gas za ta klic je bil ~50 milijonov,
-resnični ETC `block.gasLimit` pa natanko 8.000.000. Korenski vzrok: Rust
-fuzzer simulira na `revm`, ki (glej `CLAUDE.md`) **nima merjenja gasa** —
-zato lahko "potrdi" sled, ki je v idealizirani brezmejni simulaciji
-veljavna, na pravi verigi pa je fizično nikoli ne moreš oddati v enem
-bloku. Napaka se je prej pojavila šele kot surova RPC zavrnitev PO
-podpisu transakcije.
+While executing a real, not-yet-tested plan `C9f53_2` against the real ETC mainnet
+contract `0x9f5304DA62A5408416Ea58A17a92611019bD5ce3`, `execute_plan()` failed with
+`Web3RPCError: {'code': -32000, 'message': 'exceeds block gas limit'}`. Directly
+verified with `eth_estimateGas`/`eth_getBlock('latest')`: the estimated gas for that
+call was ~50 million, while the real ETC `block.gasLimit` is exactly 8,000,000. Root
+cause: the Rust fuzzer simulates on `revm`, which (see `CLAUDE.md`) **has no gas
+metering** — so it can "confirm" a trace that is valid in the idealized unbounded
+simulation, but on the real chain you can physically never submit it in one block. The
+error had previously appeared only as a raw RPC rejection AFTER signing the transaction.
 
-**Popravek**: `gas_utils.estimate_gas_limit()` zdaj PRED vrnitvijo oceno
-primerja z resničnim, sveže prebranim `w3.eth.get_block('latest')
-['gasLimit']` in vrže `GasExceedsBlockLimitError`, če ocena presega block
-limit — to je edino mesto, kjer se to preverja, ker VSI klicatelji
-(`auto_pipeline.py`, `aave_flashloan_runner.py`, `batch_pipeline.py`,
-`dex_arbitrage_scanner.py`) gredo prek `build_precise_tx`/
-`estimate_gas_limit`. `execute_plan()` v `auto_pipeline.py` to izjemo
-zdaj ujame ob prvi oceni gasa (prej izven vsakega `try`/`except` bloka —
-od tod neukrotjena izjema) in vrne čist `PLAN_NOT_CONFIRMED` z berljivim
-sporočilom, enako za bundle-pot (`execute_flat_plan_via_flashloan`) in
-zaporedno pot. **Živo preverjeno na pravi ETC mainnet verigi po popravku in merge-u v
-`main`** (ponovni zagon istega `C9f53_2` plana, isti dan): ocena gasa
-49.610.942 proti resničnemu `block.gasLimit` 8.000.000 → čist
-`NOT CONFIRMED: potreben gas presega block limit`, `status=not_confirmed,
-recovery_delta_wei=0`, BREZ poskusa podpisa/pošiljanja transakcije (plan
-je imel `total_value=0`, zato tudi funding-korak ni bil dosežen pred
-preverbo gasa). Potrjuje dvoje: (1) popravek deluje točno kot
-predvideno, in (2) ta konkretna fuzzer-jeva najdba NI realno izkoristljiva
-na pravi verigi kljub `CONFIRMED`-videzu v simulaciji — natanko primer
-blind spot-a, ki ga ta popravek zajame.
+**Fix**: `gas_utils.estimate_gas_limit()` now, BEFORE returning, compares the estimate
+against the real, freshly read `w3.eth.get_block('latest')['gasLimit']` and raises
+`GasExceedsBlockLimitError` if the estimate exceeds the block limit — this is the only
+place where this is checked, because ALL callers (`auto_pipeline.py`,
+`aave_flashloan_runner.py`, `batch_pipeline.py`, `dex_arbitrage_scanner.py`) go through
+`build_precise_tx`/`estimate_gas_limit`. `execute_plan()` in `auto_pipeline.py` now
+catches this exception at the first gas estimate (previously outside any `try`/`except`
+block — hence the uncaught exception) and returns a clean `PLAN_NOT_CONFIRMED` with a
+readable message, likewise for the bundle path (`execute_flat_plan_via_flashloan`) and
+the sequential path. **Live-verified on the real ETC mainnet chain after the fix and
+merge into `main`** (re-running the same `C9f53_2` plan, same day): the gas estimate
+49,610,942 against the real `block.gasLimit` 8,000,000 → a clean `NOT CONFIRMED: the
+required gas exceeds the block limit`, `status=not_confirmed, recovery_delta_wei=0`,
+WITHOUT any attempt to sign/send a transaction (the plan had `total_value=0`, so the
+funding step was not reached before the gas check either). It confirms two things: (1)
+the fix works exactly as intended, and (2) this specific fuzzer finding is NOT really
+exploitable on the real chain despite the `CONFIRMED`-looking simulation — exactly the
+blind-spot case this fix catches.
 
-## Najdba: logi so trdo izpisovali "ETH" tudi na ETC/BSC/Polygon/... (2026-11-02)
+## Finding: logs hard-printed "ETH" even on ETC/BSC/Polygon/... (2026-11-02)
 
-Uporabnik je ob branju resničnega ETC-mainnet izpisa vprašal "zakaj meša
-ETH z ETC?" — upravičeno: `auto_pipeline.py`, `batch_pipeline.py`,
-`aave_flashloan_runner.py` in `gas_utils.describe_actual_cost()` so imeli
-povsod trdo zakodiran priponek `" ETH"` za vsak `w3.from_wei(...,
-'ether')`, NE GLEDE na to, katera veriga dejansko teče — torej je tudi
-pravi ETC-mainnet tek izpisoval zneske kot "ETH", ne "ETC" (podobno bi
-veljalo za BSC → BNB, Polygon → POL, Avalanche → AVAX, Gnosis → xDAI na
-poteh, ki te verige dejansko podpirajo, npr. `aave_flashloan_runner.py`).
+When reading a real ETC-mainnet output, the user asked "why does it mix ETH with ETC?"
+— rightly so: `auto_pipeline.py`, `batch_pipeline.py`, `aave_flashloan_runner.py` and
+`gas_utils.describe_actual_cost()` all had a hard-coded `" ETH"` suffix for every
+`w3.from_wei(..., 'ether')`, REGARDLESS of which chain was actually running — so even
+a real ETC-mainnet run printed amounts as "ETH", not "ETC" (the same would hold for
+BSC → BNB, Polygon → POL, Avalanche → AVAX, Gnosis → xDAI on paths that actually
+support these chains, e.g. `aave_flashloan_runner.py`).
 
-**Popravek**: `chains.py` dobi `NATIVE_SYMBOL` (chain string → ticker) in
-`native_symbol_for_w3(w3)`, ki simbol izpelje iz RESNIČNEGA, živo
-povezanega `w3.eth.chain_id` (ne iz morebiti napačnega `--chain` niza —
-ista "nikoli ne zaupaj samo imenu" disciplina kot `chain_banner()`/
-`require_mainnet_confirmation()`, tu uporabljena za izpis namesto za
-izbiro verige). Vsi prizadeti klicni mesta zdaj kličejo
-`native_symbol_for_w3(w3)` namesto trdega `"ETH"`. `dex_arbitrage_scanner.py`
-je bil namenoma izpuščen — trenutno deluje izključno na `eth`
-(`DEX_PAIRS_BY_CHAIN` ima samo `"eth"` ključ), zato je tam `"ETH"` dejansko
-pravilen, dokler se scanner ne razširi na druge verige.
+**Fix**: `chains.py` gains `NATIVE_SYMBOL` (chain string → ticker) and
+`native_symbol_for_w3(w3)`, which derives the symbol from the REAL, live-connected
+`w3.eth.chain_id` (not from a possibly wrong `--chain` string — the same "never trust
+the name alone" discipline as `chain_banner()`/`require_mainnet_confirmation()`, here
+used for display instead of chain selection). All affected call sites now call
+`native_symbol_for_w3(w3)` instead of a hard `"ETH"`. `dex_arbitrage_scanner.py` was
+deliberately left out — it currently operates exclusively on `eth`
+(`DEX_PAIRS_BY_CHAIN` has only the `"eth"` key), so `"ETH"` there is actually correct,
+until the scanner is extended to other chains.
 
-## `readonly_reentrancy.rs`: pravilna detekcija, a `has_post_exec` jo skoraj nikoli spusti skozi — korenski vzrok NI v `feedback.rs` (2026-11-03)
+## `readonly_reentrancy.rs`: correct detection, but `has_post_exec` almost never lets it through — the root cause is NOT in `feedback.rs` (2026-11-03)
 
-Novi oracle `readonly_reentrancy.rs` (bug_idx 39, SWC read-only
-reentrancy: `view` funkcija vrne nekonsistentno vmesno stanje med odprtim
-reentrancy oknom) je zahteval dodatni popravek, preden je sploh lahko
-pravilno zaznaval:
+The new oracle `readonly_reentrancy.rs` (bug_idx 39, the SWC read-only reentrancy:
+a `view` function returns an inconsistent intermediate state while a reentrancy window
+is open) required an additional fix before it could even detect correctly:
 
-**Popravek 1 — `view_call_baseline` mora biti persistenten.** Standarden
-vzorec "`current_*`, počisti ob vsakem klicu" (glej Plast 2-4 zgoraj) se
-izkaže za PREVEČ agresivnega tudi za ta primer: polje se je pobrisalo
-tudi ob RESUMPCIJI control-leak kontinuacije, ne samo ob resnično NOVI
-top-level transakciji. Posledica: `baseline_present=false` natanko v
-trenutku, ko ga oracle potrebuje. Popravek: `current_view_call_baseline`
-→ preimenovan v persistentni `view_call_baseline` (NIKOLI počiščen na 3
-reset mestih), po istem vzorcu kot že obstoječi `slot_write_contexts`.
-Po popravku je debug instrumentacija potrdila `baseline_present=true` in
-pravilne `HIT INSERTED` dogodke (21562+-krat v enem teku).
+**Fix 1 — `view_call_baseline` must be persistent.** The standard "`current_*`, clear
+on every call" pattern (see Layers 2-4 above) turns out to be TOO aggressive for this
+case too: the field was cleared also on the RESUMPTION of a control-leak continuation,
+not only on a genuinely NEW top-level transaction. Consequence: `baseline_present=false`
+exactly when the oracle needs it. Fix: `current_view_call_baseline` → renamed to the
+persistent `view_call_baseline` (NEVER cleared at the 3 reset places), following the
+same pattern as the existing `slot_write_contexts`. After the fix, debug
+instrumentation confirmed `baseline_present=true` and correct `HIT INSERTED` events
+(21562+ times in one run).
 
-**Popravek 2 ni bil mogoč — druga plast istega `has_post_exec` problema,
-a tokrat nerešljiva s preoblikovanjem test fixture-ja.** Pri
-`forced_eth_accounting.rs` (glej razdelek zgoraj) je bilo mogoče
-preprosto odstraniti nepotreben izhodni `.transfer()` klic iz test
-fixture-ja, ker vzorec hrošča tega klica sploh ni potreboval. Pri
-read-only reentrancy pa je control-leak klic (zunanji klic, ki odpre
-reentrancy okno) SAM MEHANIZEM hrošča — ni ga mogoče odstraniti, ne da bi
-odstranili sam scenarij, ki ga oracle preverja.
+**Fix 2 was not possible — the second layer of the same `has_post_exec` problem, but
+this time unsolvable by reshaping the test fixture.** In `forced_eth_accounting.rs`
+(see the section above) it was possible to simply remove the unnecessary outgoing
+`.transfer()` call from the test fixture, because the bug pattern did not need that
+call at all. But in read-only reentrancy the control-leak call (the external call that
+opens the reentrancy window) IS the bug's mechanism — it cannot be removed without
+removing the very scenario the oracle checks.
 
-Na uporabnikovo eksplicitno zahtevo ("Poglobi se v `feedback.rs` in
-poskusi rešiti `has_post_exec` problem na splošni ravni") je bila
-dodana začasna debug instrumentacija v `feedback.rs`'s `is_interesting()`
-(odstranjena pred commit-om), in zagnan 20s tek na
-`tests/evm/readonly_reentrancy/*`. Rezultat:
+At the user's explicit request ("Dig into `feedback.rs` and try to solve the
+`has_post_exec` problem at a general level"), temporary debug instrumentation was added
+to `feedback.rs`'s `is_interesting()` (removed before the commit), and a 20s run was
+launched on `tests/evm/readonly_reentrancy/*`. Result:
 
 ```
 120305 has_post_exec=false
  99444 has_post_exec=true
 ---per bug_idx, has_post_exec=false count---
-2579933380265121289   <- samo klasični Reentrancy, NIČ drugega
+2579933380265121289   <- only classic Reentrancy, NOTHING else
 ```
 
-Od **120.305** popolnoma razrešenih transakcij v celotnem teku je SAMO
-EN bug_idx (klasični `Reentrancy`) kadarkoli dosegel `has_post_exec=false`.
-`readonly_reentrancy`-jeva dva bug_idx-a (`4330118404053422103`,
-`10675110855689788199`) se nista pojavila niti enkrat med ~220.000
-skupnimi preverjanji — kljub temu, da je host-level detekcija dokazano
-pravilna in se sproži tisočkrat.
+Of **120,305** fully resolved transactions in the whole run, only ONE bug_idx (classic
+`Reentrancy`) ever reached `has_post_exec=false`. The two `readonly_reentrancy` bug_idxs
+(`4330118404053422103`, `10675110855689788199`) did not appear even once among
+~220,000 total checks — despite the host-level detection being proven correct and
+firing thousands of times.
 
-**Sklep: `feedback.rs`'s `has_post_exec` vrata NISO hrošč — delujejo
-natanko po načrtu.** Klasični reentrancy dokazuje, da fuzzer OBČASNO
-NAJDE popolnoma razrešeno pot za control-leak-odvisen hrošč — torej
-mehanizem sam po sebi deluje. Prava ovira je v tem, KATERE kontinuacije
-fuzzer-jeva mutacijska/izbirna strategija (`src/evm/mutator.rs`,
-`src/fuzzers/evm_fuzzer.rs`) sploh poskusi med odprtim control-leak
-oknom — "pokliči nazaj `getPrice()` MED oknom, nato pusti zunanjo
-sekvenco normalno zaključiti" je precej ožji, specifičnejši cilj kot
-klasični "prenesi vrednost nazaj", zato ga trenutna strategija le redko
-zadane.
+**Conclusion: `feedback.rs`'s `has_post_exec` gate is NOT a bug — it works exactly as
+designed.** Classic reentrancy proves that the fuzzer OCCASIONALLY FINDS a fully
+resolved path for a control-leak-dependent bug — so the mechanism itself works. The
+real obstacle is in WHICH continuations the fuzzer's mutation/selection strategy
+(`src/evm/mutator.rs`, `src/fuzzers/evm_fuzzer.rs`) even attempts during an open
+control-leak window — "call back `getPrice()` DURING the window, then let the outer
+sequence finish normally" is a much narrower, more specific goal than the classic
+"transfer value back", so the current strategy rarely hits it.
 
-**Posledica za VSE bodoče control-leak-odvisne orakle** (ne samo za
-tega): nizka stopnja dejanskega poročanja na pravih pogodbah ni nujno
-znak napačne detekcijske logike — lahko je znak, da fuzzer preprosto
-redko poskusi natanko pravo kontinuacijo. To je arhitekturna omejitev
-mutacijske strategije, ne oracle-specifičen hrošč, in popravek bi moral
-cilja biti v `mutator.rs`/`evm_fuzzer.rs` (vpliva na VSE control-leak
-odvisne orakle hkrati, torej tvegan, večji posel), ne v `feedback.rs`.
-Uporabnik se je odločil za to poglobitev; ni bila zaključena v tej seji
-zaradi bližajočega se limita seje — nadaljevanje v naslednji seji.
+**Consequence for ALL future control-leak-dependent oracles** (not just this one): a
+low actual reporting rate on real contracts is not necessarily a sign of wrong
+detection logic — it may be a sign that the fuzzer simply rarely attempts exactly the
+right continuation. This is an architectural limitation of the mutation strategy, not
+an oracle-specific bug, and a fix would have to target `mutator.rs`/`evm_fuzzer.rs`
+(affecting ALL control-leak-dependent oracles at once, hence risky, a bigger job), not
+`feedback.rs`. The user chose this deepening; it was not completed in this session due
+to the session limit approaching — to be continued next session.
 
-## `delegatecall_target.rs`: dva resnična popravka, USPEŠNO živo potrjena (2026-11-03)
+## `delegatecall_target.rs`: two real fixes, SUCCESSFULLY live-confirmed (2026-11-03)
 
-Na uporabnikovo zahtevo ("dokončaj zgornje popravilo in še tega
-delegatecall_target.rs") je bila najprej preverjena hipoteza, da
+At the user's request ("finish the fix above and this `delegatecall_target.rs` too"),
+the hypothesis was first verified that
 `current_calldata_addresses`/`current_returndata_addresses`/
-`current_paid_calldata_addresses` trpijo za ISTIM cross-leak-resumpcijskim
-problemom kot `view_call_baseline` (glej razdelek zgoraj). Potrjeno v
-kodi: `execute_abi`'s `is_step` zanka (`vm.rs`) kliče `execute_from_pc` s
-`cleanup=true` ŽE ZA PRVI resumiran segment, in `post_exec` parameter je
-`Some(pe)` natanko in SAMO za resumpcijo (nikoli za pravo novo
-transakcijo, ki vedno prejme `None`) — to je natančen, zanesljiv signal
-za razlikovanje med "prava nova transakcija" (potreben pravi reset, da se
-prepreči cross-transaction onesnaženje, enak razlog kot "Plast 1-4" zgoraj)
-in "nadaljevanje istega leak-a" (potreben OHRANJEN taint izpred leak-a).
+`current_paid_calldata_addresses` suffer from the SAME cross-leak-resumption problem
+as `view_call_baseline` (see the section above). Confirmed in the code:
+`execute_abi`'s `is_step` loop (`vm.rs`) calls `execute_from_pc` with `cleanup=true`
+already for the FIRST resuming segment, and the `post_exec` parameter is `Some(pe)`
+exactly and ONLY for a resumption (never for a genuinely new transaction, which always
+receives `None`) — this is an exact, reliable signal for distinguishing "a genuinely
+new transaction" (needs a real reset, to prevent cross-transaction contamination, the
+same reason as "Layers 1-4" above) from "a continuation of the same leak" (needs the
+PRESERVED taint from before the leak).
 
-**Popravek (varnejši od "persistent za vedno")**: namesto da bi ta tri
-polja NIKOLI ponastavili (tveganje: naslovne vrednosti se veliko pogosteje
-po naključju ponovijo med nepovezanimi transakcijami kot ozko-ključan
-`view_call_baseline`, kar bi na Confirmed-tier oraclju lahko sprožilo
-lažne pozitivne), se ob `post_exec.is_some()` namesto ponastavitve na
-`empty` SEMENIJO iz `vm_state`-a same lineage (ki je BIL pravilno
-izračunan tik pred leak-om in je na voljo kot parameter `execute_from_pc`-ju)
-— natančno, brez tveganja cross-lineage onesnaženja, ker gre za PRAVO,
-že-pravilno-izračunano stanje te specifične veje, ne za globalno
-persistentno stanje na host objektu.
+**Fix (safer than "persistent forever")**: instead of NEVER resetting these three
+fields (risk: address values coincide by chance much more often between unrelated
+transactions than a narrowly-keyed `view_call_baseline`, which on a Confirmed-tier
+oracle could trigger false positives), on `post_exec.is_some()` they are SEEDED from
+the `vm_state` of the same lineage (which was correctly computed just before the leak
+and is available as a parameter to `execute_from_pc`) instead of resetting to `empty`
+— exact, without the risk of cross-lineage contamination, because it is the REAL,
+already-correctly-computed state of this specific branch, not global persistent state
+on the host object.
 
-**Druga, ločena najdba med živim preverjanjem**: zgrajen namenski test
-fixture (`tests/evm/delegatecall_target/main.sol`), ki RETURNDATACOPY
-dekodiranje tarče (self-call na `getTarget()`, izpeljana vrednost iz
-shranjenega `x`, da se izogne kakršnikoli koliziji s calldata/byte-coincidence
-signalom) in ranljiv DELEGATECALL namerno razdeli čez control-leak mejo
-(`Someone(x).something()`). Debug instrumentacija je pokazala, da
-`delegatecall_targets_seen`-ov pre/post diff PRAVILNO zazna nov zadetek
-(deset-tisoče primerov `pre=0 post=1 equal=false`), a `calldata.len() < 20`
-preverjanje VEDNO prezgodaj vrne `vec![]` za TAK segment — korenski vzrok:
-`set_as_post_exec()` (`src/evm/input.rs`) ob "step" mutaciji PREPIŠE
-`input.data` s sintetičnim placeholder-jem (predstavlja injicirano
-vrnjeno vrednost leak-callback-a), zato `ctx.input.to_bytes()` za
-resumiran segment vrne samo 4 bajte (gol selector), NIKOLI prave argumente
-originalne transakcije — preverjeno živo.
+**A second, separate finding during live verification**: a purpose-built test fixture
+was made (`tests/evm/delegatecall_target/main.sol`) that deliberately splits the
+RETURNDATACOPY decoding of the target (a self-call to `getTarget()`, a derived value
+from the stored `x`, to avoid any collision with the calldata/byte-coincidence signal)
+and the vulnerable DELEGATECALL across a control-leak boundary (`Someone(x).something()`).
+Debug instrumentation showed that `delegatecall_targets_seen`'s pre/post diff CORRECTLY
+detects a new hit (tens of thousands of cases `pre=0 post=1 equal=false`), but the
+`calldata.len() < 20` check ALWAYS returned `vec![]` too early for SUCH a segment —
+root cause: `set_as_post_exec()` (`src/evm/input.rs`) on a "step" mutation OVERWRITES
+`input.data` with a synthetic placeholder (representing the injected return value of
+the leak callback), so `ctx.input.to_bytes()` for a resuming segment returns only 4
+bytes (a bare selector), NEVER the real arguments of the original transaction —
+verified live.
 
-**Ta preverek je bil nepravilno postavljen kot blanket early-return za
-CELO funkcijo**, čeprav je resnično relevanten SAMO za šibkejši
-"byte coincidence" fallback — Confirmed-tier `via_calldata_taint`/
-`via_returndata_taint` sploh ne uporabljata `calldata`, slonita izključno
-na (zdaj pravilno persistentnih) `calldata_addresses`/`returndata_addresses`.
-Popravek: `calldata.len() < 20` preverjanje premaknjeno iz zgodnjega
-`return` v sam `via_byte_coincidence` izračun znotraj zanke — Confirmed-tier
-signali zdaj tečejo neodvisno od dolžine `calldata`, fallback pa preprosto
-ne velja, ko je `calldata` prekratka (enako praktično vedenje kot prej,
-a pravilno omejeno samo na signal, ki od tega dejansko je odvisen).
+**This check was wrongly placed as a blanket early-return for the WHOLE function**,
+although it is really relevant ONLY for the weaker "byte coincidence" fallback — the
+Confirmed-tier `via_calldata_taint`/`via_returndata_taint` do not use `calldata` at all;
+they rely exclusively on the (now correctly persistent)
+`calldata_addresses`/`returndata_addresses`. Fix: the `calldata.len() < 20` check was
+moved from the early `return` into the `via_byte_coincidence` computation inside the
+loop — Confirmed-tier signals now run independently of the `calldata` length, and the
+fallback simply does not apply when `calldata` is too short (the same practical
+behaviour as before, but correctly limited to only the signal that actually depends on
+it).
 
-**Živo potrjeno po obeh popravkih**: fuzzer je na novem fixture-ju v 15s
-poročal natanko EN `[Delegatecall Target From Calldata] (sim-confirmed)`
-zadetek, pravilno opisan kot "read back from a PRIOR call's return data
-within this same transaction" — in generiral `Delegatecall_target_0.t.sol`
-v `work_dir/vulnerabilities/`. **To je PRVI primer v tej seji, kjer je bil
-control-leak-odvisen oracle USPEŠNO popravljen in živo potrjen do konca**
-(za razliko od `readonly_reentrancy.rs` zgoraj, kjer ovira ostaja v
-fuzzer-jevi mutacijski strategiji) — razlika: tu je bila ovira v DVEH
-konkretnih, lokaliziranih kodnih napakah (persistenca stanja + napačen
-obseg preverjanja dolžine), ne v tem, KATERE kontinuacije fuzzer sploh
-poskusi.
+**Live-confirmed after both fixes**: on the new fixture the fuzzer, in 15s, reported
+exactly ONE `[Delegatecall Target From Calldata] (sim-confirmed)` hit, correctly
+described as "read back from a PRIOR call's return data within this same transaction"
+— and generated `Delegatecall_target_0.t.sol` in `work_dir/vulnerabilities/`. **This is
+the FIRST case in this session where a control-leak-dependent oracle was SUCCESSFULLY
+fixed and live-confirmed to the end** (unlike `readonly_reentrancy.rs` above, where the
+obstacle remains in the fuzzer's mutation strategy) — the difference: here the obstacle
+was in TWO concrete, localized code errors (state persistence + a wrong scope of the
+length check), not in WHICH continuations the fuzzer even attempts.
 
-## Strategy Layer: dvo-koračno verigenje najdb, živo potrjeno (2026-11-03)
+## Strategy Layer: two-step chaining of findings, live-confirmed (2026-11-03)
 
-Uporabnik je identificiral resnično vrzel: `auto_pipeline.py`/`batch_pipeline.py`
-vsako `.plan.json` najdbo na isti tarči izvajata POPOLNOMA NEODVISNO, v
-leksikografskem vrstnem redu datotečnih imen (celo ne numeričnem). Nikjer v
-kodi ni obstajal koncept "ta najdba omogoči drugo" — če oracle A (npr.
-`ecrecover.rs`) odkrije ponarejanje podpisa, ki odklene `authorized[caller]`,
-in oracle B (npr. `erc20.rs`) ločeno odkrije `withdraw()`, ki to zastavico
-zahteva, pravi fuzz tek pa NI slučajno nadaljeval iz A-ja v B znotraj ene
-linije — se ta compound napad NIKOLI ni poskusil na pravi verigi, čeprav sta
-OBE polovici že samostojno odkriti.
+The user identified a real gap: `auto_pipeline.py`/`batch_pipeline.py` execute every
+`.plan.json` finding on the same target COMPLETELY INDEPENDENTLY, in the lexicographic
+order of file names (not even numeric). Nowhere in the code did the concept "this
+finding enables another" exist — if oracle A (e.g. `ecrecover.rs`) discovers a forged
+signature that unlocks `authorized[caller]`, and oracle B (e.g. `erc20.rs`) separately
+discovers `withdraw()`, which requires that flag, but the real fuzz run did NOT happen
+to continue from A into B within one lineage — then this compound attack was NEVER
+attempted on the real chain, even though BOTH halves were already independently
+discovered.
 
-**Nov modul**: `onchain_scripts/strategy_layer.py`. Dve ločeni izboljšavi:
+**New module**: `onchain_scripts/strategy_layer.py`. Two separate improvements:
 
-1. **`ordering_key()`** — zamenja golo `sorted(plan_files)` (leksikografsko
-   ime) s smiselnim vrstnim redom: UNLOCK-tipa najdbe (ponarejanje podpisa,
-   auth bypass, delegatecall/storage hijack, ...) pred OBJECTIVE-tipa
-   (Fund Loss, nepooblaščeni prenosi, insolventnost, ...), z NUMERIČNIM (ne
-   leksikografskim) razvrščanjem znotraj istega razreda. Klasifikacija
-   temelji IZKLJUČNO na že obstoječem, že pregledanem bug_type taksonomiju
-   (`src/evm/oracle.rs`'s `classify_confidence`) — brez kakršnega koli
-   novega semantičnega razumevanja kode, samo druga os nad isto tabelo.
-2. **`run_chain_attempts()`** — po obstoječem neodvisnem teku (ki se NE
-   spremeni, ničelno tveganje regresije) poskusi pare (UNLOCK najdba A,
-   OBJECTIVE najdba B na ISTI tarči), kjer B še ni sam potrdil. Sestavi
-   sintetičen plan (`merge_plans()`: `A.steps + B.steps`, `kind:"flat"`) in
-   ga pošlje skozi POPOLNOMA OBSTOJEČ `execute_plan()` — brez podvajanja
-   gas-limit/mainnet-confirmation varnostne logike.
+1. **`ordering_key()`** — replaces a bare `sorted(plan_files)` (lexicographic name)
+   with a meaningful order: UNLOCK-type findings (signature forgery, auth bypass,
+   delegatecall/storage hijack, ...) before OBJECTIVE-type ones (Fund Loss,
+   unauthorized transfers, insolvency, ...), with NUMERIC (not lexicographic) sorting
+   within the same class. The classification relies EXCLUSIVELY on the already
+   existing, already reviewed bug_type taxonomy (`src/evm/oracle.rs`'s
+   `classify_confidence`) — without any new semantic understanding of the code, just
+   another axis over the same table.
+2. **`run_chain_attempts()`** — after the existing independent run (which is NOT
+   changed, zero regression risk) it attempts pairs (an UNLOCK finding A, an OBJECTIVE
+   finding B on the SAME target) where B has not yet confirmed on its own. It builds a
+   synthetic plan (`merge_plans()`: `A.steps + B.steps`, `kind:"flat"`) and sends it
+   through the COMPLETELY EXISTING `execute_plan()` — without duplicating the
+   gas-limit/mainnet-confirmation security logic.
 
-**Namerno OZEK obseg prve verzije** (dokumentirano, ne tiho izpuščeno):
-samo `kind=="flat"` plani (reentrancy-tipa ima en sam `repeat_step` slot,
-ki ne pokrije dveh ločenih najdb); samo pari, ne 3+ verige; samo ista tarča;
-izključeni financirani (`needs_funding`) plani; brez prenosa resnične
-on-chain vrnjene vrednosti kot argumenta (samo PREDVAJANJE korakov po
-vrsti — pokrije "A spremeni stanje/pooblastilo, ki ga B potrebuje", ne "B
-potrebuje A-jev točen izhodni bajt kot argument").
+**Deliberately NARROW scope of the first version** (documented, not silently omitted):
+only `kind=="flat"` plans (a reentrancy-type one has a single `repeat_step` slot that
+does not cover two separate findings); only pairs, not 3+ chains; only the same target;
+funded (`needs_funding`) plans excluded; no transfer of a real on-chain return value as
+an argument (only REPLAYING the steps in order — it covers "A changes state/permission
+that B needs", not "B needs A's exact output byte as an argument").
 
-**Tehnična podrobnost**: `plan.json` sam nima polja `bug_type`/`confidence`
-(preverjeno v `src/evm/solution/script_generator.rs`'s `ExploitPlan`
-strukturi) — `strategy_layer.py` ga pridobi iz istoimenskega `.t.sol`
-Description bloka (`[bug_type] (confirmed): ...` vrstice, regex toleranten
-na `sim-` predpono), ker ga `generate_test()`/`generate_exploit_plan()`
-pišeta iz ISTE `TemplateArgs` z istim `contract_name`.
+**A technical detail**: `plan.json` itself has no `bug_type`/`confidence` field
+(verified in `src/evm/solution/script_generator.rs`'s `ExploitPlan` struct) —
+`strategy_layer.py` obtains it from the Description block of the same-named `.t.sol`
+(`[bug_type] (confirmed): ...` lines, a regex tolerant of the `sim-` prefix), because
+`generate_test()`/`generate_exploit_plan()` write it from the SAME `TemplateArgs` with
+the same `contract_name`.
 
-**Živo potrjeno** na lokalnem anvil forku z namenskim dvo-pogodbenim
-fixture-jem, ki natanko ponazarja uporabnikov primer: `Vault.claim(v,r,s)`
-ima nepreverjen `ecrecover(bytes32(0),...)`, ki ob `signer==address(0)`
-nastavi `authorized[msg.sender]=true`; LOČEN `Vault.withdraw()` zahteva to
-zastavico in nakaže celoten saldo. Rezultat:
-- `withdraw()` SAM (brez `claim()`): `EXECUTED_NO_PROFIT`, 0 ETH (ne
-  `NOT_CONFIRMED` — `AttackWallet.execute()` ne razveljavi zunanje
-  transakcije, ko notranji klic revert-ira, zato se to pravilno pokaže kot
-  "izvedeno, brez profita", ne kot neuspeh same transakcije).
-- `strategy_layer.merge_plans(claim, withdraw)`, poslan skozi
-  `execute_plan()`: **`CONFIRMED`**, recovery denarnica pridobi ~1 ETH
-  (natančen znesek minus plin, ker je bil signer v tem testu isti naslov
-  kot recovery denarnica — v pravi uporabi, kjer so ločeni, bi bil znesek
-  natančno 1 ETH).
+**Live-confirmed** on a local anvil fork with a purpose-built two-contract fixture that
+exactly illustrates the user's case: `Vault.claim(v,r,s)` has an unchecked
+`ecrecover(bytes32(0),...)` that, on `signer==address(0)`, sets
+`authorized[msg.sender]=true`; a SEPARATE `Vault.withdraw()` requires that flag and
+transfers the whole balance. Result:
+- `withdraw()` ALONE (without `claim()`): `EXECUTED_NO_PROFIT`, 0 ETH (not
+  `NOT_CONFIRMED` — `AttackWallet.execute()` does not undo the outer transaction when
+  the inner call reverts, so this correctly shows as "executed, no profit", not as a
+  failure of the transaction itself).
+- `strategy_layer.merge_plans(claim, withdraw)`, sent through `execute_plan()`:
+  **`CONFIRMED`**, the recovery wallet gains ~1 ETH (the exact amount minus gas, because
+  in this test the signer was the same address as the recovery wallet — in real use,
+  where they are separate, the amount would be exactly 1 ETH).
 
-To je prvi neposreden dokaz, da verigenje DVEH ločeno odkritih najdb v EN
-resničen, izvršen compound izkoristek deluje — ne samo teoretično načrtovano.
+This is the first direct proof that chaining TWO separately discovered findings into
+ONE real, executed compound exploit works — not just theoretically planned.
 
-## Resen zaupanja-vreden popravek: oraclji so trdo izpisovali "ETH" tudi na ETC/BSC/... (2026-11-03)
+## A serious trust-worthy fix: oracles hard-printed "ETH" even on ETC/BSC/... (2026-11-03)
 
-Uporabnik je poročal **resnično poslovno škodo**: stranka je na ETC reviziji
-videla besedo "ETH" v imenu/opisu hrošča in sklepala, da ForkSploit ne loči
-ETH (dražji kovanec) od ETC (~500x cenejši) — izguba zaupanja, izgubljen
-posel. To je BILO resnično, a LOČENO od že popravljenega Python-ovega
-`native_symbol_for_w3()` popravka (2026-11-02, glej spodaj) — TA popravek je
-pokril samo `onchain_scripts/*.py`, NE same Rust fuzzer binarke.
+The user reported **real business damage**: a client, on an ETC review, saw the word
+"ETH" in the name/description of a bug and concluded that ForkSploit does not
+distinguish ETH (the pricier coin) from ETC (~500x cheaper) — a loss of trust, a lost
+deal. This WAS real, but SEPARATE from the already-fixed Python-side
+`native_symbol_for_w3()` fix (2026-11-02, see below) — THAT fix covered only
+`onchain_scripts/*.py`, NOT the Rust fuzzer binary itself.
 
-**Najdeno** (preverjeno z grep čez `src/evm/oracles/*.rs`): `eth_backing.rs`,
+**Found** (verified with a grep over `src/evm/oracles/*.rs`): `eth_backing.rs`,
 `forced_eth_accounting.rs`, `curve_virtual_price.rs`, `twap_manipulation.rs`,
-`erc20.rs`, `unchecked_call.rs` so imeli trdo zapisano besedo "ETH" v
-`bug_type` imenu in/ali `bug_info` opisu, NE GLEDE na pravo verigo. Te
-nize gredo neposredno v `.t.sol`, `vuln_info.jsonl` in dashboard — torej
-jih stranka dejansko vidi.
+`erc20.rs`, `unchecked_call.rs` had the word "ETH" hard-written in the `bug_type` name
+and/or the `bug_info` description, REGARDLESS of the real chain. These strings go
+directly into `.t.sol`, `vuln_info.jsonl` and the dashboard — so the client actually
+sees them.
 
-**Zakaj ni bilo mogoče dinamično vstaviti PRAVEGA tickerja** (npr. "ETC"
-namesto generičnega): preverjeno v kodi (`src/evm/oracle.rs`'s
-`EVMOracleCtx`), da aktivna veriga NI zanesljivo dosegljiva znotraj
-`oracle()` klica — edina pot je `chain_id` kot STRANSKI UČINEK `CHAINID`
-opcode-a (`onchain/mod.rs`'s `OnChain::step`), ki je `None`, dokler
-pogodba dejansko ne pokliče `CHAINID`. Pri OFFCHAIN fuzzanju (brez
-`--onchain-*` zastavic) sploh NI pravega chain konteksta. Pravilna, edina
-univerzalno pravilna rešitev: **genericizacija** — "native value"/
-"native-token balance" namesto katerekoli konkretne kratice, kar je
-pravilno TAKO za onchain KOT offchain fuzzanje.
+**Why it was not possible to dynamically insert the CORRECT ticker** (e.g. "ETC"
+instead of a generic one): verified in the code (`src/evm/oracle.rs`'s `EVMOracleCtx`)
+that the active chain is NOT reliably reachable inside an `oracle()` call — the only
+path is `chain_id` as a SIDE EFFECT of the `CHAINID` opcode (`onchain/mod.rs`'s
+`OnChain::step`), which is `None` until the contract actually calls `CHAINID`. During
+OFFCHAIN fuzzing (without `--onchain-*` flags) there is no real chain context at all.
+The correct, only universally correct solution: **genericization** — "native value"/
+"native-token balance" instead of any concrete ticker, which is correct for BOTH
+onchain AND offchain fuzzing.
 
-**Popravek** (bug_type STRINGI, ki so matching key, posodobljeni V LOCKSTEP
-na vseh mestih): `"Insolvent: Promised ETH Exceeds Real Balance"` →
-`"Insolvent: Promised Native Value Exceeds Real Balance"` (3 mesta:
-`eth_backing.rs`, `oracle.rs`'s `classify_confidence`,
-`solution/mod.rs`'s `CONFIRMED_EXPLOITABLE_BUG_TYPES`, PLUS
-`onchain_scripts/strategy_layer.py`'s klasifikacijske tabele, ker je ta
-isti niz uporabljen kot UNLOCK/OBJECTIVE klasifikacijski ključ);
-`"Forced ETH Accounting"` → `"Forced Native Value Accounting"` (brez
-lockstep tveganja v Rustu, a enako posodobljeno v `strategy_layer.py`).
-Prosta besedila (ne matching key) v preostalih 4 datotekah preprosto
-preimenovana ("net ETH balance increase" → "net native-token balance
-increase" ipd.).
+**Fix** (the bug_type STRINGS, which are a matching key, updated IN LOCKSTEP at all
+places): `"Insolvent: Promised ETH Exceeds Real Balance"` → `"Insolvent: Promised
+Native Value Exceeds Real Balance"` (3 places: `eth_backing.rs`, `oracle.rs`'s
+`classify_confidence`, `solution/mod.rs`'s `CONFIRMED_EXPLOITABLE_BUG_TYPES`, PLUS
+`onchain_scripts/strategy_layer.py`'s classification tables, because this same string
+is used as the UNLOCK/OBJECTIVE classification key); `"Forced ETH Accounting"` →
+`"Forced Native Value Accounting"` (no lockstep risk in Rust, but likewise updated in
+`strategy_layer.py`). Free text (not a matching key) in the remaining 4 files was simply
+renamed ("net ETH balance increase" → "net native-token balance increase", etc.).
 
-**Živo potrjeno** na obstoječih test fixture-jih (`tests/evm/eth_backing/*`,
-`tests/evm/forced_eth_accounting/*`): novi nizi se pravilno izpišejo
+**Live-confirmed** on the existing test fixtures (`tests/evm/eth_backing/*`,
+`tests/evm/forced_eth_accounting/*`): the new strings are printed correctly
 (`[Insolvent: Promised Native Value Exceeds Real Balance] (sim-confirmed)`,
-`[Forced Native Value Accounting] (sim-review)`), in confidence tier se
-NI spremenil (lockstep popravek deloval pravilno).
+`[Forced Native Value Accounting] (sim-review)`), and the confidence tier did NOT
+change (the lockstep fix worked correctly).
 
-## Resen najden gap na pravi stranki pogodbi: resna Confirmed najdba, 0 planov generiranih -- delno popravljeno, NI dokončno (2026-11-03)
+## A serious gap found on a real client contract: a serious Confirmed finding, 0 plans generated — partly fixed, NOT final (2026-11-03)
 
-Uporabnik je poročal resno poslovno škodo: na stranki pogodbi, znani kot
-"90% ranljiva", je ForkSploit našel resne hrošče, a `AttackWallet` ni
-izvedel NIČESA -- ne napačno, ampak ker **noben plan sploh ni bil
-generiran**. Živo preverjeno na uporabnikovi pravi ETC pogodbi
-(`0x9f5304DA62A5408416Ea58A17a92611019bD5ce3`, ista kot v prejšnjih
-najdbah te seje): 300s tek, 90.90% instruction coverage, **4037 ločenih
-najdb, 0 `.plan.json` datotek**.
+The user reported serious business damage: on a client contract known as "90%
+vulnerable", ForkSploit found serious bugs, but `AttackWallet` executed NOTHING — not
+wrongly, but because **no plan was generated at all**. Live-verified on the user's real
+ETC contract (`0x9f5304DA62A5408416Ea58A17a92611019bD5ce3`, the same as in earlier
+findings this session): a 300s run, 90.90% instruction coverage, **4037 separate
+findings, 0 `.plan.json` files**.
 
-Med njimi: `[Fund Loss] (sim-confirmed)` -- "Anyone can earn 1,277,262
-native tokens" (skoraj CEL saldo pogodbe), ponovljeno 4x z realistično
-(ne fuzzer-napihnjeno) vrednostjo. Sled: `Sender → target.call(0x1554611f)
-→ Sender.fallback() → target.call(0x00000000)` -- klasičen
-control-leak/callback vzorec. `trace_depends_on_control_leak()` ga je
-pravilno zavrnila (varnostna varovalka deluje), A `solution/mod.rs` je
-callback-zmožen generator (`armCallback`/`repeat_step`) prej uporabil
-SAMO, če je `bug_type` dobesedno "Reentrancy" -- oraclj-poimenovalna
-nesreča, ne resnična razlika v tem, kaj AttackWallet potrebuje storiti.
+Among them: `[Fund Loss] (sim-confirmed)` — "Anyone can earn 1,277,262 native tokens"
+(nearly the WHOLE contract balance), repeated 4x with a realistic (not
+fuzzer-inflated) value. Trace: `Sender → target.call(0x1554611f) → Sender.fallback()
+→ target.call(0x00000000)` — a classic control-leak/callback pattern.
+`trace_depends_on_control_leak()` correctly rejected it (the security safeguard works),
+BUT `solution/mod.rs` had previously used the callback-capable generator
+(`armCallback`/`repeat_step`) ONLY if `bug_type` was literally "Reentrancy" — an
+oracle-naming accident, not a real difference in what AttackWallet needs to do.
 
-**Popravek 1 (dokončan, varen, commitan)**: `trace_depends_on_control_leak`
-veja zdaj poskusi `split_reentrant_trace` za VSAKO Confirmed najdbo, ne
-samo za "Reentrancy" -- enak mehanizem, širši pogoj sprožitve, brez
-podvajanja za primere, ki jih je "Reentrancy" veja že obdelala.
+**Fix 1 (done, safe, committed)**: the `trace_depends_on_control_leak` branch now
+attempts `split_reentrant_trace` for EVERY Confirmed finding, not only for
+"Reentrancy" — the same mechanism, a wider trigger condition, without duplicating cases
+the "Reentrancy" branch already handled.
 
-**A ta konkreten primer S TEM popravkom ŠE VEDNO ni rešen** -- živo
-ponovno preverjeno na isti pogodbi po popravku: **še vedno 0 planov**.
-Korenski vzrok, natančno: `split_reentrant_trace()` zahteva, da napadalec
-isto (contract, selector) par pokliče DVAKRAT (klasičen "pokliči isto
-funkcijo spet" reentrancy vzorec). Ta sled ima DRUGAČEN selector v
-callback oknu (`0x00000000`) kot zunanji klic (`0x1554611f`) -- ni
-ponovitev, je DRUGAČEN klic med oknom. `split_reentrant_trace` zato
-pravilno vrne `None`, in popravek se ne sproži.
+**But this specific case is STILL not solved with THAT fix** — live re-verified on the
+same contract after the fix: **still 0 plans**. The root cause, precisely:
+`split_reentrant_trace()` requires the attacker to call the same (contract, selector)
+pair TWICE (the classic "call the same function again" reentrancy pattern). This trace
+has a DIFFERENT selector in the callback window (`0x00000000`) than the outer call
+(`0x1554611f`) — it is not a repeat, it is a DIFFERENT call during the window.
+`split_reentrant_trace` therefore correctly returns `None`, and the fix does not trigger.
 
-**Prava rešitev, odložena na naslednjo sejo zaradi časovne stiske**:
-razširiti `armCallback`/`repeat_step` mehanizem (ali zgraditi vzporeden),
-da lahko AttackWallet med callback oknom predvaja DRUGAČEN, fuzzer-
-odkrit klic (ne samo isti klic ponovno) -- to je večji, tveganejši posel
-(vpliva na generiranje planov za VSE control-leak-odvisne Confirmed
-najdbe), ki potrebuje lastno, skrbno načrtovanje in živo preverjanje,
-preden se ga šteje za rešenega.
+**The real solution, deferred to the next session due to time pressure**: extend the
+`armCallback`/`repeat_step` mechanism (or build a parallel one) so that AttackWallet can
+replay a DIFFERENT, fuzzer-discovered call during the callback window (not just the same
+call again) — this is a bigger, riskier job (it affects plan generation for ALL
+control-leak-dependent Confirmed findings), which needs its own careful planning and
+live verification before it is considered solved.
 
-**Pomembno vodilo za naprej** (uporabnikova eksplicitna zahteva, glej
-[[feedback_literal_execution]] v spominu): dokler ta konkreten primer na
-tej konkretni pogodbi dejansko ne doseže pravega premika sredstev, se to
-NE sme šteti ali poročati kot "rešeno". Ta razdelek ostaja odprt dokler
-ni to dokazano.
+**An important guideline for the future** (the user's explicit request, see
+[[feedback_literal_execution]] in memory): until this specific case on this specific
+contract actually reaches a real movement of funds, it must NOT be counted or reported
+as "solved". This section remains open until that is proven.
 
-## Resna napaka v gas-limit preverjanju: "presega block limit" je bila LAŽNA (2026-11-03)
+## A serious bug in the gas-limit check: "exceeds block limit" was FALSE (2026-11-03)
 
-Po prejšnjem popravku (control-leak routing) je uporabnik ponovno pognal
-na ISTI pravi ETC pogodbi — tokrat STA se generirala 2 plana (napredek!),
-a OBA sta padla z `NOT CONFIRMED: potreben gas (49610942) presega resnicni
-block gas limit (8000000)`. Isto natanko število za DVA popolnoma
-različna, nepovezana klica (`3e2640d6...` in `c01c1ca3`) je bilo sumljivo.
+After the previous fix (control-leak routing) the user re-ran on the SAME real ETC
+contract — this time 2 plans WERE generated (progress!), but BOTH failed with `NOT
+CONFIRMED: the required gas (49610942) exceeds the real block gas limit (8000000)`.
+The exact same number for TWO completely different, unrelated calls (`3e2640d6...` and
+`c01c1ca3`) was suspicious.
 
-**Preverjeno neposredno proti pravemu lokalnemu ETC vozlišču** (`eth_call`,
-ne samo zaupanje `eth_estimateGas`-u): z EXAKTNO pravo blok-mejo
-(8.000.000 gasa) OBA klica **uspeta brez revert-a** — tudi povsem trivialen
-klic (prazna calldata) skozi AttackWallet vrne IDENTIČNO "potrebno" oceno
-49.610.942. To dokončno dokaže: **ocena gasa je bila napačna, ne resnica
-o neizvedljivosti**. Znan EVM/geth pojav: `eth_estimateGas`-ov binarni
-iskalnik lahko vrne popolnoma napačno, napihnjeno število, če je prava
-poraba gasa NEMONOTONA glede na razpoložljiv gas (npr. nekje v verigi
-klicev `gasleft()`-odvisno vejanje) — binarno iskanje takrat ne konvergira
-pravilno.
+**Verified directly against the real local ETC node** (`eth_call`, not just trusting
+`eth_estimateGas`): with the EXACT real block limit (8,000,000 gas) BOTH calls
+**succeed without reverting** — even a completely trivial call (empty calldata) through
+AttackWallet returns the IDENTICAL "required" estimate 49,610,942. This definitively
+proves: **the gas estimate was wrong, not the truth about infeasibility**. A known
+EVM/geth phenomenon: `eth_estimateGas`'s binary search can return a completely wrong,
+inflated number if the real gas usage is NON-MONOTONIC with respect to the available
+gas (e.g. a `gasleft()`-dependent branch somewhere in the call chain) — binary search
+then does not converge correctly.
 
-**To je bila ISTA pogodba in ISTA vrsta napake kot v prvotnem popravku
-tega preverjanja (2026-11-02, plan C9f53_2)** — kar pomeni, da je bil
-ŽE TISTI prvotni "exceeds block gas limit" primer MOREBITI tudi lažen
-negativ, nikoli preverjen s pravim `eth_call`.
+**This was the SAME contract and the SAME kind of error as in the original fix of this
+check (2026-11-02, plan C9f53_2)** — which means that EVEN that original "exceeds block
+gas limit" case was possibly also a false negative, never verified with a real
+`eth_call`.
 
-**Popravek** (`gas_utils.py`'s `estimate_gas_limit()`): preden obupa, zdaj
-naredi PRAVO preverbo — `eth_call` z natanko pravo blok-mejo kot gas. Če
-TA ne revert-ira, je ocena preprosto napačna, in se uporabi prava
-`block_gas_limit` vrednost neposredno (brez margin-a, ker bi ta spet
-presegel strop). `GasExceedsBlockLimitError` se zdaj sproži SAMO, če tudi
-ta neposredna proba revert-ira -- torej samo, ko je sled RESNIČNO
-neizvedljiva, ne samo "estimateGas je vrnil veliko število".
+**Fix** (`gas_utils.py`'s `estimate_gas_limit()`): before giving up, it now performs a
+REAL check — an `eth_call` with exactly the real block limit as gas. If THAT does not
+revert, the estimate is simply wrong, and the real `block_gas_limit` value is used
+directly (without a margin, because that would exceed the cap again).
+`GasExceedsBlockLimitError` now fires ONLY if even this direct probe reverts — i.e.
+only when the trace is REALLY infeasible, not just "estimateGas returned a large number".
 
-**Živo potrjeno** (neposreden Python klic `estimate_gas_limit()` proti
-pravemu lokalnemu ETC vozlišču, z EKSAKTNO calldato obeh padlih planov):
-oba zdaj vrneta `8000000` namesto da bi vrgla napako. **Uporabnik bo zdaj
-ponovno pognal `auto_pipeline.py` na isti pogodbi** — šele TA tek pove,
-ali ta dva plana po tem popravku dejansko premakneta prava sredstva. Dokler
-to ni potrjeno, to OSTAJA odprto, enako kot zgornji razdelek.
+**Live-confirmed** (a direct Python call to `estimate_gas_limit()` against the real
+local ETC node, with the EXACT calldata of both failed plans): both now return
+`8000000` instead of raising an error. **The user will now re-run `auto_pipeline.py` on
+the same contract** — only THAT run tells whether these two plans, after this fix,
+actually move real funds. Until that is confirmed, this REMAINS open, the same as the
+section above.
 
-## Triaža + materializacija: 4664 planov -> 241 površin -> 21 pravih (2026-11-07)
+## Triage + materialization: 4664 plans -> 241 surfaces -> 21 real (2026-11-07)
 
-Uporabnik je pognal triažni sloj (`triage_findings.py`) na svojih pravih
-podatkih: **4664 planov se je sesedlo na 241 površin**, od tega 2 RUNNABLE,
-19 NEEDS_MATERIALIZATION in 220 HEURISTIC_ONLY. Iz agregata ponarejenih
-klicev je takoj razvidno dvoje: (a) vseh 19 materializacijskih površin je
-na ISTI tarči `0x9f5304DA62A5408416Ea58A17a92611019bD5ce3`, (b) prevladujejo
-selektorji `escapeHatch`, `proxyWithdraw`, `withdraw`, `claimRemaining` in
-`extendClosingTime` -- torej gre za ENO pogodbo, ne za 19 hroščev.
+The user ran the triage layer (`triage_findings.py`) on their real data: **4664 plans
+collapsed to 241 surfaces**, of which 2 RUNNABLE, 19 NEEDS_MATERIALIZATION and 220
+HEURISTIC_ONLY. From the aggregate of faked calls two things are immediately clear: (a)
+all 19 materialization surfaces are on the SAME target
+`0x9f5304DA62A5408416Ea58A17a92611019bD5ce3`, (b) the selectors `escapeHatch`,
+`proxyWithdraw`, `withdraw`, `claimRemaining` and `extendClosingTime` dominate — so it
+is ONE contract, not 19 bugs.
 
-`materialize_plan.py` je bil dodan kot naslednji korak: vsak ponak klic
-razvrsti v razred (`AUTH_GUARD`, `SIGNATURE`, `TOKEN_BALANCE`,
-`PRICE_ORACLE`, `REENTRANCY_CALLBACK`, ...) in mu pripiše recept. Ponak klic
-v DRUGO pogodbo (ne v tarčo) se razvrsti kot `REENTRANCY_CALLBACK`, ker je to
-callback oblika, ne branje stanja.
+`materialize_plan.py` was added as the next step: it classifies each repeated call into
+a class (`AUTH_GUARD`, `SIGNATURE`, `TOKEN_BALANCE`, `PRICE_ORACLE`,
+`REENTRANCY_CALLBACK`, ...) and assigns it a recipe. A repeated call into ANOTHER
+contract (not the target) is classified as `REENTRANCY_CALLBACK`, because that is a
+callback shape, not a state read.
 
-### Živo preverjeno na lokalnem anvil forku ETC (NIKOLI na mainnetu)
+### Live-verified on a local anvil fork of ETC (NEVER on mainnet)
 
-Tarča `0x9f53...5ce3` drži **1.277.262 ETC** (`getTotalFunds` 8.44M ETC).
-Vseh 14 selektorjev iz dispatcha razrešenih prek 4byte: `escapeHatch()`,
-`proxyWithdraw(address,uint256,uint8,bytes32,bytes32)`,
-`withdraw(address,uint256)`, `claimRemaining()`, `extendClosingTime(uint256)`,
-`changeOwner`, `addOwner/removeOwner/changeRequirement`, `setDailyLimit`,
-`resetSpentToday`, `seal`, `fill`, `deposit`.
+The target `0x9f53...5ce3` holds **1,277,262 ETC** (`getTotalFunds` 8.44M ETC). All 14
+selectors from the dispatcher were resolved via 4byte: `escapeHatch()`,
+`proxyWithdraw(address,uint256,uint8,bytes32,bytes32)`, `withdraw(address,uint256)`,
+`claimRemaining()`, `extendClosingTime(uint256)`, `changeOwner`,
+`addOwner/removeOwner/changeRequirement`, `setDailyLimit`, `resetSpentToday`, `seal`,
+`fill`, `deposit`.
 
-**Vsaka funkcija reverta za ne-lastnika (`InvalidJump` = solc 0.4.x
-`require`), RAZEN `deposit()` in `proxyWithdraw` z majhno vsoto.**
+**Every function reverts for a non-owner (`InvalidJump` = solc 0.4.x `require`),
+EXCEPT `deposit()` and `proxyWithdraw` with a small amount.**
 
-`escapeHatch()` je `require(msg.sender == slot0)` (lastnik
-`0xe79aca...`); na lastniški poti prenese `slot8` (fiksni 100 wei), NE
-celotnega salda. Fuzzerjev "Fund Loss" na `escapeHatch` je torej
-control-leak artefakt: nobena ne-lastniška pot ne premakne vrednosti.
+`escapeHatch()` is `require(msg.sender == slot0)` (the owner `0xe79aca...`); on the
+owner path it transfers `slot8` (a fixed 100 wei), NOT the whole balance. The fuzzer's
+"Fund Loss" on `escapeHatch` is therefore a control-leak artifact: no non-owner path
+moves value.
 
-**Resnična najdba -- `proxyWithdraw` (Unchecked ecrecover(0)):** funkcija
-zgradi sporočilo `"Withdraw DAOETC to " + <20-bajtni naslov> + <32-bajtna
-vsota>` (preverjeno z rekonstrukcijo keccak predpone), ga KLIČE ecrecover
-precompile (CALL na `0x1`, pc=1927), a **rezultata ne preveri, da bi bil
-ne-ničeln**. Z `v=27, r=0x1111..., s=0x2222...` (ponarejena signatura)
-funkcija **USPE (status 1, 64122 gas)**. Z `v=0, r=0, s=0` ecrecover vrne
-`0x0`, a funkcija se ustavi PRIJ vsoto `> 100` (drugo preverjanje); z
-vsoto `<= 100` gre skozi.
+**A real finding -- `proxyWithdraw` (Unchecked ecrecover(0)):** the function builds the
+message `"Withdraw DAOETC to " + <20-byte address> + <32-byte amount>` (verified by
+reconstructing the keccak prefix), CALLS the ecrecover precompile (a CALL to `0x1`,
+pc=1927), but **does not check that the result is non-zero**. With `v=27, r=0x1111...,
+s=0x2222...` (a forged signature) the function **SUCCEEDS (status 1, 64122 gas)**. With
+`v=0, r=0, s=0` ecrecover returns `0x0`, but the function stops AT the check `amount >
+100` (a second check); with an amount `<= 100` it goes through.
 
-**A resnični premik sredstev NI dokazan:** ob uspehu `proxyWithdraw(ME,1)`
-in `proxyWithdraw(ME,100)` se saldo tarče, napadalca IN lastnika **ne
-spremeni** (vse delte 0). Izplačilo gre prek `slot7` (lastnik
-`0xe79aca...`) z količino, ki jo določa nekaj, kar je v tem stanju 0 --
-zato je "Fund Loss" tu NEPOTRJEN. Kar JE potrjeno, je ranljivost sama:
-signatura se ne preverja pravilno (ecrecover(0) se ne zavrne) -- kar je
-klasičen `Unchecked ecrecover` razred, a sam po sebi v tem stanju ne
-izprazni pogodbe.
+**But a real movement of funds is NOT proven:** on a successful
+`proxyWithdraw(ME,1)` and `proxyWithdraw(ME,100)` the balance of the target, the
+attacker AND the owner **does not change** (all deltas 0). The payout goes through
+`slot7` (the owner `0xe79aca...`) with an amount determined by something that is 0 in
+this state — so "Fund Loss" here is UNCONFIRMED. What IS confirmed is the vulnerability
+itself: the signature is not verified correctly (ecrecover(0) is not rejected) — which
+is the classic `Unchecked ecrecover` class, but by itself in this state it does not
+drain the contract.
 
-**Druga RUNNABLE tarča `0xD096...9ff7` je standardni WETH9** ("Wrapped
-Ether"): nima nobenega klica ecrecover precompile, zato je "Unchecked
-ecrecover(0)" tam LAŽNO POZITIVEN. `deposit()/withdraw()` se obnašata
-točno kot pri WETH (withdraw ne-držanega salda reverta).
+**The second RUNNABLE target `0xD096...9ff7` is standard WETH9** ("Wrapped Ether"): it
+has no call to the ecrecover precompile, so "Unchecked ecrecover(0)" there is a FALSE
+POSITIVE. `deposit()/withdraw()` behave exactly as in WETH (withdraw of an unheld
+balance reverts).
 
-### Zaključek
+### Conclusion
 
-Triaža je bila pravilna: 220 od 241 površin je šum, 21 je pravih, a **nobena
-od 21 (v tem stanju) ne premakne sredstev** -- RUNNABLE je potreben, ne
-zadosten pogoj. To je natanko "dokaži, ne trdi" pravilo: šele resnična tx
-na forku, ki premakne vrednost, šteje. Materializacijski recept za
-`proxyWithdraw` (SIGNATURE) je pravi, a materializacija SAMA po sebi ne
-ustvari vrednosti, ki je v pogodbi ni na voljo prek te poti.
+The triage was correct: 220 of 241 surfaces are noise, 21 are real, but **none of the
+21 (in this state) moves funds** — RUNNABLE is a necessary, not a sufficient condition.
+This is exactly the "prove, do not claim" rule: only a real tx on the fork that moves
+value counts. The materialization recipe for `proxyWithdraw` (SIGNATURE) is correct, but
+materialization ITSELF does not create value that is not available in the contract
+through that path.
 
-## Sledenje denarju na 0x9f53...5ce3: nobena ne-lastniška pot ne izplača (2026-11-07)
+## Following the money on 0x9f53...5ce3: no non-owner path pays out (2026-11-07)
 
-Nadaljevanje prejšnje sekcije. Po globljem sledenju (anvil fork ETC, nikoli
-mainnet) je slika popolna in NEGATIVNA glede izpraznitve pogodbe:
+A continuation of the previous section. After deeper tracing (an anvil fork of ETC,
+never mainnet) the picture is complete and NEGATIVE regarding draining the contract:
 
-**Pomemben popravek prejšnje meritve:** `withdraw(address,uint256)` NI
-nepredvajljiv. Pri 3M gasa je OOG, a pri 8M (RESNICNI ETC block limit,
-potrjen na mainnetu: gasLimit=8.000.000) **USPE** (status 1, 37064 gas) z
-`amount=1`. Prejšnji OOG je bil posledica premajhnega gasa, ne logike
-pogodbe -- to je natanko past "simulacija brez merjenja gasa".
+**An important correction of the previous measurement:** `withdraw(address,uint256)` is
+NOT non-replayable. At 3M gas it is OOG, but at 8M (the REAL ETC block limit, confirmed
+on mainnet: gasLimit=8,000,000) it **SUCCEEDS** (status 1, 37064 gas) with `amount=1`.
+The earlier OOG was due to too little gas, not the contract's logic — this is exactly
+the "simulation without gas metering" trap.
 
-**A izplačilo je 0, ker je `balanceOf(uporabnik)` 0.** Sled `withdraw`:
-1. SLOAD slot1 -> naslov ledgerja `0x180826b05452ce96e157f0708c43381fee64a6b8`
+**But the payout is 0, because `balanceOf(user)` is 0.** The `withdraw` trace:
+1. SLOAD slot1 -> the ledger address `0x180826b05452ce96e157f0708c43381fee64a6b8`
 2. CALL ledger.`balanceOf(msg.sender)` (0x70a08231)
-3. SLOAD `keccak(uporabnik, slot0)` -> interni saldo (0)
+3. SLOAD `keccak(user, slot0)` -> the internal balance (0)
 4. CALL ledger.`totalSupply()` (0x18160ddd) -> 1.15e25
-5. SLOAD slot2, slot4, slot `keccak(adr, ...)` -> vse 0
-Pogodba torej preveri `balanceOf` + shranjeni saldo; ker je oboje 0, prenese
-0. `RETURN` vmesnih korakov je `0x00...00`.
+5. SLOAD slot2, slot4, slot `keccak(adr, ...)` -> all 0
+The contract therefore checks `balanceOf` + the stored balance; since both are 0, it
+transfers 0. The `RETURN` of the intermediate steps is `0x00...00`.
 
-**Ledger `0x180826...` ima `totalSupply` 11538165987024671407837618, a
-`balanceOf` je 0 za VSAK preverjen naslov** (owner, WHG donation, slot8,
-tarča, zero address) -- tudi neposredno prek `cast index` po mapiranju v
-slot0. Distribucija saldov torej ni bila izvedena (ali pa so saldi drugje in
-pot do njih ni prek teh selektorjev).
+**The ledger `0x180826...` has `totalSupply` 11538165987024671407837618, but
+`balanceOf` is 0 for EVERY checked address** (owner, WHG donation, slot8, the target,
+the zero address) — even directly via `cast index` on the mapping at slot0. The
+distribution of balances was therefore never performed (or the balances are elsewhere
+and the path to them is not through these selectors).
 
-**`deposit()` sprejme ETH, a NE pripiše per-user salda:** po depozitu 1 ETC
-se saldo tarče poveča (+1 ETC), a `getMyBalance(ME)` ostane **0**; depozit
-doda le v slot4 (skupni pool) in izda LOG1. Zato `deposit -> withdraw` ne
-vrne nič deponentu. `withdraw` z `amount=1e18` po depozitu celo OOG-a (zanka
-je odvisna od zneska), z `amount=1` pa uspe z 0 izplačila.
+**`deposit()` accepts ETH but does NOT credit a per-user balance:** after a deposit of
+1 ETC the target's balance increases (+1 ETC), but `getMyBalance(ME)` stays **0**; the
+deposit only adds to slot4 (the total pool) and emits LOG1. So `deposit -> withdraw`
+returns nothing to the depositor. `withdraw` with `amount=1e18` after a deposit even
+OOGs (the loop depends on the amount), while with `amount=1` it succeeds with a 0
+payout.
 
-**V uspešnih poteh NI nobenega prenosa vrednosti:** opcode histogram
-`withdraw`/`proxyWithdraw` vsebuje samo 3 CALL-e z `value=0` (ecrecover,
-balanceOf, totalSupply), `SELFDESTRUCT: 0`, `CREATE: 0`, zadnji opcode STOP.
-`sealed() == true`, `totalAccounts == 22092`.
+**In the successful paths there is NO value transfer:** the opcode histogram of
+`withdraw`/`proxyWithdraw` contains only 3 CALLs with `value=0` (ecrecover, balanceOf,
+totalSupply), `SELFDESTRUCT: 0`, `CREATE: 0`, the last opcode STOP. `sealed() == true`,
+`totalAccounts == 22092`.
 
-**Zaključek:** vseh 21 resničnih površin je strukturirano NEIZKORISTLJIVIH v
-trenutnem stanju pogodbe -- bodisi so `AUTH_GUARD` (lastniške), bodisi
-izplačajo 0, ker je ledger brez saldov. Edini potrjeni hrošč ostaja
-`proxyWithdraw` `Unchecked ecrecover(0)` (ponarejena signatura USPE), a sam
-ne premakne sredstev. Pogodba je verjetno "DAOETC" slog refund/claim sistema,
-kjer so saldi nastavljeni v drugem (upravljanem) koraku, ki ga ne-lastnik ne
-doseže.
+**Conclusion:** all 21 real surfaces are structurally UNEXPLOITABLE in the contract's
+current state — either they are `AUTH_GUARD` (owner-only), or they pay out 0 because the
+ledger has no balances. The only confirmed bug remains `proxyWithdraw` `Unchecked
+ecrecover(0)` (a forged signature SUCCEEDS), but it alone does not move funds. The
+contract is probably a "DAOETC"-style refund/claim system, where the balances are set
+in another (managed) step that a non-owner does not reach.
 
-## Koncni dokaz: ledger ima totalSupply, a NIČ bilanc (2026-11-07)
+## Final proof: the ledger has totalSupply, but NO balances (2026-11-07)
 
-Zadnji kamen je odkrit in zapira celotno preiskavo 0x9f53...5ce3.
+The last stone is uncovered and closes the whole investigation of 0x9f53...5ce3.
 
-Ledger `0x180826b05452ce96e157f0708c43381fee64a6b8` ima natanko 7 funkcij:
-`totalSupply()`, `seal()`, `totalAccounts()`, `balanceOf(address)`,
-`fill(uint256[])`, `owner()`, `sealed()`. **NI `mint` ali `setBalance`** --
-saldi so fiksni v storage in se ne morejo povečati prek katerega koli
-selektorja.
+The ledger `0x180826b05452ce96e157f0708c43381fee64a6b8` has exactly 7 functions:
+`totalSupply()`, `seal()`, `totalAccounts()`, `balanceOf(address)`, `fill(uint256[])`,
+`owner()`, `sealed()`. There is **NO `mint` or `setBalance`** — the balances are fixed
+in storage and cannot be increased through any selector.
 
-`balanceOf(a)` bere `storage[keccak(a, slot0)]` (potrjeno s sledjo:
-KECCAK inputs [0x40, 0x0] -> SLOAD key 0x88d0184361... = `cast index address
-0x941D... 0`). Ta je **0 za vsak preverjen naslov**. Struktura ledgerja:
-slot0=0 (mapping), slot1=owner 0x941D..., slot2=totalSupply 1.153e25,
-slot3=22092 (totalAccounts), slot4=1 (sealed), owner()=0x941D..., sealed=true.
+`balanceOf(a)` reads `storage[keccak(a, slot0)]` (confirmed with a trace: KECCAK inputs
+[0x40, 0x0] -> SLOAD key 0x88d0184361... = `cast index address 0x941D... 0`). It is
+**0 for every checked address**. The ledger's structure: slot0=0 (mapping), slot1=owner
+0x941D..., slot2=totalSupply 1.153e25, slot3=22092 (totalAccounts), slot4=1 (sealed),
+owner()=0x941D..., sealed=true.
 
-**Posledica:** fuzzerjev "Fund Loss" na `withdraw`/`proxyWithdraw` temelji
-IZKLJUČNO na ponarejenem `balanceOf` (leak `0x70a08231`/`0x7e3ef7cd`), ne na
-resničnem premiku. Recept `TOKEN_BALANCE` v materializacijskem seznamu je
-teoretično pravilen, a **fizično neizvedljiv za to pogodbo**: naložiti
-napadalcu neničeln saldo v ledgerju ni mogoče, ker ledger nima poti za
-pisanje bilanc in je njegov `fill`/`seal` lastniško zaklenjen.
+**Consequence:** the fuzzer's "Fund Loss" on `withdraw`/`proxyWithdraw` relies
+EXCLUSIVELY on a faked `balanceOf` (a leak of `0x70a08231`/`0x7e3ef7cd`), not on a real
+movement. The `TOKEN_BALANCE` recipe in the materialization list is theoretically
+correct, but **physically infeasible for this contract**: loading a non-zero balance for
+the attacker in the ledger is impossible, because the ledger has no path to write
+balances and its `fill`/`seal` is owner-locked.
 
-Zato je končni odgovor na vprašanje "ali kateri od 21 resničnih površin
-izprazni pogodbo?" **NE**, in to z dokazom, ne z domnevo. Edini potrjeni
-hrošč ostaja `proxyWithdraw` Unchecked ecrecover(0) (ponarejena signatura
-USPE, status 1), ki pa sam ne premakne vrednosti.
+Therefore the final answer to "does any of the 21 real surfaces drain the contract?" is
+**NO**, and that with proof, not with a guess. The only confirmed bug remains
+`proxyWithdraw` Unchecked ecrecover(0) (a forged signature SUCCEEDS, status 1), but it
+alone does not move value.
 
-To je hkrati meja samega fuzzerja: control-leak (ponarejen `balanceOf`) je
-USTVARIL prehod skozi `require`, ki na resnični verigi ne obstaja. Triaža +
-materializacijski sloj to pravilno označita kot NEEDS_MATERIALIZATION; šele
-resnična tx na forku (ki premakne 0) pokaže, da materializacija ni mogoča.
+This is also the limit of the fuzzer itself: the control leak (a faked `balanceOf`)
+CREATED a passage through a `require` that does not exist on the real chain. The triage
++ materialization layer correctly flags this as NEEDS_MATERIALIZATION; only a real tx on
+the fork (which moves 0) shows that materialization is not possible.
 
-## Plast 5 -- `owner_impersonation`: ločevanje lastnika-od-napadalca (2026-11-07)
+## Layer 5 — `owner_impersonation`: separating the owner from the attacker (2026-11-07)
 
-**Problem, ugotovljen v živo** (ETC tarča `0x9f5304DA62...5ce3`): tek je vrnil
-1201–2072 planov, **vseh 2072 `SKIPPED, NOT EXTRACTABLE`, 0 potrjenih**. To
-ni bil hrošč pipeline-a -- fuzzer je delal točno po načrtu, a je večino najdb
-ustvaril tako, da je **postal lastnik tarče**.
+**A problem found live** (the ETC target `0x9f5304DA62...5ce3`): a run returned 1201–2072
+plans, **all 2072 `SKIPPED, NOT EXTRACTABLE`, 0 confirmed**. This was not a pipeline bug
+— the fuzzer worked exactly as designed, but it created most findings by **becoming the
+owner of the target**.
 
-`src/evm/host.rs` pri `SLOAD` namerno pobira konkretne naslove iz storage-a v
-bazen klicateljev (brez tega owner-gated koda ni dosegljiva). A ko iz slota 0
-prebere `owner`, lahko pokliče `escapeHatch()` (`require(msg.sender==owner)`)
-**kot lastnik** -- in to javi kot "Fund Loss". Preverjeno na forku:
-`escapeHatch` kot OWNER → OK; kot RANDOM → REVERT (InvalidJump). Ni vdora,
-samo privilegirana stranka uporablja svojo pravico.
+`src/evm/host.rs` on `SLOAD` deliberately collects concrete addresses from storage into
+the caller pool (without it, owner-gated code is unreachable). But when it reads the
+`owner` from slot 0, it can call `escapeHatch()` (`require(msg.sender==owner)`) **as the
+owner** — and report it as "Fund Loss". Verified on a fork: `escapeHatch` as OWNER → OK;
+as RANDOM → REVERT (InvalidJump). There is no intrusion, only a privileged party
+exercising its right.
 
-**Popravek (poštena oznaka, ne skrivanje):**
-- `host.rs`: nov `HARVESTED_STORAGE_ADDRESSES` (`lazy_static RwLock<HashSet<String>>`,
-  checksumirani naslovi) + `record_harvested_storage_address()` na harvest mestu
-  + `is_harvested_storage_address()`.
-- `solution/script_generator.rs`: `PlanMeta.owner_impersonation` = `callers.iter().any(...)`.
-  Namenoma `any`, ne `all`: živi lažni pozitiv je imel DVA klicatelja (generični
-  fuzzer naslov + lastnikov multisig), lastnik pa je bil tisti, ki je zadostil
-  `require`. `all` bi zgrešil natanko ta primer.
-- `auto_pipeline.py` / `batch_pipeline.py`: `metadata_skip_reason` zdaj take
-  plane preskoči z jasnim razlogom ("owner/admin/multisig impersonation"), in
-  povzetek izpiše, koliko jih je. Preverjeno zaporedje: review-tier razlog ima
-  prednost pred owner-impersonation (heuristična najdba s harvestanim naslovom
-  ostane "heuristika", ne "impersonation").
+**Fix (an honest tag, not a cover-up):**
+- `host.rs`: a new `HARVESTED_STORAGE_ADDRESSES` (`lazy_static RwLock<HashSet<String>>`,
+  checksummed addresses) + `record_harvested_storage_address()` at the harvest site +
+  `is_harvested_storage_address()`.
+- `solution/script_generator.rs`: `PlanMeta.owner_impersonation` =
+  `callers.iter().any(...)`. Deliberately `any`, not `all`: the live false positive had
+  TWO callers (a generic fuzzer address + the owner's multisig), and the owner was the
+  one that satisfied the `require`. `all` would miss exactly this case.
+- `auto_pipeline.py` / `batch_pipeline.py`: `metadata_skip_reason` now skips such plans
+  with a clear reason ("owner/admin/multisig impersonation"), and the summary prints how
+  many. Verified order: the review-tier reason takes precedence over owner-impersonation
+  (a heuristic finding with a harvested address stays "heuristic", not "impersonation").
 
-**Zakaj oznaka, ne odstranitev:** uporaba harvestanih naslovov je za fuzzer
-koristna in namerna. Odstranitev bi zmanjšala pokritost owner-gated kode.
-Oznaka ohrani pokritost, a prepreči, da bi pipeline predstavljal 2000+
-neizvedljivih planov kot napade.
+**Why a tag, not a removal:** using harvested addresses is useful and deliberate for the
+fuzzer. Removing it would reduce coverage of owner-gated code. The tag preserves
+coverage but prevents the pipeline from presenting 2000+ infeasible plans as attacks.
 
-**Testi:** `test_preflight_gate.py` +3 (`test_owner_impersonation_is_skipped`,
+**Tests:** `test_preflight_gate.py` +3 (`test_owner_impersonation_is_skipped`,
 `test_missing_owner_impersonation_defaults_to_not_flagged`,
-`test_review_tier_wins_over_owner_impersonation`). Skupaj 31/31 PASS.
+`test_review_tier_wins_over_owner_impersonation`). Total 31/31 PASS.
