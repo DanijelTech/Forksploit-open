@@ -1,0 +1,6 @@
+{ "invariants": [
+  { "name": "PROBE: value() is never below 1 (expected to FIRE at genesis)",
+    "op": "ge",
+    "lhs": { "call": { "sig": "value()" } },
+    "rhs": { "literal": "1" } }
+] }

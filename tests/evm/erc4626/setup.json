@@ -1,0 +1,7 @@
+{
+  "calls": [
+    { "to": "Vault", "sig": "setAsset(address)", "args": ["Asset"] },
+    { "to": "Asset", "sig": "mint(address,uint256)", "args": ["$caller", "1000000000000000000000"] },
+    { "to": "Vault", "sig": "deposit(uint256,address)", "args": ["100000000000000000000", "$caller"] }
+  ]
+}

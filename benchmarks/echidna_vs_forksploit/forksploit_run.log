@@ -1,0 +1,552 @@
+[32m INFO[0m eth_getCode 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee
+Contract loaded: 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee
+[32m INFO[0m 
+
+ ================ EVM Fuzzer Start ===================
+
+
+[33m WARN[0m Chain is Ethereum Classic (mordor) but --spec-id is 'Latest', not 'Shanghai'. ETC's current hardfork (Spiral/ECIP-1109) is closest to Shanghai (adds PUSH0 and warm COINBASE) but explicitly skips the Merge-related EIPs (DIFFICULTY stays real PoW difficulty, not PREVRANDAO). Recommended: --spec-id Shanghai (exact case).
+[32m INFO[0m Deploying contract: 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee
+[32m INFO[0m Contract 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee deployed to: 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee -> balacne is 0
+[32m INFO[0m Deployed all contracts
+
+[32m INFO[0m [Stats #0] run time: 0h-0m-0s, clients: 1, corpus: 0, objectives: 0, executions: 0, exec/sec: 0.000
+[32m INFO[0m ============= New Corpus Item =============
+[32m INFO[0m Reverted? true 
+ Txn:
+[Sender] 0x8EF508Aca04B32Ff3ba5003177cb18BfA6Cd79dd
+   ├─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.buyTicket()
+   │  └─ ← 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000016496e636f7272656374207469636b657420707269636500000000000000000000
+
+[32m INFO[0m ==========================================
+[32m INFO[0m [Testcase #0] run time: 0h-0m-0s, clients: 1, corpus: 5, objectives: 0, executions: 1, exec/sec: 0.000
+[32m INFO[0m ============= Coverage Summary =============
+[32m INFO[0m 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee: 16.80% Instruction Covered, 20.18% Branch Covered
+[32m INFO[0m [Stats #0] run time: 0h-0m-0s, clients: 1, corpus: 5, objectives: 0, executions: 1, exec/sec: 0.000
+[32m INFO[0m ============= New Corpus Item =============
+[32m INFO[0m Reverted? true 
+ Txn:
+[Sender] 0xe1A425f1AC34A8a441566f93c82dD730639c8510
+   ├─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.setTicketPrice(35477323689661659093350634101776769030036878128813776692055.764591127902027776 ether)
+   │  └─ ← 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000094e6f74206f776e65720000000000000000000000000000000000000000000000
+
+[32m INFO[0m ==========================================
+[32m INFO[0m [Testcase #0] run time: 0h-0m-0s, clients: 1, corpus: 6, objectives: 0, executions: 32, exec/sec: 0.000
+[32m INFO[0m [Stats #0] run time: 0h-0m-0s, clients: 1, corpus: 6, objectives: 0, executions: 32, exec/sec: 0.000
+[32m INFO[0m ============= New Corpus Item =============
+[32m INFO[0m Reverted? true 
+ Txn:
+[Sender] 0xe1A425f1AC34A8a441566f93c82dD730639c8510
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.setTicketPrice{value: 3463.602747643561705896 ether}(4)
+
+[32m INFO[0m ==========================================
+[32m INFO[0m [Testcase #0] run time: 0h-0m-0s, clients: 1, corpus: 7, objectives: 0, executions: 50, exec/sec: 0.000
+[32m INFO[0m ============= Coverage Summary =============
+[32m INFO[0m 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee: 16.94% Instruction Covered, 21.05% Branch Covered
+[32m INFO[0m [Stats #0] run time: 0h-0m-0s, clients: 1, corpus: 7, objectives: 0, executions: 50, exec/sec: 0.000
+[32m INFO[0m ============= New Corpus Item =============
+[32m INFO[0m Reverted? true 
+ Txn:
+[Sender] 0x8EF508Aca04B32Ff3ba5003177cb18BfA6Cd79dd
+   ├─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.withdrawFunds()
+   │  └─ ← 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000094e6f74206f776e65720000000000000000000000000000000000000000000000
+
+[32m INFO[0m ==========================================
+[32m INFO[0m [Testcase #0] run time: 0h-0m-0s, clients: 1, corpus: 8, objectives: 0, executions: 64, exec/sec: 0.000
+[32m INFO[0m [Stats #0] run time: 0h-0m-0s, clients: 1, corpus: 8, objectives: 0, executions: 64, exec/sec: 0.000
+[32m INFO[0m ============= New Corpus Item =============
+[32m INFO[0m Reverted? true 
+ Txn:
+[Sender] 0x8EF508Aca04B32Ff3ba5003177cb18BfA6Cd79dd
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.withdrawFunds{value: 4032.631915494595492173 ether}()
+
+[32m INFO[0m ==========================================
+[32m INFO[0m [Testcase #0] run time: 0h-0m-0s, clients: 1, corpus: 9, objectives: 0, executions: 65, exec/sec: 0.000
+[32m INFO[0m balance of 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee at 0x108c8c3 is 10600000000000000848
+[32m INFO[0m eth_getCode 0xff0f52636c2b4689179c1a99e45886b6eabdf967
+[32m INFO[0m [Stats #0] run time: 0h-0m-0s, clients: 1, corpus: 9, objectives: 0, executions: 65, exec/sec: 0.000
+[32m INFO[0m ============= New Corpus Item =============
+[32m INFO[0m Reverted? false 
+ Txn:
+[Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967
+   ├─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.withdrawFunds()
+   │  └─[2] [Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967.fallback()
+
+[32m INFO[0m ==========================================
+[32m INFO[0m [Testcase #0] run time: 0h-0m-0s, clients: 1, corpus: 10, objectives: 0, executions: 84, exec/sec: 0.000
+
+
+
+😊😊 Found vulnerabilities! 
+
+
+================ Description ================
+[Fund Loss] (sim-confirmed): Anyone can earn 10.600 native tokens by interacting with the provided contracts
+
+================ Trace ================
+[Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967
+   ├─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.withdrawFunds()
+   │  ├─[2] [Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967.fallback()
+   │  │  └─[3] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.receive()
+
+
+[32m INFO[0m ============= Coverage Summary =============
+[32m INFO[0m 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee: 19.60% Instruction Covered, 23.68% Branch Covered
+[32m INFO[0m [Stats #0] run time: 0h-0m-0s, clients: 1, corpus: 10, objectives: 0, executions: 84, exec/sec: 0.000
+[32m INFO[0m ============= New Corpus Item =============
+[32m INFO[0m Reverted? false 
+ Txn:
+[Sender] 0x8EF508Aca04B32Ff3ba5003177cb18BfA6Cd79dd
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.call{value: 1460.785054235046059778 ether}()
+
+[32m INFO[0m ==========================================
+[32m INFO[0m [Testcase #0] run time: 0h-0m-0s, clients: 1, corpus: 12, objectives: 0, executions: 96, exec/sec: 0.000
+[32m INFO[0m ============= Coverage Summary =============
+[32m INFO[0m 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee: 19.60% Instruction Covered, 23.68% Branch Covered
+[32m INFO[0m [Stats #0] run time: 0h-0m-0s, clients: 1, corpus: 12, objectives: 0, executions: 96, exec/sec: 0.000
+[32m INFO[0m ============= New Corpus Item =============
+[32m INFO[0m Reverted? true 
+ Txn:
+[Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967
+   ├─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.withdrawFunds()
+   │  ├─[2] [Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967.fallback()
+   │  [Sender] 0x8EF508Aca04B32Ff3ba5003177cb18BfA6Cd79dd
+   │  │  ├─[3] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.buyTicket{value: 0.035891206057398416 ether}()
+   │  │  │  └─ ← 0x3ee5aeb5
+
+[32m INFO[0m ==========================================
+[32m INFO[0m [Testcase #0] run time: 0h-0m-0s, clients: 1, corpus: 13, objectives: 0, executions: 130, exec/sec: 0.000
+[32m INFO[0m ============= Coverage Summary =============
+[32m INFO[0m 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee: 20.21% Instruction Covered, 24.56% Branch Covered
+
+
+
+😊😊 Found vulnerabilities! 
+
+
+================ Description ================
+[Centralization Risk: Owner-Only Function] (sim-review): 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee's function 0x15981650 succeeded when called by owner() (0xff0f52636c2b4689179c1a99e45886b6eabdf967), but the identical call reverts for anyone else -- part of the privileged admin surface. Not a bug by itself: review whether this power (and anything else owner-gated on this contract) is appropriately scoped, time-locked, or multi-sig'd before production.
+
+================ Trace ================
+[Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.setTicketPrice(105315505544645704678469111607855114644100139806.536676839981581927 ether)
+
+
+[32m INFO[0m ============= Coverage Summary =============
+[32m INFO[0m 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee: 20.56% Instruction Covered, 25.44% Branch Covered
+
+
+
+😊😊 Found vulnerabilities! 
+
+
+================ Description ================
+[Zero Address Setter] (sim-review): 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee wrote address(0) into storage slot 2 at pc 962, overwriting a previously-set address value with no visible zero-check. If this slot holds an owner/admin/implementation role, the privileged address is now permanently the burn address -- a missing `require(newAddr != address(0))` guard (SWC-131, presence of unused variables / zero-address assignment).
+
+[Zero Address Setter] (sim-review): 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee wrote address(0) into storage slot 2 at pc 962, overwriting a previously-set address value with no visible zero-check. If this slot holds an owner/admin/implementation role, the privileged address is now permanently the burn address -- a missing `require(newAddr != address(0))` guard (SWC-131, presence of unused variables / zero-address assignment).
+
+================ Trace ================
+[Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.setTicketPrice(0)
+
+
+[32m INFO[0m ============= Coverage Summary =============
+[32m INFO[0m 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee: 20.56% Instruction Covered, 25.44% Branch Covered
+[32m INFO[0m eth_getCode 0x8ef508aca04b32ff3ba5003177cb18bfa6cd79dd
+[32m INFO[0m [Stats #0] run time: 0h-0m-0s, clients: 1, corpus: 13, objectives: 0, executions: 130, exec/sec: 0.000
+[32m INFO[0m ============= New Corpus Item =============
+[32m INFO[0m Reverted? false 
+ Txn:
+[Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.setTicketPrice(0)
+[Sender] 0x8EF508Aca04B32Ff3ba5003177cb18BfA6Cd79dd
+   ├─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.buyTicket()
+   │  └─[2] [Sender] 0x8EF508Aca04B32Ff3ba5003177cb18BfA6Cd79dd.fallback()
+
+[32m INFO[0m ==========================================
+[32m INFO[0m [Testcase #0] run time: 0h-0m-0s, clients: 1, corpus: 16, objectives: 0, executions: 1783, exec/sec: 0.000
+[32m INFO[0m ============= Coverage Summary =============
+[32m INFO[0m 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee: 36.67% Instruction Covered, 30.70% Branch Covered
+[32m INFO[0m eth_getCode 0x0000000000000000000000000000000000000041
+
+
+
+😊😊 Found vulnerabilities! 
+
+
+================ Description ================
+[Integer Overflow] (sim-review): Unchecked SUB at 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee:3666 wrapped around without reverting -- likely missing overflow protection (pre-0.8 Solidity, raw bytecode, or an `unchecked` block).
+
+================ Trace ================
+[Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.setTicketPrice(0)
+[Sender] 0x8EF508Aca04B32Ff3ba5003177cb18BfA6Cd79dd
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.buyTicket()
+
+
+[32m INFO[0m eth_getCode 0x68dd4f5ac792eaaa5e36f4f4e0474e0625dc9024
+[32m INFO[0m eth_getCode 0x000000000000000000000000000000000000016b
+[32m INFO[0m eth_getCode 0x0000000000000000000200000000000000000000
+[32m INFO[0m [Stats #0] run time: 0h-0m-0s, clients: 1, corpus: 16, objectives: 0, executions: 1783, exec/sec: 0.000
+[32m INFO[0m ============= New Corpus Item =============
+[32m INFO[0m Reverted? false 
+ Txn:
+[Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.setTicketPrice(0)
+[Sender] 0x8EF508Aca04B32Ff3ba5003177cb18BfA6Cd79dd
+   ├─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.buyTicket()
+   │  ├─[2] [Sender] 0x8EF508Aca04B32Ff3ba5003177cb18BfA6Cd79dd.fallback()
+   │  │  └─[3] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.receive()
+
+[32m INFO[0m ==========================================
+[32m INFO[0m [Testcase #0] run time: 0h-0m-0s, clients: 1, corpus: 18, objectives: 0, executions: 2258, exec/sec: 0.000
+[32m INFO[0m [Stats #0] run time: 0h-0m-0s, clients: 1, corpus: 18, objectives: 0, executions: 2258, exec/sec: 0.000
+[32m INFO[0m ============= New Corpus Item =============
+[32m INFO[0m Reverted? true 
+ Txn:
+[Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967
+   ├─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.withdrawFunds()
+   │  ├─[2] [Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967.fallback()
+   │  │  └─[3] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.receive()
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.setTicketPrice(0)
+[Sender] 0x8EF508Aca04B32Ff3ba5003177cb18BfA6Cd79dd
+   ├─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.buyTicket()
+   │  └─ ← 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001c4e6f7420656e6f7567682066756e647320696e20636f6e747261637400000000
+
+[32m INFO[0m ==========================================
+[32m INFO[0m [Testcase #0] run time: 0h-0m-0s, clients: 1, corpus: 19, objectives: 0, executions: 2262, exec/sec: 0.000
+[32m INFO[0m eth_getCode 0x0000000000000000000000000000000000000001
+
+
+
+😊😊 Found vulnerabilities! 
+
+
+================ Description ================
+[Weak Randomness] (sim-review): 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee used a block-environment value (block.timestamp/number/prevrandao/gaslimit/basefee) as the operand of a modulo/bitmask/comparison at pc 2084 (SWC-120). Such values are predictable by whoever watches the pending transaction and influenceable by the block producer, so any winner/lottery/selection logic built on them can be gamed.
+
+[Fund Loss] (sim-confirmed): Anyone can earn 0.100 native tokens by interacting with the provided contracts
+
+[Unchecked ecrecover(0)] (sim-confirmed): 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee called ecrecover() at pc 2075 with an invalid signature (recovered the zero address), and the call succeeded anyway -- likely missing a `require(signer != address(0))` check, which is exploitable if the compared value was never initialized.
+
+[Unbounded Loop] (sim-review): 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee's loop at pc 2740 iterated 17 times this call, up from a previous max of 12 -- its trip count is GROWING across separate calls, meaning it's bounded by a storage value that only ever increases, not by calldata or a fixed constant. Gas cost for EVERY future call through this loop keeps rising as more state accumulates, until it eventually exceeds the block gas limit and the function becomes permanently unusable (unbounded-loop-over-growing-storage gas-griefing DoS). Heuristic: a loop can also grow once for a legitimate reason (e.g. a bigger caller-supplied length); this is only reported after the SAME loop grows repeatedly with no such explicit driver.
+
+[Weak Randomness] (sim-review): 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee used a block-environment value (block.timestamp/number/prevrandao/gaslimit/basefee) as the operand of a modulo/bitmask/comparison at pc 2084 (SWC-120). Such values are predictable by whoever watches the pending transaction and influenceable by the block producer, so any winner/lottery/selection logic built on them can be gamed.
+
+================ Trace ================
+[Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.setTicketPrice(0)
+[Sender] 0x0000000000000000000000000000000000000001
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.buyTicket()
+
+
+[32m INFO[0m ============= Coverage Summary =============
+[32m INFO[0m 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee: 51.07% Instruction Covered, 35.96% Branch Covered
+[32m INFO[0m eth_getCode 0x0000000000000000000000000000000000000002
+[32m INFO[0m [Stats #0] run time: 0h-0m-0s, clients: 1, corpus: 19, objectives: 0, executions: 2262, exec/sec: 0.000
+[32m INFO[0m ============= New Corpus Item =============
+[32m INFO[0m Reverted? false 
+ Txn:
+[Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.setTicketPrice(0)
+[Sender] 0x0000000000000000000000000000000000000002
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.buyTicket()
+
+[32m INFO[0m ==========================================
+[32m INFO[0m [Testcase #0] run time: 0h-0m-0s, clients: 1, corpus: 21, objectives: 0, executions: 2272, exec/sec: 0.000
+
+
+
+😊😊 Found vulnerabilities! 
+
+
+================ Description ================
+[Stale Guard Counter] (sim-review): 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee's guard check at pc 2620 reads storage slot 0x0, which held the exact same value (0x1) across 6 separate successful calls through this guard. If this slot is meant to be a counter or usage total that a `require(slot < LIMIT)`-style check enforces a cap against, a value that never moves despite repeated successful activity usually means the increment logic is missing, unreachable, or gated behind something unrelated -- making the advertised limit silently ineffective (confirmed in a real deployed contract this session: a token-mint cap whose counter's increment had been commented out). Review item, not a certain bug: a guard CAN legitimately read a slot that stays constant by design (an admin flag, a one-time init check) -- worth a manual look at what this slot is supposed to track and whether anything actually updates it.
+
+[Stale Guard Counter] (sim-review): 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee's guard check at pc 1771 reads storage slot 0x2, which held the exact same value (0x0) across 6 separate successful calls through this guard. If this slot is meant to be a counter or usage total that a `require(slot < LIMIT)`-style check enforces a cap against, a value that never moves despite repeated successful activity usually means the increment logic is missing, unreachable, or gated behind something unrelated -- making the advertised limit silently ineffective (confirmed in a real deployed contract this session: a token-mint cap whose counter's increment had been commented out). Review item, not a certain bug: a guard CAN legitimately read a slot that stays constant by design (an admin flag, a one-time init check) -- worth a manual look at what this slot is supposed to track and whether anything actually updates it.
+
+[Stale Guard Counter] (sim-review): 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee's guard check at pc 1905 reads storage slot 0x5, which held the exact same value (0x41) across 6 separate successful calls through this guard. If this slot is meant to be a counter or usage total that a `require(slot < LIMIT)`-style check enforces a cap against, a value that never moves despite repeated successful activity usually means the increment logic is missing, unreachable, or gated behind something unrelated -- making the advertised limit silently ineffective (confirmed in a real deployed contract this session: a token-mint cap whose counter's increment had been commented out). Review item, not a certain bug: a guard CAN legitimately read a slot that stays constant by design (an admin flag, a one-time init check) -- worth a manual look at what this slot is supposed to track and whether anything actually updates it.
+
+================ Trace ================
+[Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.setTicketPrice(0)
+[Sender] 0x8EF508Aca04B32Ff3ba5003177cb18BfA6Cd79dd
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.buyTicket()
+
+
+[32m INFO[0m eth_getCode 0x000000000000000000000000016345785d8a003a
+
+
+
+😊😊 Found vulnerabilities! 
+
+
+================ Description ================
+[Fund Loss] (sim-confirmed): Anyone can earn 0.100 native tokens by interacting with the provided contracts
+
+[Stale Guard Counter] (sim-review): 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee's guard check at pc 2407 reads storage slot 0x8, which held the exact same value (0x16345785d8a003a) across 6 separate successful calls through this guard. If this slot is meant to be a counter or usage total that a `require(slot < LIMIT)`-style check enforces a cap against, a value that never moves despite repeated successful activity usually means the increment logic is missing, unreachable, or gated behind something unrelated -- making the advertised limit silently ineffective (confirmed in a real deployed contract this session: a token-mint cap whose counter's increment had been commented out). Review item, not a certain bug: a guard CAN legitimately read a slot that stays constant by design (an admin flag, a one-time init check) -- worth a manual look at what this slot is supposed to track and whether anything actually updates it.
+
+================ Trace ================
+[Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.setTicketPrice(0)
+[Sender] 0x0000000000000000000000000000000000000002
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.buyTicket()
+
+
+[32m INFO[0m ============= Coverage Summary =============
+[32m INFO[0m 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee: 52.16% Instruction Covered, 36.84% Branch Covered
+
+
+
+😊😊 Found vulnerabilities! 
+
+
+================ Description ================
+[Fund Loss] (sim-confirmed): Anyone can earn 0.100 native tokens by interacting with the provided contracts
+
+[Unchecked ecrecover(0)] (sim-confirmed): 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee called ecrecover() at pc 2075 with an invalid signature (recovered the zero address), and the call succeeded anyway -- likely missing a `require(signer != address(0))` check, which is exploitable if the compared value was never initialized.
+
+[Stale Guard Counter] (sim-review): 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee's guard check at pc 1967 reads storage slot 0x4, which held the exact same value (0x16345785d8a0000) across 6 separate successful calls through this guard. If this slot is meant to be a counter or usage total that a `require(slot < LIMIT)`-style check enforces a cap against, a value that never moves despite repeated successful activity usually means the increment logic is missing, unreachable, or gated behind something unrelated -- making the advertised limit silently ineffective (confirmed in a real deployed contract this session: a token-mint cap whose counter's increment had been commented out). Review item, not a certain bug: a guard CAN legitimately read a slot that stays constant by design (an admin flag, a one-time init check) -- worth a manual look at what this slot is supposed to track and whether anything actually updates it.
+
+================ Trace ================
+[Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.setTicketPrice(0)
+[Sender] 0x0000000000000000000000000000000000000001
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.buyTicket()
+
+
+[32m INFO[0m [Stats #0] run time: 0h-0m-0s, clients: 1, corpus: 21, objectives: 0, executions: 2272, exec/sec: 0.000
+[32m INFO[0m ============= New Corpus Item =============
+[32m INFO[0m Reverted? false 
+ Txn:
+[Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.setTicketPrice(0)
+[Sender] 0x0000000000000000000000000000000000000001
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.buyTicket()
+
+[32m INFO[0m ==========================================
+[32m INFO[0m [Testcase #0] run time: 0h-0m-0s, clients: 1, corpus: 25, objectives: 0, executions: 2368, exec/sec: 0.000
+[32m INFO[0m eth_getCode 0x000000000000000000000000000000000000000d
+[32m INFO[0m eth_getCode 0x0000000000000000000000008ac7230489e80000
+[32m INFO[0m ============= Coverage Summary =============
+[32m INFO[0m 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee: 52.42% Instruction Covered, 37.72% Branch Covered
+[32m INFO[0m eth_getCode 0x000000000000000000000000000000000000001a
+[32m INFO[0m eth_getCode 0x000000000000000000000000000000000000000e
+[32m INFO[0m eth_getCode 0x0000000000000000000000000000000000000018
+[32m INFO[0m eth_getCode 0x00000000000000000000000014d1120d7b160159
+[32m INFO[0m eth_getCode 0x35c9dfd76bf02107ff4f7128bd69716612d31ddb
+[32m INFO[0m eth_getCode 0x0000000000000000000000000000000000006400
+[32m INFO[0m eth_getCode 0x000000000000000000000000000000000000001b
+[32m INFO[0m eth_getCode 0xe1a425f1ac34a8a441566f93c82dd730639c8510
+[32m INFO[0m eth_getCode 0x000000000000000000000000000000000000000f
+[32m INFO[0m eth_getCode 0x0080ff03e8000000fa0000fa0000008000000f36
+[32m INFO[0m eth_getCode 0x0000000000000000000000007fffffff00001083
+[32m INFO[0m [Stats #0] run time: 0h-0m-1s, clients: 1, corpus: 25, objectives: 0, executions: 3357, exec/sec: 3.211k
+[32m INFO[0m eth_getCode 0x000000000000000000000000016345785d8a003f
+[32m INFO[0m eth_getCode 0x0000000000000000000000000000000000640bc9
+[32m INFO[0m eth_getCode 0x000000000000000000000000136dcc951d8c0158
+[32m INFO[0m eth_getCode 0x0000000000000000000000000000000000000412
+[32m INFO[0m eth_getCode 0x000000000000000000000000120a871cc002012c
+[32m INFO[0m eth_getCode 0x00000000000000000000000014d1120d7b160166
+[32m INFO[0m eth_getCode 0x000000000000000000000000136dcc951d8c014f
+[32m INFO[0m eth_getCode 0x000000000000000000000000136dcc951d8c0139
+[32m INFO[0m eth_getCode 0x00000000000000000000000014d1120d7b160191
+[32m INFO[0m eth_getCode 0x000000000000000000000000136dcc951d8c0146
+
+
+
+😊😊 Found vulnerabilities! 
+
+
+================ Description ================
+[Weak Randomness] (sim-review): 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee used a block-environment value (block.timestamp/number/prevrandao/gaslimit/basefee) as the operand of a modulo/bitmask/comparison at pc 4079 (SWC-120). Such values are predictable by whoever watches the pending transaction and influenceable by the block producer, so any winner/lottery/selection logic built on them can be gamed.
+
+[Fund Loss] (sim-confirmed): Anyone can earn 0.200 native tokens by interacting with the provided contracts
+
+[Weak Randomness] (sim-review): 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee used a block-environment value (block.timestamp/number/prevrandao/gaslimit/basefee) as the operand of a modulo/bitmask/comparison at pc 4079 (SWC-120). Such values are predictable by whoever watches the pending transaction and influenceable by the block producer, so any winner/lottery/selection logic built on them can be gamed.
+
+================ Trace ================
+[Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.setTicketPrice(0)
+[Sender] 0x8EF508Aca04B32Ff3ba5003177cb18BfA6Cd79dd
+   ├─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.buyTicket()
+   │  ├─[2] [Sender] 0x8EF508Aca04B32Ff3ba5003177cb18BfA6Cd79dd.fallback()
+   │  │  └─[3] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.receive()
+   ├─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.buyTicket()
+   │  ├─[2] [Sender] 0x8EF508Aca04B32Ff3ba5003177cb18BfA6Cd79dd.fallback()
+   │  │  └─[3] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.receive()
+
+
+[32m INFO[0m ============= Coverage Summary =============
+[32m INFO[0m 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee: 52.42% Instruction Covered, 37.72% Branch Covered
+[32m INFO[0m [Stats #0] run time: 0h-0m-2s, clients: 1, corpus: 25, objectives: 0, executions: 8129, exec/sec: 3.974k
+[32m INFO[0m [Stats #0] run time: 0h-0m-3s, clients: 1, corpus: 25, objectives: 0, executions: 15820, exec/sec: 5.191k
+[32m INFO[0m [Stats #0] run time: 0h-0m-4s, clients: 1, corpus: 25, objectives: 0, executions: 22482, exec/sec: 5.546k
+
+
+
+😊😊 Found vulnerabilities! 
+
+
+================ Description ================
+[Arbitrary Storage Write] (sim-confirmed): 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee executed SSTORE at pc 962 with slot 2 -- a value that came straight from this transaction's own calldata, not from a KECCAK256 mapping/array-slot derivation. The storage slot being written looks attacker-chosen, which can overwrite ANY slot in this contract (owner, balances, implementation address, ...) depending on what value is passed.
+
+================ Trace ================
+[Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.setTicketPrice(2)
+
+
+[32m INFO[0m ============= Coverage Summary =============
+[32m INFO[0m 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee: 52.42% Instruction Covered, 37.72% Branch Covered
+[32m INFO[0m [Stats #0] run time: 0h-0m-5s, clients: 1, corpus: 25, objectives: 0, executions: 29092, exec/sec: 5.752k
+[32m INFO[0m [Stats #0] run time: 0h-0m-6s, clients: 1, corpus: 25, objectives: 0, executions: 35604, exec/sec: 5.876k
+[32m INFO[0m [Stats #0] run time: 0h-0m-7s, clients: 1, corpus: 25, objectives: 0, executions: 41815, exec/sec: 5.921k
+[32m INFO[0m [Stats #0] run time: 0h-0m-8s, clients: 1, corpus: 25, objectives: 0, executions: 48160, exec/sec: 5.974k
+[32m INFO[0m [Stats #0] run time: 0h-0m-9s, clients: 1, corpus: 25, objectives: 0, executions: 53486, exec/sec: 5.900k
+[32m INFO[0m [Stats #0] run time: 0h-0m-10s, clients: 1, corpus: 25, objectives: 0, executions: 59358, exec/sec: 5.896k
+[32m INFO[0m [Stats #0] run time: 0h-0m-11s, clients: 1, corpus: 25, objectives: 0, executions: 65083, exec/sec: 5.880k
+[32m INFO[0m [Stats #0] run time: 0h-0m-12s, clients: 1, corpus: 25, objectives: 0, executions: 70260, exec/sec: 5.818k
+[32m INFO[0m [Stats #0] run time: 0h-0m-13s, clients: 1, corpus: 25, objectives: 0, executions: 75608, exec/sec: 5.778k
+[32m INFO[0m [Stats #0] run time: 0h-0m-14s, clients: 1, corpus: 25, objectives: 0, executions: 81036, exec/sec: 5.753k
+[32m INFO[0m [Stats #0] run time: 0h-0m-15s, clients: 1, corpus: 25, objectives: 0, executions: 86110, exec/sec: 5.706k
+[32m INFO[0m [Stats #0] run time: 0h-0m-16s, clients: 1, corpus: 25, objectives: 0, executions: 91367, exec/sec: 5.678k
+[32m INFO[0m [Stats #0] run time: 0h-0m-17s, clients: 1, corpus: 25, objectives: 0, executions: 96521, exec/sec: 5.647k
+[32m INFO[0m [Stats #0] run time: 0h-0m-18s, clients: 1, corpus: 25, objectives: 0, executions: 101593, exec/sec: 5.614k
+[32m INFO[0m [Stats #0] run time: 0h-0m-19s, clients: 1, corpus: 25, objectives: 0, executions: 106326, exec/sec: 5.567k
+[32m INFO[0m [Stats #0] run time: 0h-0m-20s, clients: 1, corpus: 25, objectives: 0, executions: 111315, exec/sec: 5.537k
+[32m INFO[0m [Stats #0] run time: 0h-0m-21s, clients: 1, corpus: 25, objectives: 0, executions: 116131, exec/sec: 5.503k
+[32m INFO[0m [Stats #0] run time: 0h-0m-22s, clients: 1, corpus: 25, objectives: 0, executions: 120808, exec/sec: 5.464k
+[32m INFO[0m [Stats #0] run time: 0h-0m-23s, clients: 1, corpus: 25, objectives: 0, executions: 125695, exec/sec: 5.437k
+[32m INFO[0m [Stats #0] run time: 0h-0m-24s, clients: 1, corpus: 25, objectives: 0, executions: 130219, exec/sec: 5.396k
+[32m INFO[0m [Stats #0] run time: 0h-0m-25s, clients: 1, corpus: 25, objectives: 0, executions: 134953, exec/sec: 5.369k
+[32m INFO[0m [Stats #0] run time: 0h-0m-26s, clients: 1, corpus: 25, objectives: 0, executions: 139743, exec/sec: 5.346k
+[32m INFO[0m [Stats #0] run time: 0h-0m-27s, clients: 1, corpus: 25, objectives: 0, executions: 144337, exec/sec: 5.318k
+[32m INFO[0m [Stats #0] run time: 0h-0m-28s, clients: 1, corpus: 25, objectives: 0, executions: 149105, exec/sec: 5.297k
+[32m INFO[0m [Stats #0] run time: 0h-0m-29s, clients: 1, corpus: 25, objectives: 0, executions: 153449, exec/sec: 5.263k
+[32m INFO[0m [Stats #0] run time: 0h-0m-30s, clients: 1, corpus: 25, objectives: 0, executions: 157963, exec/sec: 5.236k
+[32m INFO[0m [Stats #0] run time: 0h-0m-31s, clients: 1, corpus: 25, objectives: 0, executions: 162386, exec/sec: 5.209k
+[32m INFO[0m [Stats #0] run time: 0h-0m-32s, clients: 1, corpus: 25, objectives: 0, executions: 166839, exec/sec: 5.185k
+[32m INFO[0m [Stats #0] run time: 0h-0m-33s, clients: 1, corpus: 25, objectives: 0, executions: 171216, exec/sec: 5.160k
+[32m INFO[0m [Stats #0] run time: 0h-0m-34s, clients: 1, corpus: 25, objectives: 0, executions: 175435, exec/sec: 5.131k
+[32m INFO[0m [Stats #0] run time: 0h-0m-35s, clients: 1, corpus: 25, objectives: 0, executions: 179738, exec/sec: 5.107k
+[32m INFO[0m [Stats #0] run time: 0h-0m-36s, clients: 1, corpus: 25, objectives: 0, executions: 184022, exec/sec: 5.084k
+[32m INFO[0m [Stats #0] run time: 0h-0m-37s, clients: 1, corpus: 25, objectives: 0, executions: 188357, exec/sec: 5.064k
+[32m INFO[0m [Stats #0] run time: 0h-0m-38s, clients: 1, corpus: 25, objectives: 0, executions: 192337, exec/sec: 5.035k
+[32m INFO[0m [Stats #0] run time: 0h-0m-39s, clients: 1, corpus: 25, objectives: 0, executions: 196383, exec/sec: 5.009k
+[32m INFO[0m [Stats #0] run time: 0h-0m-40s, clients: 1, corpus: 25, objectives: 0, executions: 200585, exec/sec: 4.989k
+[32m INFO[0m [Stats #0] run time: 0h-0m-41s, clients: 1, corpus: 25, objectives: 0, executions: 204735, exec/sec: 4.968k
+[32m INFO[0m [Stats #0] run time: 0h-0m-42s, clients: 1, corpus: 25, objectives: 0, executions: 208677, exec/sec: 4.943k
+[32m INFO[0m [Stats #0] run time: 0h-0m-43s, clients: 1, corpus: 25, objectives: 0, executions: 212519, exec/sec: 4.917k
+[32m INFO[0m [Stats #0] run time: 0h-0m-44s, clients: 1, corpus: 25, objectives: 0, executions: 216544, exec/sec: 4.896k
+[32m INFO[0m [Stats #0] run time: 0h-0m-45s, clients: 1, corpus: 25, objectives: 0, executions: 220494, exec/sec: 4.875k
+[32m INFO[0m [Stats #0] run time: 0h-0m-46s, clients: 1, corpus: 25, objectives: 0, executions: 224380, exec/sec: 4.853k
+[32m INFO[0m [Stats #0] run time: 0h-0m-47s, clients: 1, corpus: 25, objectives: 0, executions: 228348, exec/sec: 4.834k
+[32m INFO[0m [Stats #0] run time: 0h-0m-48s, clients: 1, corpus: 25, objectives: 0, executions: 232423, exec/sec: 4.817k
+[32m INFO[0m [Stats #0] run time: 0h-0m-49s, clients: 1, corpus: 25, objectives: 0, executions: 236125, exec/sec: 4.794k
+[32m INFO[0m [Stats #0] run time: 0h-0m-50s, clients: 1, corpus: 25, objectives: 0, executions: 240080, exec/sec: 4.776k
+[32m INFO[0m [Stats #0] run time: 0h-0m-51s, clients: 1, corpus: 25, objectives: 0, executions: 243961, exec/sec: 4.758k
+[32m INFO[0m [Stats #0] run time: 0h-0m-52s, clients: 1, corpus: 25, objectives: 0, executions: 247801, exec/sec: 4.740k
+[32m INFO[0m [Stats #0] run time: 0h-0m-53s, clients: 1, corpus: 25, objectives: 0, executions: 251663, exec/sec: 4.723k
+[32m INFO[0m [Stats #0] run time: 0h-0m-54s, clients: 1, corpus: 25, objectives: 0, executions: 255220, exec/sec: 4.701k
+[32m INFO[0m [Stats #0] run time: 0h-0m-55s, clients: 1, corpus: 25, objectives: 0, executions: 259081, exec/sec: 4.686k
+[32m INFO[0m [Stats #0] run time: 0h-0m-56s, clients: 1, corpus: 25, objectives: 0, executions: 262781, exec/sec: 4.667k
+[32m INFO[0m [Stats #0] run time: 0h-0m-57s, clients: 1, corpus: 25, objectives: 0, executions: 266437, exec/sec: 4.649k
+[32m INFO[0m [Stats #0] run time: 0h-0m-58s, clients: 1, corpus: 25, objectives: 0, executions: 270272, exec/sec: 4.634k
+[32m INFO[0m [Stats #0] run time: 0h-0m-59s, clients: 1, corpus: 25, objectives: 0, executions: 273847, exec/sec: 4.616k
+[32m INFO[0m [Stats #0] run time: 0h-1m-0s, clients: 1, corpus: 25, objectives: 0, executions: 277737, exec/sec: 4.604k
+[32m INFO[0m [Stats #0] run time: 0h-1m-1s, clients: 1, corpus: 25, objectives: 0, executions: 281260, exec/sec: 4.586k
+[32m INFO[0m [Stats #0] run time: 0h-1m-2s, clients: 1, corpus: 25, objectives: 0, executions: 284932, exec/sec: 4.570k
+[32m INFO[0m [Stats #0] run time: 0h-1m-3s, clients: 1, corpus: 25, objectives: 0, executions: 288538, exec/sec: 4.555k
+[32m INFO[0m [Stats #0] run time: 0h-1m-4s, clients: 1, corpus: 25, objectives: 0, executions: 292152, exec/sec: 4.540k
+[32m INFO[0m [Stats #0] run time: 0h-1m-5s, clients: 1, corpus: 25, objectives: 0, executions: 295679, exec/sec: 4.524k
+[32m INFO[0m [Stats #0] run time: 0h-1m-6s, clients: 1, corpus: 25, objectives: 0, executions: 299226, exec/sec: 4.508k
+[32m INFO[0m [Stats #0] run time: 0h-1m-7s, clients: 1, corpus: 25, objectives: 0, executions: 302968, exec/sec: 4.497k
+[32m INFO[0m [Stats #0] run time: 0h-1m-8s, clients: 1, corpus: 25, objectives: 0, executions: 306460, exec/sec: 4.482k
+[32m INFO[0m [Stats #0] run time: 0h-1m-9s, clients: 1, corpus: 25, objectives: 0, executions: 309878, exec/sec: 4.466k
+[32m INFO[0m [Stats #0] run time: 0h-1m-10s, clients: 1, corpus: 25, objectives: 0, executions: 313280, exec/sec: 4.451k
+[32m INFO[0m [Stats #0] run time: 0h-1m-11s, clients: 1, corpus: 25, objectives: 0, executions: 316743, exec/sec: 4.436k
+[32m INFO[0m [Stats #0] run time: 0h-1m-12s, clients: 1, corpus: 25, objectives: 0, executions: 320265, exec/sec: 4.423k
+[32m INFO[0m [Stats #0] run time: 0h-1m-13s, clients: 1, corpus: 25, objectives: 0, executions: 323645, exec/sec: 4.408k
+[32m INFO[0m [Stats #0] run time: 0h-1m-14s, clients: 1, corpus: 25, objectives: 0, executions: 327278, exec/sec: 4.398k
+[32m INFO[0m [Stats #0] run time: 0h-1m-15s, clients: 1, corpus: 25, objectives: 0, executions: 330767, exec/sec: 4.385k
+[32m INFO[0m [Stats #0] run time: 0h-1m-16s, clients: 1, corpus: 25, objectives: 0, executions: 334259, exec/sec: 4.373k
+[32m INFO[0m [Stats #0] run time: 0h-1m-17s, clients: 1, corpus: 25, objectives: 0, executions: 337793, exec/sec: 4.362k
+[32m INFO[0m [Stats #0] run time: 0h-1m-18s, clients: 1, corpus: 25, objectives: 0, executions: 341193, exec/sec: 4.350k
+[32m INFO[0m [Stats #0] run time: 0h-1m-19s, clients: 1, corpus: 25, objectives: 0, executions: 344489, exec/sec: 4.336k
+[32m INFO[0m [Stats #0] run time: 0h-1m-20s, clients: 1, corpus: 25, objectives: 0, executions: 347935, exec/sec: 4.325k
+[32m INFO[0m [Stats #0] run time: 0h-1m-21s, clients: 1, corpus: 25, objectives: 0, executions: 351303, exec/sec: 4.313k
+[32m INFO[0m [Stats #0] run time: 0h-1m-22s, clients: 1, corpus: 25, objectives: 0, executions: 354770, exec/sec: 4.302k
+[32m INFO[0m [Stats #0] run time: 0h-1m-23s, clients: 1, corpus: 25, objectives: 0, executions: 358138, exec/sec: 4.290k
+[32m INFO[0m [Stats #0] run time: 0h-1m-24s, clients: 1, corpus: 25, objectives: 0, executions: 361451, exec/sec: 4.278k
+[32m INFO[0m [Stats #0] run time: 0h-1m-25s, clients: 1, corpus: 25, objectives: 0, executions: 364856, exec/sec: 4.267k
+[32m INFO[0m [Stats #0] run time: 0h-1m-26s, clients: 1, corpus: 25, objectives: 0, executions: 368237, exec/sec: 4.257k
+[32m INFO[0m [Stats #0] run time: 0h-1m-27s, clients: 1, corpus: 25, objectives: 0, executions: 371468, exec/sec: 4.245k
+[32m INFO[0m [Stats #0] run time: 0h-1m-28s, clients: 1, corpus: 25, objectives: 0, executions: 374759, exec/sec: 4.234k
+[32m INFO[0m [Stats #0] run time: 0h-1m-29s, clients: 1, corpus: 25, objectives: 0, executions: 378056, exec/sec: 4.223k
+[32m INFO[0m [Stats #0] run time: 0h-1m-30s, clients: 1, corpus: 25, objectives: 0, executions: 381350, exec/sec: 4.212k
+[32m INFO[0m [Stats #0] run time: 0h-1m-31s, clients: 1, corpus: 25, objectives: 0, executions: 384572, exec/sec: 4.201k
+[32m INFO[0m [Stats #0] run time: 0h-1m-32s, clients: 1, corpus: 25, objectives: 0, executions: 387873, exec/sec: 4.192k
+[32m INFO[0m [Stats #0] run time: 0h-1m-33s, clients: 1, corpus: 25, objectives: 0, executions: 390887, exec/sec: 4.179k
+[32m INFO[0m [Stats #0] run time: 0h-1m-34s, clients: 1, corpus: 25, objectives: 0, executions: 394096, exec/sec: 4.168k
+[32m INFO[0m [Stats #0] run time: 0h-1m-35s, clients: 1, corpus: 25, objectives: 0, executions: 397366, exec/sec: 4.159k
+[32m INFO[0m [Stats #0] run time: 0h-1m-36s, clients: 1, corpus: 25, objectives: 0, executions: 400595, exec/sec: 4.149k
+[32m INFO[0m [Stats #0] run time: 0h-1m-37s, clients: 1, corpus: 25, objectives: 0, executions: 403747, exec/sec: 4.138k
+[32m INFO[0m [Stats #0] run time: 0h-1m-38s, clients: 1, corpus: 25, objectives: 0, executions: 406860, exec/sec: 4.128k
+[32m INFO[0m [Stats #0] run time: 0h-1m-39s, clients: 1, corpus: 25, objectives: 0, executions: 409983, exec/sec: 4.117k
+[32m INFO[0m [Stats #0] run time: 0h-1m-40s, clients: 1, corpus: 25, objectives: 0, executions: 413257, exec/sec: 4.108k
+[32m INFO[0m [Stats #0] run time: 0h-1m-41s, clients: 1, corpus: 25, objectives: 0, executions: 416168, exec/sec: 4.097k
+[32m INFO[0m [Stats #0] run time: 0h-1m-42s, clients: 1, corpus: 25, objectives: 0, executions: 419448, exec/sec: 4.088k
+[32m INFO[0m [Stats #0] run time: 0h-1m-43s, clients: 1, corpus: 25, objectives: 0, executions: 422621, exec/sec: 4.079k
+[32m INFO[0m [Stats #0] run time: 0h-1m-44s, clients: 1, corpus: 25, objectives: 0, executions: 425764, exec/sec: 4.069k
+[32m INFO[0m [Stats #0] run time: 0h-1m-45s, clients: 1, corpus: 25, objectives: 0, executions: 428650, exec/sec: 4.058k
+[32m INFO[0m [Stats #0] run time: 0h-1m-46s, clients: 1, corpus: 25, objectives: 0, executions: 431976, exec/sec: 4.051k
+[32m INFO[0m [Stats #0] run time: 0h-1m-47s, clients: 1, corpus: 25, objectives: 0, executions: 435238, exec/sec: 4.043k
+[32m INFO[0m [Stats #0] run time: 0h-1m-48s, clients: 1, corpus: 25, objectives: 0, executions: 438389, exec/sec: 4.035k
+[32m INFO[0m [Stats #0] run time: 0h-1m-49s, clients: 1, corpus: 25, objectives: 0, executions: 441284, exec/sec: 4.024k
+[32m INFO[0m [Stats #0] run time: 0h-1m-50s, clients: 1, corpus: 25, objectives: 0, executions: 444461, exec/sec: 4.016k
+[32m INFO[0m [Stats #0] run time: 0h-1m-51s, clients: 1, corpus: 25, objectives: 0, executions: 447512, exec/sec: 4.007k
+[32m INFO[0m [Stats #0] run time: 0h-1m-52s, clients: 1, corpus: 25, objectives: 0, executions: 450502, exec/sec: 3.998k
+[32m INFO[0m [Stats #0] run time: 0h-1m-53s, clients: 1, corpus: 25, objectives: 0, executions: 453376, exec/sec: 3.988k
+[32m INFO[0m [Stats #0] run time: 0h-1m-54s, clients: 1, corpus: 25, objectives: 0, executions: 456361, exec/sec: 3.979k
+[32m INFO[0m [Stats #0] run time: 0h-1m-55s, clients: 1, corpus: 25, objectives: 0, executions: 459397, exec/sec: 3.970k
+[32m INFO[0m [Stats #0] run time: 0h-1m-56s, clients: 1, corpus: 25, objectives: 0, executions: 462376, exec/sec: 3.962k
+[32m INFO[0m [Stats #0] run time: 0h-1m-57s, clients: 1, corpus: 25, objectives: 0, executions: 465472, exec/sec: 3.954k
+
+
+
+😊😊 Found vulnerabilities! 
+
+
+================ Description ================
+[Weak Randomness] (sim-review): 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee used a block-environment value (block.timestamp/number/prevrandao/gaslimit/basefee) as the operand of a modulo/bitmask/comparison at pc 2402 (SWC-120). Such values are predictable by whoever watches the pending transaction and influenceable by the block producer, so any winner/lottery/selection logic built on them can be gamed.
+
+[Fund Loss] (sim-confirmed): Anyone can earn 0.200 native tokens by interacting with the provided contracts
+
+[Weak Randomness] (sim-review): 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee used a block-environment value (block.timestamp/number/prevrandao/gaslimit/basefee) as the operand of a modulo/bitmask/comparison at pc 2402 (SWC-120). Such values are predictable by whoever watches the pending transaction and influenceable by the block producer, so any winner/lottery/selection logic built on them can be gamed.
+
+================ Trace ================
+[Sender] 0xfF0f52636c2B4689179c1A99E45886b6EaBDF967
+   └─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.setTicketPrice(0)
+[Sender] 0x8EF508Aca04B32Ff3ba5003177cb18BfA6Cd79dd
+   ├─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.buyTicket()
+   │  ├─[2] [Sender] 0x8EF508Aca04B32Ff3ba5003177cb18BfA6Cd79dd.fallback()
+   │  │  └─[3] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.receive()
+   ├─[1] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.buyTicket()
+   │  ├─[2] [Sender] 0x8EF508Aca04B32Ff3ba5003177cb18BfA6Cd79dd.fallback()
+   │  │  └─[3] 0x1FD07693355ac7f1c29d2FC2BbC390fc0D5Ad2Ee.receive()
+
+
+[32m INFO[0m ============= Coverage Summary =============
+[32m INFO[0m 0x1fd07693355ac7f1c29d2fc2bbc390fc0d5ad2ee: 52.42% Instruction Covered, 37.72% Branch Covered
+[32m INFO[0m [Stats #0] run time: 0h-1m-58s, clients: 1, corpus: 25, objectives: 0, executions: 468337, exec/sec: 3.945k
+[32m INFO[0m [Stats #0] run time: 0h-1m-59s, clients: 1, corpus: 25, objectives: 0, executions: 471274, exec/sec: 3.936k
+[32m INFO[0m [Stats #0] run time: 0h-2m-0s, clients: 1, corpus: 25, objectives: 0, executions: 474160, exec/sec: 3.927k
+[32m INFO[0m [Stats #0] run time: 0h-2m-1s, clients: 1, corpus: 25, objectives: 0, executions: 476920, exec/sec: 3.917k
+[32m INFO[0m [Stats #0] run time: 0h-2m-2s, clients: 1, corpus: 25, objectives: 0, executions: 479914, exec/sec: 3.910k
+[32m INFO[0m [Stats #0] run time: 0h-2m-3s, clients: 1, corpus: 25, objectives: 0, executions: 482512, exec/sec: 3.899k
+[32m INFO[0m [Stats #0] run time: 0h-2m-4s, clients: 1, corpus: 25, objectives: 0, executions: 485365, exec/sec: 3.890k
+[32m INFO[0m [Stats #0] run time: 0h-2m-5s, clients: 1, corpus: 25, objectives: 0, executions: 488185, exec/sec: 3.882k
+[32m INFO[0m [Stats #0] run time: 0h-2m-6s, clients: 1, corpus: 25, objectives: 0, executions: 490984, exec/sec: 3.873k
+[32m INFO[0m [Stats #0] run time: 0h-2m-7s, clients: 1, corpus: 25, objectives: 0, executions: 494001, exec/sec: 3.866k
+[32m INFO[0m [Stats #0] run time: 0h-2m-8s, clients: 1, corpus: 25, objectives: 0, executions: 496702, exec/sec: 3.857k
+EXIT=124

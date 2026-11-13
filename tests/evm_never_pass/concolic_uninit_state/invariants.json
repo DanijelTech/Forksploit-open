@@ -1,0 +1,10 @@
+{
+  "invariants": [
+    {
+      "name": "solved stays 0: the gate needs a keccak preimage, so win() can never succeed",
+      "op": "le",
+      "lhs": { "call": { "sig": "solved()" } },
+      "rhs": { "literal": "0" }
+    }
+  ]
+}

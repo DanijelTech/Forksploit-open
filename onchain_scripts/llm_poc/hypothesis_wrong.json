@@ -1,0 +1,8 @@
+{
+  "description": "Deliberately WRONG control hypothesis: attacker just deposits and immediately redeems the same amount with no donation trick -- should yield zero profit, proving the confirmation engine does not rubber-stamp every hypothesis.",
+  "steps": [
+    {"actor": "attacker", "contract": "token", "function": "approve(address,uint256)", "args": ["<vault>", "100000000000000000000"], "value": "0"},
+    {"actor": "attacker", "contract": "vault", "function": "deposit(uint256)", "args": ["100000000000000000000"], "value": "0"},
+    {"actor": "attacker", "contract": "vault", "function": "redeem(uint256)", "args": ["100000000000000000000"], "value": "0"}
+  ]
+}

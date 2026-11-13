@@ -1,0 +1,6 @@
+testMode: property
+testLimit: 100000
+seqLen: 100
+balanceContract: 1000000000000000000000
+balanceAddr: 1000000000000000000000
+sender: ["0x10000", "0x20000", "0x30000"]

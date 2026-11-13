@@ -1,0 +1,5 @@
+{ "invariants": [
+  { "name": "value stays within cap", "op": "le",
+    "lhs": { "call": { "sig": "value()" } },
+    "rhs": { "literal": "1" } }
+] }

@@ -1,0 +1,6 @@
+{ "invariants": [
+  { "name": "value stays within cap (cap=2: the sequence alone is NOT a bug)",
+    "op": "le",
+    "lhs": { "call": { "sig": "value()" } },
+    "rhs": { "literal": "2" } }
+] }

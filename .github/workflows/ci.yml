@@ -1,0 +1,110 @@
+name: CI
+
+# 100% free on GitHub-hosted runners: ubuntu-22.04 (Linux) only, no
+# macOS/Windows (paid on private repos) and no self-hosted/EC2 runners.
+#
+# The gates here are the checks that are green and deterministic WITHOUT
+# network access to live chains and WITHOUT anvil/solc/forge:
+#   - cargo build --release (must succeed)
+#   - cargo test --release, skipping the handful of tests that require a live
+#     public RPC / a pinned live balance (they fail even WITH egress -- they
+#     are network/state-dependent, see the --skip list below)
+#   - forksploit.sh --doctor (environment check; exits 0 even when the
+#     optional anvil/solc are absent)
+#   - python -m pytest onchain_scripts (232 pass with no anvil/solc on PATH)
+#
+# Deliberately NOT run as gates (would be red on the current tree and are not
+# this workflow's job to fix): `cargo fmt --check` (the tree is not rustfmt-
+# clean) and `cargo clippy` (pre-existing warnings).
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rust:
+    name: Rust build + test (linux x86_64)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (pinned by rust-toolchain.toml)
+        run: |
+          CHANNEL="$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)"
+          echo "Toolchain: ${CHANNEL:-<none>}"
+          if [ -n "$CHANNEL" ]; then
+            rustup toolchain install "$CHANNEL" --profile minimal
+            rustup default "$CHANNEL"
+          fi
+          rustc --version && cargo --version
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          prefix-key: "v2"
+          key: ci-rust
+
+      - name: Install system prerequisites (z3, clang, cmake, pkg-config)
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            libz3-dev libssl-dev libudev-dev \
+            pkg-config clang cmake build-essential
+
+      - name: Build (release)
+        run: cargo build --release --features "cmp dataflow evm print_txn_corpus full_trace force_cache real_balance" --no-default-features --locked
+
+      - name: Test (release; network/state-dependent tests skipped)
+        run: |
+          cargo test --release -- \
+            --skip onchain_pair_discovery \
+            --skip uniswap::tests::test_get_pair \
+            --skip uniswap::tests::test_fetch_uniswap_path \
+            --skip endpoints::tests::test_get_balance
+
+      - name: Upload the release binary for the Python job
+        uses: actions/upload-artifact@v4
+        with:
+          name: forksploit-release
+          path: target/release/forksploit
+          if-no-files-found: error
+
+  python:
+    name: Python tests (linux x86_64)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    needs: rust
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Download the release binary
+        uses: actions/download-artifact@v4
+        with:
+          name: forksploit-release
+          path: target/release
+
+      - name: Make the binary executable
+        run: chmod +x target/release/forksploit
+
+      - name: Install Python dependencies
+        run: pip install -r onchain_scripts/requirements.txt pytest
+
+      - name: Environment doctor (no installs)
+        run: ./forksploit.sh --doctor --no-install
+
+      - name: Run the Python test suite
+        run: python -m pytest onchain_scripts -q -p no:cacheprovider

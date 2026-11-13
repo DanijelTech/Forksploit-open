@@ -1,0 +1,112 @@
+[package]
+name = "forksploit"
+version = "1.0.0"
+edition = "2024"
+build = "src/build.rs"
+license-file = "LICENSE"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dev-dependencies]
+criterion = "0.7.0"
+
+[features]
+default = [
+    "cmp",
+    "dataflow",
+    "evm",
+    "print_txn_corpus",
+    "full_trace",
+    "force_cache",
+    "real_balance",
+]
+evm = []
+cmp = []
+dataflow = []
+evaluation = []
+ondisk_corpus = []
+# need to turn off when running DV contracts
+deployer_is_attacker = []
+print_infant_corpus = []
+print_txn_corpus = []
+fuzz_static = []
+real_balance = []
+full_trace = []
+force_cache = []
+use_presets = []
+print_logs = []
+z3_debug = []
+debug = []
+flashloan_debug = []
+no_etherscan = []
+
+
+[dependencies]
+bytes = { version = "1.2.1", features = ["serde"] }
+retry = "2.0.0"
+clap = { version = "4.6.7", features = ["derive"] }
+rlp = "0.5.2"
+ethers = "2.0.14"
+
+hex = "0.4"
+primitive-types = { version = "0.14.0", features = ["rlp", "serde"] }
+libafl = "=0.11.2"
+libafl_bolts = "=0.11.2"
+rand = "0.8.5"
+serde = "1.0.147"
+serde_traitobject = "0.2.8"
+serde_json = "1.0.73"
+z3 = { version = "0.21.1" }
+z3-sys = "0.13.1"
+glob = "0.3.0"
+rust-crypto = "0.2"
+itertools = "0.10.2"
+reqwest = { version = "0.13.5", features = ["blocking", "json"] }
+once_cell = "1.8.0"
+either = "1.8.0"
+regex = "1"
+typetag = "0.2.13"
+lazy_static = "1.4.0"
+
+revm = { git = "https://github.com/forksploit/revm", rev = "1dead51", features = [
+    "no_gas_measuring",
+    "serde",
+    "memory_limit",
+] }
+revm-primitives = { git = "https://github.com/forksploit/revm", rev = "1dead51", features = [
+    "no_gas_measuring",
+    "serde",
+    "memory_limit",
+] }
+revm-interpreter = { git = "https://github.com/forksploit/revm", rev = "1dead51", features = [
+    "no_gas_measuring",
+    "serde",
+    "memory_limit",
+] }
+
+# template engine
+handlebars = "6.4.4"
+
+# for cheatcode middleware
+# TODO: enable cheatcode when https://github.com/matter-labs/zksync-era/issues/4581 is resolved
+# foundry-cheatcodes = { git = "https://github.com/foundry-rs/foundry.git", rev = "617dfc28" }
+alloy-sol-types = "1.7.3"
+alloy-dyn-abi = { version = "1.7.3", features = ["arbitrary", "eip712"] }
+alloy-primitives = "1.7.3"
+alloy-json-abi = "1.7.3"
+# error handling
+anyhow = "1.0"
+thiserror = "2.0.21"
+# logging
+tracing = "0.1"
+tracing-subscriber = "0.3"
+colored = "2.0"
+evmole = "0.9.4"
+semver = "1.0.28"
+
+# serde_traitobject 0.2.9 (the latest, and apparently final, release) has
+# three pointer casts that newer rustc rejects outright (E0804: adding an
+# auto trait to a dyn bound via cast). Upstream is unmaintained, so this
+# vendors a locally patched copy using the compiler-suggested transmute fix
+# -- see vendor/serde_traitobject-0.2.9-patched/src/convenience.rs.
+[patch.crates-io]
+serde_traitobject = { path = "vendor/serde_traitobject-0.2.9-patched" }

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability in ForkSploit
+    url: https://github.com/DanijelTech/ForkSploit/security/policy
+    about: Please report security issues in ForkSploit privately — do NOT open a public issue. See SECURITY.md.
+  - name: Question / discussion
+    url: https://github.com/DanijelTech/ForkSploit/discussions
+    about: Ask a question or start a discussion (if Discussions is enabled).

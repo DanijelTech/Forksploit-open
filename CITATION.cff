@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use ForkSploit in academic work or a security report, please cite it as below."
+title: "ForkSploit — audit/offensive platform for EVM smart contracts"
+abstract: >-
+  ForkSploit is an audit/offensive platform for EVM smart contracts. It
+  discovers attack surfaces and proves exploitability by executing the exploit
+  against real chain state and moving recovered funds to a recovery wallet.
+  Built and verified for Ethereum (ETH) and Ethereum Classic (ETC), on both
+  testnet and mainnet, for native currency and ERC tokens.
+type: software
+# Proprietary, All Rights Reserved -- not an SPDX identifier, so per CFF only
+# `license-url` is given (the CFF `license` field accepts SPDX ids only).
+license-url: "https://github.com/DanijelTech/ForkSploit/blob/main/LICENSE"
+authors:
+  - family-names: "Cvijetić"
+    given-names: "Danijel"
+    alias: "DanijelTech"
+repository-code: "https://github.com/DanijelTech/ForkSploit"
+url: "https://github.com/DanijelTech/ForkSploit"
+keywords:
+  - ethereum
+  - ethereum-classic
+  - evm
+  - smart-contracts
+  - solidity
+  - security
+  - smart-contract-audit
+  - fuzzing
+  - concolic-execution
+  - exploit
+version: "1.0.0"
+date-released: "2026-11-09"

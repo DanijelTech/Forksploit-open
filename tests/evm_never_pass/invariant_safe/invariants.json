@@ -1,0 +1,10 @@
+{
+  "invariants": [
+    {
+      "name": "bank solvent: sum(balances) must not exceed real ETH held",
+      "op": "le",
+      "lhs": { "sum_over_callers": { "sig": "balances(address)" } },
+      "rhs": { "native_balance": true }
+    }
+  ]
+}

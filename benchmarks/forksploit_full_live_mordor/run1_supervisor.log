@@ -1,0 +1,7 @@
+[32m INFO[0m multicore: launching 3 isolated worker processes (base seed 1667840158231589000, budget 300s)
+[32m INFO[0m multicore: job 0 -> /tmp/live_full/work/job_0 (seed 14026150505556177367, log /tmp/live_full/work/job_0/fuzzer.log)
+[32m INFO[0m multicore: job 1 -> /tmp/live_full/work/job_1 (seed 12488385987425104542, log /tmp/live_full/work/job_1/fuzzer.log)
+[32m INFO[0m multicore: job 2 -> /tmp/live_full/work/job_2 (seed 4320249721024643593, log /tmp/live_full/work/job_2/fuzzer.log)
+[33m WARN[0m multicore: budget reached, terminating 3 still-running worker(s)
+[32m INFO[0m multicore: merged 91 finding file(s) into /tmp/live_full/work/vulnerabilities/
+EXIT=0

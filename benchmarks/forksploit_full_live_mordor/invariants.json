@@ -1,0 +1,16 @@
+{
+  "invariants": [
+    {
+      "name": "no win may exceed the advertised maxPrize (contract's own cap promise)",
+      "op": "le",
+      "lhs": { "call": { "sig": "biggestWin()" } },
+      "rhs": { "call": { "sig": "maxPrize()" } }
+    },
+    {
+      "name": "cumulative payouts must never exceed the contract's real native balance (payouts are funded only by ticket revenue still held)",
+      "op": "le",
+      "lhs": { "call": { "sig": "totalPayouts()" } },
+      "rhs": { "native_balance": true }
+    }
+  ]
+}

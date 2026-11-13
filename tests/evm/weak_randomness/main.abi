@@ -1,0 +1,1 @@
+[{"inputs":[],"name":"draw","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"drawTimestampOnly","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"lastWinner","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]

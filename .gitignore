@@ -1,0 +1,49 @@
+/target
+/tmp
+.DS_Store
+/solutions
+/*bench
+bin
+corpus
+.idea
+.vscode
+node_modules
+cache
+*.bin
+*.bin-runtime
+*.abi
+!tests/**/*.bin
+!tests/**/*.abi
+output
+work_dir
+work_demo
+/work_*/
+.z3-trace
+*.code-workspace
+*.txt
+!requirements.txt
+!**/requirements.txt
+!onchain_scripts/target.txt
+!onchain_tests.txt
+combined.json
+/**/build/
+Move.lock
+/w_**/
+/tests/evm_manual/story-core
+__pycache__/
+*.pyc
+# Private keys and local runtime state for onchain_scripts/ deploy/test
+# helpers -- never commit these (wallets.json/contracts.json are
+# per-user/session state, e.g. wallet labels and candidate contracts under
+# test, and could reference unreleased work).
+onchain_scripts/key.txt
+onchain_scripts/*.key
+onchain_scripts/keys/
+onchain_scripts/wallets.json
+onchain_scripts/contracts.json
+onchain_scripts/rpc_overrides.json
+onchain_scripts/forksploit_settings.json
+onchain_scripts/attack_wallets.json
+onchain_scripts/auto_work/
+onchain_scripts/logs/
+onchain_scripts/monitor_work/
