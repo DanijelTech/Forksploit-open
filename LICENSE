@@ -54,9 +54,10 @@ COMPONENT LICENSES
 
   Root-level prose documents (README.md, LICENSING.md, DISCLAIMER.md,
   SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md, CHANGELOG.md, AGENTS.md,
-  CLAUDE.md, PLAN.md, LIMITATIONS.md, BLOCKERS.md, TASK_SPEC.md,
-  backtesting.md) and any file without its own SPDX header are covered by
-  CC-BY-4.0, except third-party material which keeps its upstream license.
+  CLAUDE.md) and the project documents under docs/project/ (PLAN.md,
+  LIMITATIONS.md, BLOCKERS.md, TASK_SPEC.md, backtesting.md,
+  RELEASE_NOTES_v0.0.1.md) and any file without its own SPDX header are covered
+  by CC-BY-4.0, except third-party material which keeps its upstream license.
 
   The Rust core and the Python layer are separate works (they communicate over
   a subprocess + files, not by linking), so their licenses do not combine.

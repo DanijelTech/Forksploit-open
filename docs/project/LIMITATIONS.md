@@ -5,7 +5,7 @@
 > sends real transactions and can move real funds. You use it entirely at your
 > own risk and under your own full responsibility; the authors and copyright
 > holders accept NO liability whatsoever for any consequences of its use, misuse
-> or inability to use it. See [`DISCLAIMER.md`](DISCLAIMER.md).**
+> or inability to use it. See [`DISCLAIMER.md`](../../DISCLAIMER.md).**
 
 > Rule R3: a limitation is **written down**, not hidden. Anything not measured is
 > marked **unmeasured**. There are deliberately no `file:line` references here

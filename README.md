@@ -678,7 +678,9 @@ ForkSploit is a powerful tool, but it is not magic. What it **cannot** do:
 - **A negative result is bounded.** "Nothing found" means "nothing found in this budget with these oracles", not "the contract is free of vulnerabilities". ForkSploit prints this explicitly.
 - **Aave flashloan is tied to chains with a live Aave V3** (`eth`, `sepolia`, and others from `AAVE_V3_POOLS`); ETC/Mordor have no Aave (verified — it does not exist).
 
-A more detailed, continuously maintained record of limitations and blockers is in `LIMITATIONS.md` and `BLOCKERS.md`.
+A more detailed, continuously maintained record of limitations and blockers is in
+[`docs/project/LIMITATIONS.md`](docs/project/LIMITATIONS.md) and
+[`docs/project/BLOCKERS.md`](docs/project/BLOCKERS.md).
 
 ---
 

@@ -8,7 +8,7 @@
 > consequences of its use, misuse or inability to use it. Use it only on
 > contracts you own, on contracts for which you have the owner's written
 > permission, or on test networks. Unauthorised use against third-party
-> contracts is illegal. See [`DISCLAIMER.md`](DISCLAIMER.md).
+> contracts is illegal. See [`DISCLAIMER.md`](../../DISCLAIMER.md).
 
 **ForkSploit is now open source. v0.0.1 is the first public tag of the project.**
 The community is warmly invited to join and help build one shared, large
@@ -197,8 +197,8 @@ linking), so each can carry its own license:
   license.
 - The **Python layer is Apache-2.0**: build tooling and integrations freely, with
   legal clarity for corporate contributors.
-- Full texts are in [`LICENSES/`](LICENSES/); the map is in
-  [`LICENSING.md`](LICENSING.md) and [`REUSE.toml`](REUSE.toml).
+- Full texts are in [`LICENSES/`](../../LICENSES/); the map is in
+  [`LICENSING.md`](../../LICENSING.md) and [`REUSE.toml`](../../REUSE.toml).
 
 ---
 
@@ -216,7 +216,7 @@ Ways to help, from easiest to deepest:
 3. **Add oracle fixtures** (`tests/evm/<name>/`) — small, self-contained
    contracts that trigger (or must NOT trigger) a detector.
 4. **Contribute oracles and features** — see the roadmap in
-   [`skills/forksploit-contract-audit/references/new-oracle-roadmap.md`](skills/forksploit-contract-audit/references/new-oracle-roadmap.md)
+   [`skills/forksploit-contract-audit/references/new-oracle-roadmap.md`](../../skills/forksploit-contract-audit/references/new-oracle-roadmap.md)
    and the analysis in [`BLOCKERS.md`](BLOCKERS.md).
 5. **Improve the docs** (`docs/`), the wiki, and the examples.
 6. **Benchmark it** against Echidna/Foundry on real contracts and publish the
@@ -226,7 +226,7 @@ Ways to help, from easiest to deepest:
 
 **Ground rule R1 — proof before claim.** No "done"/"fixed" without a
 reproducible proof (a test, a measurement, or command output). Anything not
-measured is labelled **unmeasured**. Read [`CONTRIBUTING.md`](CONTRIBUTING.md)
+measured is labelled **unmeasured**. Read [`CONTRIBUTING.md`](../../CONTRIBUTING.md)
 before your first PR.
 
 > We ask for contributions under the license of the component you touch. Because
@@ -323,7 +323,7 @@ Each is described with the current state and why it matters.
 > The full, continuously maintained list is in [`LIMITATIONS.md`](LIMITATIONS.md)
 > and [`BLOCKERS.md`](BLOCKERS.md), and the current per-phase status is in
 > [`PLAN.md`](PLAN.md). The open plan for new oracle types is in
-> [`skills/forksploit-contract-audit/references/new-oracle-roadmap.md`](skills/forksploit-contract-audit/references/new-oracle-roadmap.md).
+> [`skills/forksploit-contract-audit/references/new-oracle-roadmap.md`](../../skills/forksploit-contract-audit/references/new-oracle-roadmap.md).
 
 ---
 
@@ -343,7 +343,7 @@ pip install -r onchain_scripts/requirements.txt
 ./forksploit.sh
 ```
 
-See [`README.md`](README.md) for the full guide, [`docs/00_INDEX.md`](docs/00_INDEX.md)
+See [`README.md`](../../README.md) for the full guide, [`docs/00_INDEX.md`](../00_INDEX.md)
 for the complete technical documentation, and the
 [wiki](https://github.com/DanijelTech/Forksploit-open/wiki) for a guided tour.
 
@@ -374,4 +374,4 @@ community to hold the project to that standard, and to help raise it.
 ---
 
 *Copyright (c) 2026 Dany Tech. Multi-licensed per component — see
-[`LICENSING.md`](LICENSING.md).*
+[`LICENSING.md`](../../LICENSING.md).*

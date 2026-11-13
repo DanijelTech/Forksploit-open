@@ -34,8 +34,9 @@ license texts are in [`LICENSES/`](LICENSES/).
 
 Root-level prose documents (this file, `README.md`, `DISCLAIMER.md`,
 `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `CHANGELOG.md`,
-`AGENTS.md`, `CLAUDE.md`, `PLAN.md`, `LIMITATIONS.md`, `BLOCKERS.md`,
-`TASK_SPEC.md`, `backtesting.md`) are covered by the **CC-BY-4.0** documentation
+`AGENTS.md`, `CLAUDE.md`) and the project documents under `docs/project/`
+(`PLAN.md`, `LIMITATIONS.md`, `BLOCKERS.md`, `TASK_SPEC.md`, `backtesting.md`,
+`RELEASE_NOTES_v0.0.1.md`) are covered by the **CC-BY-4.0** documentation
 license unless they carry their own header.
 
 Files that carry no SPDX header (Markdown, GitHub templates, JSON) inherit the

@@ -23,7 +23,7 @@ the complete, documented platform.
 
 The full release announcement, the list of capabilities, the call for
 contributors and the honest list of known weak points are in
-[`RELEASE_NOTES_v0.0.1.md`](RELEASE_NOTES_v0.0.1.md).
+[`RELEASE_NOTES_v0.0.1.md`](docs/project/RELEASE_NOTES_v0.0.1.md).
 
 ### Added
 

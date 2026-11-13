@@ -342,7 +342,8 @@ sequenceDiagram
 
 * **Unmeasured:** the actual values of duration, number of executions and reach
   depth are not part of this document. For measurements see `AGENTS.md` and
-  `BLOCKERS.md`; this document describes the path, not the performance.
+  `docs/project/BLOCKERS.md`; this document describes the path, not the
+  performance.
 * **Unverified:** the order of step execution within `fuzz_loop` depends on the
   libafl scheduler (`PowerABIScheduler`); this document only states that the loop
   runs, not a deterministic order of individual mutations.

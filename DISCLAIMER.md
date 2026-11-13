@@ -47,7 +47,7 @@ professional security advice. Consult a qualified professional before acting.
 ForkSploit is under active development. It may contain bugs, produce false
 positives or false negatives, misreport findings, or behave unexpectedly. A
 negative result ("nothing found") is **bounded** and does **not** mean a contract
-is free of vulnerabilities. See [`LIMITATIONS.md`](LIMITATIONS.md).
+is free of vulnerabilities. See [`LIMITATIONS.md`](docs/project/LIMITATIONS.md).
 
 ## Indemnity
 

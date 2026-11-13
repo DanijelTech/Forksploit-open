@@ -114,7 +114,8 @@ From `CONTRIBUTING.md`:
 * `AGENTS.md` is the persistent memory for agents (repository-specific knowledge).
 * `CLAUDE.md` describes the architecture.
 * `docs/` (this directory) is the complete technical documentation.
-* `LIMITATIONS.md` and `BLOCKERS.md` list what the system cannot do.
+* `docs/project/LIMITATIONS.md` and `docs/project/BLOCKERS.md` list what the
+  system cannot do.
 * Every claim in the documentation must have a `path/to/file.rs::symbol`
   reference or a reproducible command.
 

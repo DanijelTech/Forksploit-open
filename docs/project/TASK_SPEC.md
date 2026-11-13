@@ -5,7 +5,7 @@
 > sends real transactions and can move real funds. You use it entirely at your
 > own risk and under your own full responsibility; the authors and copyright
 > holders accept NO liability whatsoever for any consequences of its use, misuse
-> or inability to use it. See [`DISCLAIMER.md`](DISCLAIMER.md).**
+> or inability to use it. See [`DISCLAIMER.md`](../../DISCLAIMER.md).**
 
 > **Note (2026-11-09):** this is the **original task** (input document), not a
 > description of the current state. The list of "known gaps" below reflects the

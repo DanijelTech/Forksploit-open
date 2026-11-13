@@ -5,7 +5,7 @@
 > sends real transactions and can move real funds. You use it entirely at your
 > own risk and under your own full responsibility; the authors and copyright
 > holders accept NO liability whatsoever for any consequences of its use, misuse
-> or inability to use it. See [`DISCLAIMER.md`](DISCLAIMER.md).**
+> or inability to use it. See [`DISCLAIMER.md`](../DISCLAIMER.md).**
 
 This directory contains the complete technical documentation of the ForkSploit
 system (Rust core + Python execution layer). Each document is standalone and
@@ -42,6 +42,7 @@ marked **unmeasured**; anything not verified in code is marked **unverified**.
 | [DEPENDENCIES.md](DEPENDENCIES.md) | external and internal dependencies, execution order, diagrams |
 | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) | how to contribute, conventions, R1 |
 | [LIMITATIONS.md](LIMITATIONS.md) | what the system cannot do (from the code) and why |
+| [project/](project/) | project and process documents: plan, limitations, blockers, task spec, backtesting, release notes |
 
 ---
 
