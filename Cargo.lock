@@ -2337,7 +2337,7 @@ checksum = "77ce24cb58228fbb8aa041425bb1050850ac19177686ea6e0f41a70416f56fdb"
 
 [[package]]
 name = "forksploit"
-version = "1.0.0"
+version = "0.0.1"
 dependencies = [
  "alloy-dyn-abi",
  "alloy-json-abi",
