@@ -1,5 +1,12 @@
 # BLOCKERS.md — why ForkSploit does not (yet) handle a "hidden deep hole"
 
+> **⚠️ USE AT YOUR OWN RISK — THE AUTHORS ACCEPT NO LIABILITY.**
+> **ForkSploit is provided "AS IS", without warranty of any kind. It signs and
+> sends real transactions and can move real funds. You use it entirely at your
+> own risk and under your own full responsibility; the authors and copyright
+> holders accept NO liability whatsoever for any consequences of its use, misuse
+> or inability to use it. See [`DISCLAIMER.md`](DISCLAIMER.md).**
+
 > Rule R1: every claim has a reproducible measurement (or a symbol, not a fragile
 > `file:line`). Rule R3: a limitation is written down, not hidden.
 > Purpose: this is a **work plan** for P1–P5, not an excuse.

@@ -25,6 +25,7 @@ work_demo
 !**/requirements.txt
 !onchain_scripts/target.txt
 !onchain_tests.txt
+!LICENSES/*.txt
 combined.json
 /**/build/
 Move.lock

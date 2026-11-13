@@ -1,5 +1,12 @@
 # Contributor Covenant Code of Conduct
 
+> **⚠️ USE AT YOUR OWN RISK — THE AUTHORS ACCEPT NO LIABILITY.**
+> **ForkSploit is provided "AS IS", without warranty of any kind. It signs and
+> sends real transactions and can move real funds. You use it entirely at your
+> own risk and under your own full responsibility; the authors and copyright
+> holders accept NO liability whatsoever for any consequences of its use, misuse
+> or inability to use it. See [`DISCLAIMER.md`](DISCLAIMER.md).**
+
 ## Our Pledge
 
 We as members, contributors, and leaders pledge to make participation in our

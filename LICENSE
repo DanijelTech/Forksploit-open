@@ -1,21 +1,73 @@
-MIT License
-
+ForkSploit — Licensing
 Copyright (c) 2026 Dany Tech
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+ForkSploit is MULTI-LICENSED, per component. Different parts of this
+repository are released under different licenses. This file is the top-level
+summary; the authoritative, per-file source of truth is the
+`SPDX-License-Identifier` header at the top of each file, and the full map is in
+`LICENSING.md`.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+================================================================================
+!!!  USE AT YOUR OWN RISK — THE AUTHORS ACCEPT NO LIABILITY  !!!
+================================================================================
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+ForkSploit is provided "AS IS", WITHOUT WARRANTY OF ANY KIND, express or
+implied, including but not limited to the warranties of merchantability,
+fitness for a particular purpose, title and non-infringement.
+
+ForkSploit is an offensive-security tool that signs and sends REAL transactions
+on real blockchains and can move REAL funds. It can cause loss of funds, loss of
+access, irrecoverable on-chain changes, financial loss, and legal or regulatory
+consequences. YOU USE IT ENTIRELY AT YOUR OWN RISK AND UNDER YOUR OWN FULL
+RESPONSIBILITY.
+
+To the maximum extent permitted by applicable law, the authors, copyright
+holders and contributors accept NO liability whatsoever for any damages or any
+loss, harm or consequence of any kind — to you or to any third party — arising
+out of or in connection with ForkSploit, its use, misuse or inability to use,
+even if advised of the possibility of such damage.
+
+Use ForkSploit ONLY on contracts you own, on contracts for which you have the
+owner's explicit written permission, or on test networks. Unauthorised use
+against third-party contracts is illegal. The operator, not the author, is
+solely responsible for lawful and authorised use.
+
+See `DISCLAIMER.md` for the full notice.
+
+================================================================================
+COMPONENT LICENSES
+================================================================================
+
+  Component                                   License
+  ------------------------------------------  ---------------------------
+  src/, benches/   (Rust core)                AGPL-3.0-or-later
+  onchain_scripts/**/*.py (Python layer)      Apache-2.0
+  onchain_scripts/contracts/**/*.sol          Proprietary (All Rights Reserved)
+  onchain_scripts/llm_poc/contracts/**/*.sol  Proprietary (All Rights Reserved)
+  onchain_scripts/dashboard_static/**         MIT
+  server/**  (JS)                             MIT
+  docs/**  (documentation)                    CC-BY-4.0
+  skills/**                                   CC-BY-4.0
+  forksploit.sh, server_run.sh, run_benchmark.sh  Apache-2.0
+  onchain_scripts/contracts/proof_w1_w2_w3.sh Proprietary (All Rights Reserved)
+  vendor/**  (third-party)                    MIT OR Apache-2.0  (upstream)
+
+  Root-level prose documents (README.md, LICENSING.md, DISCLAIMER.md,
+  SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md, CHANGELOG.md, AGENTS.md,
+  CLAUDE.md, PLAN.md, LIMITATIONS.md, BLOCKERS.md, TASK_SPEC.md,
+  backtesting.md) and any file without its own SPDX header are covered by
+  CC-BY-4.0, except third-party material which keeps its upstream license.
+
+  The Rust core and the Python layer are separate works (they communicate over
+  a subprocess + files, not by linking), so their licenses do not combine.
+
+================================================================================
+FULL LICENSE TEXTS
+================================================================================
+
+  LICENSES/AGPL-3.0-or-later.txt
+  LICENSES/Apache-2.0.txt
+  LICENSES/MIT.txt
+  LICENSES/CC-BY-4.0.txt
+
+For an alternative or commercial license, contact the author.

@@ -1,5 +1,12 @@
 # CLAUDE.md
 
+> **⚠️ USE AT YOUR OWN RISK — THE AUTHORS ACCEPT NO LIABILITY.**
+> **ForkSploit is provided "AS IS", without warranty of any kind. It signs and
+> sends real transactions and can move real funds. You use it entirely at your
+> own risk and under your own full responsibility; the authors and copyright
+> holders accept NO liability whatsoever for any consequences of its use, misuse
+> or inability to use it. See [`DISCLAIMER.md`](DISCLAIMER.md).**
+
 Guidance for AI coding agents (Claude Code and others) working in this
 repository. Every factual claim here was verified against the source in this
 repo. Where a number is measured, the command that produced it is given.

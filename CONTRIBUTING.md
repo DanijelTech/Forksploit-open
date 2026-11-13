@@ -4,6 +4,32 @@ Thanks for your interest. ForkSploit is a security tool that signs real
 transactions, so contributions are held to a high bar for correctness and
 proof. Please read this before opening a pull request.
 
+> **⚠️ USE AT YOUR OWN RISK — THE AUTHORS ACCEPT NO LIABILITY.** By
+> contributing you agree your contribution is licensed under the license that
+> applies to the component you modify (see [`LICENSING.md`](LICENSING.md)), and
+> you confirm you have the right to submit it. See
+> [`DISCLAIMER.md`](DISCLAIMER.md).
+
+## Licensing of contributions
+
+ForkSploit is **multi-licensed per component**. By opening a pull request you
+agree that your contribution is licensed under the license of the component you
+touch:
+
+| Component | License |
+|---|---|
+| Rust core (`src/`, `benches/`) | AGPL-3.0-or-later |
+| Python layer (`onchain_scripts/**/*.py`) | Apache-2.0 |
+| On-chain primitives (`**/*.sol`) | Proprietary (All Rights Reserved) |
+| Dashboard (`onchain_scripts/dashboard_static/**`, `server/**`) | MIT |
+| Documentation (`docs/**`, `skills/**`, `*.md`) | CC-BY-4.0 |
+
+Because the project may offer alternative/commercial licensing, the maintainer
+may ask you to sign a **Contributor License Agreement (CLA)** or to add a
+`Signed-off-by:` line (Developer Certificate of Origin, DCO) to your commits
+(`git commit -s`). Do not add an `SPDX-License-Identifier` header that differs
+from the component's license.
+
 ## Ground rule R1 — proof before claim
 
 **Never** state that something is "done", "fixed", or "works" in a commit

@@ -1,5 +1,12 @@
 # ForkSploit — a full run directly against live Mordor (no anvil fork)
 
+> **⚠️ USE AT YOUR OWN RISK — THE AUTHORS ACCEPT NO LIABILITY.**
+> **ForkSploit is provided "AS IS", without warranty of any kind. It signs and
+> sends real transactions and can move real funds. You use it entirely at your
+> own risk and under your own full responsibility; the authors and copyright
+> holders accept NO liability whatsoever for any consequences of its use, misuse
+> or inability to use it.**
+
 Goal: the **full** ForkSploit (all capabilities) on **exactly this contract** and
 **exactly this network**, as required — no anvil fork, directly against the public
 Mordor RPC.

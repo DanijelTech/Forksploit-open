@@ -1,5 +1,12 @@
 # PLAN.md — ForkSploit state by phase
 
+> **⚠️ USE AT YOUR OWN RISK — THE AUTHORS ACCEPT NO LIABILITY.**
+> **ForkSploit is provided "AS IS", without warranty of any kind. It signs and
+> sends real transactions and can move real funds. You use it entirely at your
+> own risk and under your own full responsibility; the authors and copyright
+> holders accept NO liability whatsoever for any consequences of its use, misuse
+> or inability to use it. See [`DISCLAIMER.md`](DISCLAIMER.md).**
+
 > Rule (R1/R2): anything not measured is marked **unmeasured**; anything not
 > verified in code is marked **unverified**. This document is a **status and
 > open-work overview**, not a diary. The change history is kept in

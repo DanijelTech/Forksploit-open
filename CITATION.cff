@@ -8,9 +8,12 @@ abstract: >-
   Built and verified for Ethereum (ETH) and Ethereum Classic (ETC), on both
   testnet and mainnet, for native currency and ERC tokens.
 type: software
-# Proprietary, All Rights Reserved -- not an SPDX identifier, so per CFF only
-# `license-url` is given (the CFF `license` field accepts SPDX ids only).
-license-url: "https://github.com/DanijelTech/ForkSploit/blob/main/LICENSE"
+# Multi-licensed per component. The Rust core is AGPL-3.0-or-later; the Python
+# layer is Apache-2.0; on-chain primitives are Proprietary; docs are CC-BY-4.0.
+# The CFF `license` field takes a single SPDX id, so the Rust core's license is
+# given here; the full map is in LICENSING.md.
+license: "AGPL-3.0-or-later"
+license-url: "https://github.com/DanijelTech/ForkSploit/blob/main/LICENSING.md"
 authors:
   - family-names: "Cvijetić"
     given-names: "Danijel"

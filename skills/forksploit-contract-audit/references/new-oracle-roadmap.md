@@ -1,5 +1,12 @@
 # Expansion plan: new oracle types (2026-11-02, to continue "tomorrow")
 
+> **⚠️ USE AT YOUR OWN RISK — THE AUTHORS ACCEPT NO LIABILITY.**
+> **ForkSploit is provided "AS IS", without warranty of any kind. It signs and
+> sends real transactions and can move real funds. You use it entirely at your
+> own risk and under your own full responsibility; the authors and copyright
+> holders accept NO liability whatsoever for any consequences of its use, misuse
+> or inability to use it.**
+
 ## Scope -- clarified 2026-11-02 (important, do not miss)
 
 After reviewing an external (ChatGPT) proposal for "70 oracles", the user explicitly

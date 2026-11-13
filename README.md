@@ -16,7 +16,9 @@
 [![Detectors](https://img.shields.io/badge/attack%20surfaces-47%20oracles-blue)](#attack-surfaces-forksploit-covers)
 [![Chains](https://img.shields.io/badge/chains-25%20EVM-627EEA)](#chains)
 [![Proof](https://img.shields.io/badge/proof-100%25%20on--chain%20exploitability-2ea043)](#why-proof-is-different-from-guessing)
-[![License: Proprietary](https://img.shields.io/badge/license-Proprietary%20(All%20Rights%20Reserved)-red.svg)](LICENSE)
+[![License: AGPL-3.0-or-later (core)](https://img.shields.io/badge/core-AGPL--3.0--or--later-blue.svg)](LICENSING.md)
+[![License: Apache-2.0 (python)](https://img.shields.io/badge/python-Apache--2.0-green.svg)](LICENSING.md)
+[![License: mixed](https://img.shields.io/badge/license-mixed%20(see%20LICENSING.md)-orange.svg)](LICENSING.md)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Docker-555)](#installation)
 
 </div>
@@ -24,6 +26,22 @@
 ForkSploit is not a fuzzer. It is a complete platform that answers the question no static tool and no fuzzer can answer with certainty: *"Is this contract really vulnerable, where exactly, what is exploitable, and does an attacker actually walk away with the funds?"* The answer is not probabilistic — it is a **deterministic proof**, because ForkSploit does not merely find the exploit: it **executes it against the real chain state** and **moves the extracted funds to the recovery wallet as proof**.
 
 > **Unique advantage:** ForkSploit is the only known system of its kind that links *discovery* and *proof of execution* into one unbroken chain — from the attack surface in the bytecode to a real movement of funds into the recovery wallet. And it does so **on both networks — Ethereum (ETH) and Ethereum Classic (ETC) — both on testnet (Sepolia, Mordor) and on mainnet (id 1 / 61) — and for all assets the contract uses: native currency (ETH/ETC) and ERC tokens (ERC-20, ERC-721, ERC-1155, ERC-4626).** The result is not "we found a pattern that could be a vulnerability" but **"this contract lost X ETH/ETC or X ERC-20/721/1155/4626 tokens in this way, here is the path, here is the proof."**
+
+---
+
+> **⚠️ USE AT YOUR OWN RISK — THE AUTHORS ACCEPT NO LIABILITY.**
+> **ForkSploit is provided "AS IS", without warranty of any kind. It is an
+> offensive-security tool that signs and sends REAL transactions and can move
+> REAL funds. It can cause loss of funds, loss of access, irrecoverable
+> on-chain changes, financial loss, and legal or regulatory consequences. You
+> use it entirely AT YOUR OWN RISK and under your own full responsibility. To
+> the maximum extent permitted by applicable law, the authors and copyright
+> holders accept NO liability whatsoever for any consequences of its use,
+> misuse or inability to use it — to you or to any third party. Use it ONLY on
+> contracts you own, on contracts for which you have the owner's written
+> permission, or on test networks. Unauthorised use against third-party
+> contracts is illegal.** See [`DISCLAIMER.md`](DISCLAIMER.md) and
+> [`LICENSING.md`](LICENSING.md).
 
 ---
 
@@ -677,12 +695,31 @@ Under this project's working model the recovery wallet is always the owner's wal
 
 ## License
 
-**Proprietary license — all rights reserved.** ForkSploit, including the source
-code, architecture, algorithms, heuristics, discovery and exploit-generation
-logic, the name "ForkSploit", the documentation and all associated intellectual
-property, is the exclusive property of the author. **No use, copying,
-modification, distribution or dissemination is permitted, in whole or in part,
-without the author's prior written permission.** Details in [`LICENSE`](LICENSE).
+ForkSploit is **multi-licensed per component**:
+
+| Component | License |
+|---|---|
+| **Rust core** (`src/`, `benches/`) | **AGPL-3.0-or-later** |
+| **Python execution layer** (`onchain_scripts/**/*.py`) | **Apache-2.0** |
+| **On-chain primitives** (`onchain_scripts/contracts/**/*.sol`, `onchain_scripts/llm_poc/contracts/**/*.sol`) | **Proprietary (All Rights Reserved)** |
+| **Dashboard** (`onchain_scripts/dashboard_static/**`, `server/**`) | **MIT** |
+| **Documentation** (`docs/**`, `skills/**`, root prose `.md`) | **CC-BY-4.0** |
+| **Third-party** (`vendor/**`) | upstream (**MIT OR Apache-2.0**) |
+
+The full map, rationale and the exact per-file rules are in
+[`LICENSING.md`](LICENSING.md); the machine-readable map is in
+[`REUSE.toml`](REUSE.toml), and the license texts are in [`LICENSES/`](LICENSES/).
+The license of a file is determined by the component (path) it belongs to, per
+that table.
+
+> **⚠️ USE AT YOUR OWN RISK — THE AUTHORS ACCEPT NO LIABILITY.**
+> **ForkSploit is provided "AS IS", without warranty of any kind. It signs and
+> sends real transactions and can move real funds; it can cause loss of funds,
+> loss of access, legal consequences, or other harm. You use it entirely at your
+> own risk and under your own full responsibility, and the authors and copyright
+> holders accept NO liability whatsoever for any consequences of its use, misuse
+> or inability to use it, to the maximum extent permitted by applicable law.**
+> See [`DISCLAIMER.md`](DISCLAIMER.md).
 
 ## Changelog
 

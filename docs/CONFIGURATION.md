@@ -1,5 +1,12 @@
 # CONFIGURATION — flags, environment, files
 
+> **⚠️ USE AT YOUR OWN RISK — THE AUTHORS ACCEPT NO LIABILITY.**
+> **ForkSploit is provided "AS IS", without warranty of any kind. It signs and
+> sends real transactions and can move real funds. You use it entirely at your
+> own risk and under your own full responsibility; the authors and copyright
+> holders accept NO liability whatsoever for any consequences of its use, misuse
+> or inability to use it. See [`DISCLAIMER.md`](../DISCLAIMER.md).**
+
 > Standalone document. Related: [CLI_REFERENCE.md](CLI_REFERENCE.md),
 > [CHAINS_AND_RPC.md](CHAINS_AND_RPC.md), [PLAN_JSON.md](PLAN_JSON.md),
 > [SECURITY_MODEL.md](SECURITY_MODEL.md).

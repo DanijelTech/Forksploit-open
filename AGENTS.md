@@ -1,5 +1,12 @@
 # AGENTS.md — ForkSploit repository knowledge
 
+> **⚠️ USE AT YOUR OWN RISK — THE AUTHORS ACCEPT NO LIABILITY.**
+> **ForkSploit is provided "AS IS", without warranty of any kind. It signs and
+> sends real transactions and can move real funds. You use it entirely at your
+> own risk and under your own full responsibility; the authors and copyright
+> holders accept NO liability whatsoever for any consequences of its use, misuse
+> or inability to use it. See [`DISCLAIMER.md`](DISCLAIMER.md).**
+
 Persistent, repository-specific context for agents. See `CLAUDE.md` for the
 full architecture and `TASK_SPEC.md` for the task specification
 (in Slovenian). `PLAN.md` tracks progress per phase; `LIMITATIONS.md` lists

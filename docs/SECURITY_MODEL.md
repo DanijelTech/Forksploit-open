@@ -1,5 +1,12 @@
 # SECURITY MODEL — operator control, locked profit, wallet policy
 
+> **⚠️ USE AT YOUR OWN RISK — THE AUTHORS ACCEPT NO LIABILITY.**
+> **ForkSploit is provided "AS IS", without warranty of any kind. It signs and
+> sends real transactions and can move real funds. You use it entirely at your
+> own risk and under your own full responsibility; the authors and copyright
+> holders accept NO liability whatsoever for any consequences of its use, misuse
+> or inability to use it. See [`DISCLAIMER.md`](../DISCLAIMER.md).**
+
 > Standalone document. Related: [ATTACKWALLET.md](ATTACKWALLET.md),
 > [CONFIGURATION.md](CONFIGURATION.md), [CHAINS_AND_RPC.md](CHAINS_AND_RPC.md).
 

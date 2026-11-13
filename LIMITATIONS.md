@@ -1,5 +1,12 @@
 # LIMITATIONS.md — what ForkSploit does not yet do (and why)
 
+> **⚠️ USE AT YOUR OWN RISK — THE AUTHORS ACCEPT NO LIABILITY.**
+> **ForkSploit is provided "AS IS", without warranty of any kind. It signs and
+> sends real transactions and can move real funds. You use it entirely at your
+> own risk and under your own full responsibility; the authors and copyright
+> holders accept NO liability whatsoever for any consequences of its use, misuse
+> or inability to use it. See [`DISCLAIMER.md`](DISCLAIMER.md).**
+
 > Rule R3: a limitation is **written down**, not hidden. Anything not measured is
 > marked **unmeasured**. There are deliberately no `file:line` references here
 > (they go stale); where it matters, a **symbol** (the name of a function or

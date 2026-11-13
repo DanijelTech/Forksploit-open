@@ -3,7 +3,9 @@ name = "forksploit"
 version = "1.0.0"
 edition = "2024"
 build = "src/build.rs"
-license-file = "LICENSE"
+# Multi-licensed: the Rust core is AGPL-3.0-or-later (see LICENSING.md and the
+# SPDX header in each src/ file). The full texts are in LICENSES/.
+license = "AGPL-3.0-or-later"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dev-dependencies]

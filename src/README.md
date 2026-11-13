@@ -1,5 +1,12 @@
 # src/ — Rust core
 
+> **⚠️ USE AT YOUR OWN RISK — THE AUTHORS ACCEPT NO LIABILITY.**
+> **ForkSploit is provided "AS IS", without warranty of any kind. It signs and
+> sends real transactions and can move real funds. You use it entirely at your
+> own risk and under your own full responsibility; the authors and copyright
+> holders accept NO liability whatsoever for any consequences of its use, misuse
+> or inability to use it.**
+
 Source of the ForkSploit Rust core: a bytecode-level, coverage-guided fuzzer
 with concolic (Z3) solving on top of `revm`, plus the oracle set and the
 exploit-plan / `.t.sol` generators. The Rust side **never signs or sends

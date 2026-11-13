@@ -3,7 +3,7 @@ name: forksploit-contract-audit
 description: "Run ForkSploit end to end with mandatory human checkpoints."
 version: 1.14.0
 author: Danijel (DanijelTech), Claude Sonnet 5
-license: Proprietary (All Rights Reserved)
+license: See LICENSING.md (multi-licensed per component)
 platforms: [linux]
 metadata:
   hermes:
@@ -12,6 +12,13 @@ metadata:
 ---
 
 # ForkSploit: a controlled contract security review
+
+> **⚠️ USE AT YOUR OWN RISK — THE AUTHORS ACCEPT NO LIABILITY.**
+> **ForkSploit is provided "AS IS", without warranty of any kind. It signs and
+> sends real transactions and can move real funds. You use it entirely at your
+> own risk and under your own full responsibility; the authors and copyright
+> holders accept NO liability whatsoever for any consequences of its use, misuse
+> or inability to use it.**
 
 This skill guides the COMPLETE cycle of verifying a smart contract with ForkSploit:
 from choosing the right node, through safe verification on a local fork, to a final,

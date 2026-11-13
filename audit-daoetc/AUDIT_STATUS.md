@@ -1,5 +1,12 @@
 # ForkSploit + DAOETC — full status, findings and plan
 
+> **⚠️ USE AT YOUR OWN RISK — THE AUTHORS ACCEPT NO LIABILITY.**
+> **ForkSploit is provided "AS IS", without warranty of any kind. It signs and
+> sends real transactions and can move real funds. You use it entirely at your
+> own risk and under your own full responsibility; the authors and copyright
+> holders accept NO liability whatsoever for any consequences of its use, misuse
+> or inability to use it.**
+
 Date: 2026-11-07 · Target: `0x9f5304DA62A5408416Ea58A17a92611019bD5ce3` (Ethereum Classic, chainId 61)
 
 ---
