@@ -724,4 +724,4 @@ that table.
 ## Changelog
 
 The full version history (what was added, changed, fixed) is in
-[`CHANGELOG.md`](CHANGELOG.md). Current version: **v1.0.0**.
+[`CHANGELOG.md`](CHANGELOG.md). Current version: **v0.0.1**.

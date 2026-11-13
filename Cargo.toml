@@ -1,6 +1,6 @@
 [package]
 name = "forksploit"
-version = "1.0.0"
+version = "0.0.1"
 edition = "2024"
 build = "src/build.rs"
 # Multi-licensed: the Rust core is AGPL-3.0-or-later (see LICENSING.md and the

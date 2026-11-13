@@ -31,5 +31,5 @@ keywords:
   - fuzzing
   - concolic-execution
   - exploit
-version: "1.0.0"
+version: "0.0.1"
 date-released: "2026-11-09"

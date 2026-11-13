@@ -14,6 +14,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.0.1] — the open-source release
+
+The first public, open-source tag of ForkSploit, published to invite the
+community to help build one shared platform. This tag marks the project as
+**open source** (multi-licensed per component — see `LICENSING.md`) and ships
+the complete, documented platform.
+
+The full release announcement, the list of capabilities, the call for
+contributors and the honest list of known weak points are in
+[`RELEASE_NOTES_v0.0.1.md`](RELEASE_NOTES_v0.0.1.md).
+
+### Added
+
+- **Open-source licensing model** — multi-licensed per component: Rust core
+  `AGPL-3.0-or-later`, Python layer `Apache-2.0`, on-chain primitives
+  Proprietary, dashboard `MIT`, documentation `CC-BY-4.0`. Texts in `LICENSES/`,
+  map in `LICENSING.md` and `REUSE.toml`.
+- **`DISCLAIMER.md`** — a prominent "use at your own risk / the authors accept
+  no liability" notice, added across the `.md` documentation.
+- **`RELEASE_NOTES_v0.0.1.md`** — the full open-source release announcement.
+
+### Notes
+
+- This is an early milestone (`0.0.1`): the engine and the proof pipeline are
+  real and live-verified, while the search remains narrow and the platform is
+  under active development. See `LIMITATIONS.md` and `BLOCKERS.md`.
+
+---
+
 ## [Unreleased]
 
 ### Added
@@ -65,7 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.0.0] — 2026-11-09
+## [0.0.1] — 2026-11-09
 
 First tagged release. ForkSploit is an audit/offensive platform for EVM
 smart contracts whose defining property is that it **proves** exploitability:
@@ -246,6 +275,8 @@ increase) is ever presented as a demonstrated attack.
   metering in the revm model; no mempool/front-running model; concolic is
   only partially storage-aware (`keccak256` is not inverted); a negative
   result is bounded by the run's budget and detectors.
-- **Licensed under a proprietary All-Rights-Reserved license** (see `LICENSE`).
+- **Multi-licensed per component** (see `LICENSING.md`): Rust core
+  `AGPL-3.0-or-later`, Python layer `Apache-2.0`, on-chain primitives
+  Proprietary, dashboard `MIT`, documentation `CC-BY-4.0`.
 
-[1.0.0]: https://github.com/DanijelTech/ForkSploit/releases/tag/v1.0.0
+[0.0.1]: https://github.com/DanijelTech/ForkSploit/releases/tag/v0.0.1
