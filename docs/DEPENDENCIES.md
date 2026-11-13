@@ -18,9 +18,9 @@ All versions are from `Cargo.toml` / `Cargo.lock` / `requirements.txt`.
 
 | Package | Version | Purpose |
 |-------|-----------|-------|
-| `revm` | pinned custom fork, git rev `1dead51` (version 3.3.0 in the lock) | EVM; features `no_gas_measuring`, `serde`, `memory_limit` |
-| `revm-primitives` | same git/rev | primitives |
-| `revm-interpreter` | same git/rev | interpreter |
+| `revm` | vendored local fork under `vendor/revm/` (version 3.3.0 in the lock) | EVM; features `no_gas_measuring`, `serde`, `memory_limit` |
+| `revm-primitives` | same vendored tree | primitives |
+| `revm-interpreter` | same vendored tree | interpreter |
 | `libafl` | `=0.11.2` | fuzzer framework (pinned) |
 | `libafl_bolts` | `=0.11.2` | helpers |
 | `z3` | `0.21.1` | Z3 binding |

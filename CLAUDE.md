@@ -179,7 +179,7 @@ Key CLI flags (always compiled in):
 ---
 
 ## External dependencies (pinned)
-- `revm` — a pinned custom fork @ `1dead51` (see `Cargo.toml`), `no_gas_measuring` (the model
+- `revm` — a pinned, vendored custom fork (`vendor/revm/`, see `Cargo.toml`), `no_gas_measuring` (the model
   does **not** meter gas; the authoritative gas number is the node's
   `eth_estimateGas`).
 - `libafl` / `libafl_bolts` — exactly `0.11.2`.

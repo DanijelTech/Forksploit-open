@@ -25,6 +25,7 @@ COPY rust-toolchain.toml .
 COPY src ./src
 COPY benches ./benches
 COPY tests ./tests
+COPY vendor ./vendor
 COPY .git ./.git
 
 # build offchain binary
